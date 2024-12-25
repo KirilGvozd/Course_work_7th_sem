@@ -18,9 +18,13 @@ const typeorm_1 = require("typeorm");
 const item_entity_1 = require("../entities/item.entity");
 const typeorm_2 = require("@nestjs/typeorm");
 const constants_1 = require("../utils/constants");
+const mail_service_1 = require("../mail/mail.service");
+const user_entity_1 = require("../entities/user.entity");
 let ItemService = class ItemService {
-    constructor(itemRepo) {
+    constructor(itemRepo, mailService, userRepository) {
         this.itemRepo = itemRepo;
+        this.mailService = mailService;
+        this.userRepository = userRepository;
     }
     async findAll(paginationDto, filters) {
         const query = this.itemRepo.createQueryBuilder("item");
@@ -44,12 +48,16 @@ let ItemService = class ItemService {
         const result = await this.itemRepo.findOne({
             where: {
                 id
-            }
+            },
+            relations: ['user'],
         });
         if (!result) {
             throw new common_1.NotFoundException("Not Found");
         }
-        return result;
+        return {
+            ...result,
+            sellerName: result.user.name,
+        };
     }
     async create(body, user) {
         if (user.role === "buyer") {
@@ -59,18 +67,36 @@ let ItemService = class ItemService {
     }
     async update(id, body) {
         const item = await this.itemRepo.findOne({
-            where: {
-                userId: body.userId,
-            }
+            where: { id },
         });
         if (!item) {
+            throw new common_1.NotFoundException("Item not found.");
+        }
+        if (item.userId !== body.userId) {
             throw new common_1.UnauthorizedException("You don't have the permission to update this item!");
         }
+        const previousPrice = item.prices.length > 0 ? item.prices[0] : item.price;
         if (body.price !== item.price) {
             item.prices.push(item.price);
         }
-        body.prices = item.prices;
-        return await this.itemRepo.update(id, body);
+        const updatedItem = {
+            ...item,
+            ...body,
+            prices: item.prices,
+        };
+        await this.itemRepo.save(updatedItem);
+        if (body.price !== item.price) {
+            const priceChange = body.price > item.price ? 'increased' : 'decreased';
+            const users = await this.userRepository.find({
+                relations: ['favourites'],
+            });
+            const usersToNotify = users.filter((user) => user.favourites.some((favourite) => favourite.id == id));
+            console.log(usersToNotify);
+            for (const user of usersToNotify) {
+                await this.mailService.sendPriceUpdateNotification(user.email, item.name, previousPrice, body.price, priceChange);
+            }
+        }
+        return updatedItem;
     }
     async delete(id, userId) {
         const item = await this.itemRepo.findOne({
@@ -88,6 +114,9 @@ exports.ItemService = ItemService;
 exports.ItemService = ItemService = __decorate([
     (0, common_1.Injectable)(),
     __param(0, (0, typeorm_2.InjectRepository)(item_entity_1.Item)),
-    __metadata("design:paramtypes", [typeorm_1.Repository])
+    __param(2, (0, typeorm_2.InjectRepository)(user_entity_1.User)),
+    __metadata("design:paramtypes", [typeorm_1.Repository,
+        mail_service_1.MailService,
+        typeorm_1.Repository])
 ], ItemService);
 //# sourceMappingURL=item.service.js.map

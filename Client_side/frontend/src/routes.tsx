@@ -7,6 +7,7 @@ import LoginPage from "@/pages/auth/LoginPage.tsx";
 import RegisterPage from "@/pages/auth/RegisterPage.tsx";
 import AddItemPage from "@/pages/item/AddItem.tsx";
 import EditItemPage from "@/pages/item/EditItem.tsx";
+import FavouritesPage from "@/pages/user/FavouritesPage.tsx";
 
 const RoutesComponent = () => {
   return (
@@ -17,6 +18,7 @@ const RoutesComponent = () => {
       <Route element={<RegisterPage />} path="/register" />
       <Route element={<AddItemPage />} path="/add-item" />
       <Route element={<EditItemPage />} path="/edit-item/:id" />
+      <Route element={<FavouritesPage />} path={"/favourites"} />
     </Routes>
   );
 };

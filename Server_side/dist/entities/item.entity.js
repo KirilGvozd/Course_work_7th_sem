@@ -25,7 +25,7 @@ __decorate([
     __metadata("design:type", Number)
 ], Item.prototype, "userId", void 0);
 __decorate([
-    (0, typeorm_1.ManyToOne)(() => user_entity_1.User, (user) => user.id),
+    (0, typeorm_1.ManyToOne)(() => user_entity_1.User, (user) => user.id, { onDelete: "CASCADE" }),
     (0, typeorm_1.JoinColumn)({ name: 'userId' }),
     __metadata("design:type", user_entity_1.User)
 ], Item.prototype, "user", void 0);
@@ -59,7 +59,7 @@ __decorate([
     __metadata("design:type", Number)
 ], Item.prototype, "price", void 0);
 __decorate([
-    (0, typeorm_1.ManyToMany)(() => user_entity_1.User, (user) => user.favourites),
+    (0, typeorm_1.ManyToMany)(() => user_entity_1.User, (user) => user.favourites, { onDelete: "CASCADE" }),
     __metadata("design:type", Array)
 ], Item.prototype, "users", void 0);
 exports.Item = Item = __decorate([

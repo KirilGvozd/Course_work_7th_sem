@@ -10,7 +10,7 @@ export class Item {
     @Column()
     userId: number;
 
-    @ManyToOne(() => User, (user) => user.id)
+    @ManyToOne(() => User, (user) => user.id, {onDelete: "CASCADE"})
     @JoinColumn({name: 'userId'})
     user: User;
 
@@ -36,6 +36,6 @@ export class Item {
     @Column()
     price: number;
 
-    @ManyToMany(() => User, (user) => user.favourites)
+    @ManyToMany(() => User, (user) => user.favourites, {onDelete: "CASCADE"})
     users: User[];
 }

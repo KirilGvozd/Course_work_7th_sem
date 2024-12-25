@@ -1,4 +1,4 @@
-import {Injectable, NotFoundException} from "@nestjs/common";
+import {BadRequestException, Injectable, NotFoundException} from "@nestjs/common";
 import {Repository} from "typeorm";
 import {InjectRepository} from "@nestjs/typeorm";
 import {User} from "../entities/user.entity";
@@ -24,6 +24,43 @@ export class UserService {
         });
 
         return await this.userRepository.save(newUser);
+    }
+
+    async addFavouriteItem(itemId: number, userId: number) {
+        const user = await this.userRepository.findOne({
+            where: { id: userId },
+            relations: ['favourites'],
+        });
+        if (!user) throw new NotFoundException('User not found');
+
+        const item = await this.itemRepository.findOne({ where: { id: itemId } });
+        if (!item) throw new NotFoundException('Item not found');
+
+        if (user.favourites.some((fav) => fav.id === item.id)) {
+            throw new BadRequestException('Item is already in favourites');
+        }
+
+        user.favourites.push(item);
+
+        return await this.userRepository.save(user);
+    }
+
+    async removeFromFavourites(userId: number, itemId: number) {
+        const user = await this.userRepository.findOne({
+            where: { id: userId },
+            relations: ['favourites'],
+        });
+        if (!user) throw new NotFoundException('Пользователь не найден');
+
+        const favouriteItemIds = user.favourites.map((item) => item.id);
+        const item = favouriteItemIds.some((id: number) => id == itemId);
+        if (!item) throw new NotFoundException('Элемент отсутствует в избранных');
+
+        await this.userRepository
+            .createQueryBuilder()
+            .relation(User, 'favourites')
+            .of(userId)
+            .remove(itemId);
     }
 
     async findAll(paginationDto: PaginationDto) {
@@ -66,9 +103,5 @@ export class UserService {
         }
 
         return await this.itemRepository.findByIds(user.favourites);
-    }
-
-    async delete(id: number) {
-        return await this.userRepository.delete(id);
     }
 }

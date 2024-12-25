@@ -8,8 +8,10 @@ export declare class UserService {
     private itemRepository;
     constructor(userRepository: Repository<User>, itemRepository: Repository<Item>);
     create(createUserDto: CreateUserDto): Promise<User>;
+    addFavouriteItem(itemId: number, userId: number): Promise<User>;
+    removeFromFavourites(userId: number, itemId: number): Promise<void>;
     findAll(paginationDto: PaginationDto): Promise<User[]>;
     findByEmail(email: string): Promise<User>;
     findOne(id: number): Promise<User>;
-    delete(id: number): Promise<import("typeorm").DeleteResult>;
+    findFavourites(id: number): Promise<Item[]>;
 }

@@ -6,12 +6,17 @@ import {CreateItemDto} from "./dto/createItemDto";
 import {PaginationDto} from "../pagination.dto";
 import {DEFAULT_PAGE_SIZE} from "../utils/constants";
 import {UpdateItemDto} from "./dto/updateItem.dto";
+import {MailService} from "../mail/mail.service";
+import {User} from "../entities/user.entity";
 
 @Injectable()
 export class ItemService {
     constructor(
         @InjectRepository(Item)
-        private itemRepo: Repository<Item>
+        private itemRepo: Repository<Item>,
+        private readonly mailService: MailService,
+        @InjectRepository(User)
+        private userRepository: Repository<User>,
     ) {}
 
     async findAll(paginationDto: PaginationDto, filters: { typeId?: number, minPrice?: number, maxPrice?: number, sellerId?: number }) {
@@ -44,14 +49,18 @@ export class ItemService {
         const result = await this.itemRepo.findOne({
             where: {
                 id
-            }
+            },
+            relations: ['user'],
         });
 
         if (!result) {
             throw new NotFoundException("Not Found");
         }
 
-        return result;
+        return {
+            ...result,
+            sellerName: result.user.name,
+        };
     }
 
     async create(body: any, user: {userId: number, role: string}) {
@@ -62,24 +71,59 @@ export class ItemService {
         return await this.itemRepo.save(body);
     }
 
-    async update(id: number, body: any){
+    async update(id: number, body: any) {
         const item = await this.itemRepo.findOne({
-            where: {
-                userId: body.userId,
-            }
+            where: { id },
         });
 
         if (!item) {
+            throw new NotFoundException("Item not found.");
+        }
+
+        if (item.userId !== body.userId) {
             throw new UnauthorizedException("You don't have the permission to update this item!");
         }
+
+        const previousPrice = item.prices.length > 0 ? item.prices[0] : item.price;
 
         if (body.price !== item.price) {
             item.prices.push(item.price);
         }
 
-        body.prices = item.prices;
+        const updatedItem = {
+            ...item,
+            ...body,
+            prices: item.prices,
+        };
 
-        return await this.itemRepo.update(id, body);
+        await this.itemRepo.save(updatedItem);
+
+        if (body.price !== item.price) {
+            const priceChange = body.price > item.price ? 'increased' : 'decreased';
+
+            const users = await this.userRepository.find({
+                relations: ['favourites'],
+            });
+
+            const usersToNotify = users.filter((user) =>
+                user.favourites.some((favourite) => favourite.id == id),
+            );
+
+            console.log(usersToNotify);
+
+            // Отправляем уведомления этим пользователям
+            for (const user of usersToNotify) {
+                await this.mailService.sendPriceUpdateNotification(
+                    user.email,
+                    item.name,
+                    previousPrice,
+                    body.price,
+                    priceChange,
+                );
+            }
+        }
+
+        return updatedItem;
     }
 
     async delete(id: number, userId: number){

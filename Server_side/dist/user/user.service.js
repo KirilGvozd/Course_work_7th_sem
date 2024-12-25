@@ -33,6 +33,39 @@ let UserService = class UserService {
         });
         return await this.userRepository.save(newUser);
     }
+    async addFavouriteItem(itemId, userId) {
+        const user = await this.userRepository.findOne({
+            where: { id: userId },
+            relations: ['favourites'],
+        });
+        if (!user)
+            throw new common_1.NotFoundException('User not found');
+        const item = await this.itemRepository.findOne({ where: { id: itemId } });
+        if (!item)
+            throw new common_1.NotFoundException('Item not found');
+        if (user.favourites.some((fav) => fav.id === item.id)) {
+            throw new common_1.BadRequestException('Item is already in favourites');
+        }
+        user.favourites.push(item);
+        return await this.userRepository.save(user);
+    }
+    async removeFromFavourites(userId, itemId) {
+        const user = await this.userRepository.findOne({
+            where: { id: userId },
+            relations: ['favourites'],
+        });
+        if (!user)
+            throw new common_1.NotFoundException('Пользователь не найден');
+        const favouriteItemIds = user.favourites.map((item) => item.id);
+        const item = favouriteItemIds.some((id) => id == itemId);
+        if (!item)
+            throw new common_1.NotFoundException('Элемент отсутствует в избранных');
+        await this.userRepository
+            .createQueryBuilder()
+            .relation(user_entity_1.User, 'favourites')
+            .of(userId)
+            .remove(itemId);
+    }
     async findAll(paginationDto) {
         return await this.userRepository.find({
             skip: paginationDto.skip,
@@ -56,8 +89,17 @@ let UserService = class UserService {
             throw new common_1.NotFoundException("Not Found");
         return result;
     }
-    async delete(id) {
-        return await this.userRepository.delete(id);
+    async findFavourites(id) {
+        const user = await this.userRepository.findOne({
+            where: {
+                id
+            },
+            relations: ['favourites'],
+        });
+        if (!user) {
+            throw new common_1.NotFoundException('User not found.');
+        }
+        return await this.itemRepository.findByIds(user.favourites);
     }
 };
 exports.UserService = UserService;

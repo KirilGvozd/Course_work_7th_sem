@@ -14,16 +14,19 @@ const typeorm_1 = require("@nestjs/typeorm");
 const item_entity_1 = require("../entities/item.entity");
 const jwt_strategy_1 = require("../auth/jwt.strategy");
 const platform_express_1 = require("@nestjs/platform-express");
+const mail_module_1 = require("../mail/mail.module");
+const user_entity_1 = require("../entities/user.entity");
 let ItemModule = class ItemModule {
 };
 exports.ItemModule = ItemModule;
 exports.ItemModule = ItemModule = __decorate([
     (0, common_1.Module)({
         imports: [
-            typeorm_1.TypeOrmModule.forFeature([item_entity_1.Item]),
+            typeorm_1.TypeOrmModule.forFeature([item_entity_1.Item, user_entity_1.User]),
             platform_express_1.MulterModule.register({
                 dest: './uploads',
             }),
+            mail_module_1.MailModule,
         ],
         controllers: [item_controller_1.ItemController],
         providers: [item_service_1.ItemService, jwt_strategy_1.JwtStrategy],

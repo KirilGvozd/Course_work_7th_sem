@@ -7,8 +7,21 @@ export declare class ItemController {
         items: import("../entities/item.entity").Item[];
         total: number;
     }>;
-    findOne(id: number): Promise<import("../entities/item.entity").Item>;
+    findOne(id: number): Promise<{
+        sellerName: string;
+        id: number;
+        userId: number;
+        user: import("../entities/user.entity").User;
+        typeId: number;
+        type: import("../entities/type.entity").Type;
+        prices: number[];
+        images: string[];
+        name: string;
+        description: string;
+        price: number;
+        users: import("../entities/user.entity").User[];
+    }>;
     create(body: any, request: any, files: Express.Multer.File[]): Promise<any>;
-    update(id: number, body: any, request: any, files: Express.Multer.File[]): Promise<import("typeorm").UpdateResult>;
+    update(id: number, body: any, request: any, files: Express.Multer.File[]): Promise<any>;
     delete(id: number, request: any): Promise<import("typeorm").DeleteResult>;
 }

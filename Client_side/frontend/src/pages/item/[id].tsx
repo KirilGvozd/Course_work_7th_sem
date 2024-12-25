@@ -3,7 +3,12 @@ import { useParams, useNavigate } from "react-router-dom";
 import { Card, Button, Image, Spacer } from "@nextui-org/react";
 
 import { AuthContext } from "@/context/AuthContext"; // Импорт контекста
-import { fetchItem, deleteItem } from "@/services/itemService.ts";
+import {
+  fetchItem,
+  deleteItem,
+  addToFavourites,
+  checkFavourites,
+} from "@/services/itemService.ts";
 
 const ItemPage = () => {
   const { id } = useParams(); // Используем useParams для получения параметра id
@@ -13,6 +18,7 @@ const ItemPage = () => {
   const [item, setItem] = useState<any>(null);
   const [currentIndex, setCurrentIndex] = useState(0); // Индекс текущего изображения
   const [loading, setLoading] = useState(true); // Стейт загрузки
+  const [isFavourite, setIsFavourite] = useState(false);
 
   useEffect(() => {
     if (id) {
@@ -28,6 +34,22 @@ const ItemPage = () => {
         });
     }
   }, [id]);
+
+  useEffect(() => {
+    if (id) {
+      checkFavouriteItems(); // Проверяем, находится ли товар в избранном
+    }
+  }, [id]);
+
+  const checkFavouriteItems = async () => {
+    try {
+      const favouriteIds = await checkFavourites(); // Получаем список ID избранных товаров
+
+      setIsFavourite(favouriteIds.includes(Number(id))); // Проверяем, есть ли текущий товар в избранном
+    } catch (error) {
+      console.error("Ошибка при проверке избранных товаров:", error);
+    }
+  };
 
   if (loading) return <p>Loading...</p>; // Показываем "Loading..." до полной загрузки данных
 
@@ -56,6 +78,20 @@ const ItemPage = () => {
     }
   };
 
+  const addItemToFavourites = async () => {
+    if (!user) return;
+
+    try {
+      console.log(item.id);
+      await addToFavourites(Number(item.id));
+      setIsFavourite(true);
+
+      return alert("Added to Favourites");
+    } catch (error) {
+      console.error("Error adding item to favourites:", error);
+    }
+  };
+
   const isAdmin = user?.role === "seller"; // Проверяем роль пользователя
 
   return (
@@ -69,7 +105,7 @@ const ItemPage = () => {
         <div style={{ position: "relative" }}>
           <Image
             alt={item.name}
-            height="300px"
+            height="500px"
             src={`http://localhost:4000/${item.images[currentIndex]}`}
             style={{ borderRadius: "8px" }}
             width="100%"
@@ -111,8 +147,10 @@ const ItemPage = () => {
         <div style={{ padding: "1rem" }}>
           <p>{item.description}</p>
           <Spacer y={0.5} />
-          <h4>Цена: {item.price}₽</h4>
-          <h5>Категория: {item.type?.name}</h5>
+          <h4>Price: {item.price}$</h4>
+          <h4>
+            <a href={"/user/:id"}>Seller: {item.sellerName}</a>
+          </h4>
         </div>
 
         <div
@@ -124,8 +162,12 @@ const ItemPage = () => {
         >
           <Button onClick={() => navigate("/")}>Назад</Button>
 
-          {/* Показываем кнопку "Добавить в избранное" только если пользователь не админ */}
-          {!isAdmin && <Button color="secondary">Добавить в избранное</Button>}
+          {/* Показываем кнопку "Добавить в избранное", если пользователь не админ и товар не в избранном */}
+          {!isAdmin && !isFavourite && (
+            <Button color="secondary" onClick={addItemToFavourites}>
+              Добавить в избранное
+            </Button>
+          )}
 
           {/* Кнопки для администратора */}
           {isAdmin && (

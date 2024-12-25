@@ -29,7 +29,6 @@ const auth_module_1 = require("./auth/auth.module");
 const chat_gateway_gateway_1 = require("./chat_gateway/chat_gateway.gateway");
 const serve_static_1 = require("@nestjs/serve-static");
 const path_1 = require("path");
-const favourites_module_1 = require("./favourites/favourites.module");
 let AppModule = class AppModule {
     configure(consumer) {
         consumer.apply(bodyParser.json()).forRoutes('*');
@@ -66,7 +65,6 @@ exports.AppModule = AppModule = __decorate([
                 rootPath: (0, path_1.join)(__dirname, '..', 'uploads'),
                 serveRoot: '/uploads',
             }),
-            favourites_module_1.FavouritesModule,
         ],
         controllers: [app_controller_1.AppController],
         providers: [app_service_1.AppService, chat_gateway_gateway_1.ChatGatewayGateway],

@@ -47,8 +47,6 @@ export class ItemController {
         @Req() request,
         @UploadedFiles() files: Express.Multer.File[],
     ) {
-
-        // Преобразуем строки в числа
         const price = Number(body.price);
         const typeId: number = 1;
 

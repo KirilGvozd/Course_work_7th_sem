@@ -8,20 +8,32 @@ import {
   Button,
 } from "@nextui-org/react";
 
-interface ProductCardProps {
+import { deleteFavourite } from "@/services/itemService.ts";
+
+interface FavouriteProductCardProps {
   id: number;
   name: string;
-  description: string;
   price: number;
   image: string;
+  onRemove: (id: number) => void;
 }
 
-const ProductCard: React.FC<ProductCardProps> = ({
+const FavouriteProductCard: React.FC<FavouriteProductCardProps> = ({
   id,
   name,
   price,
   image,
+  onRemove,
 }) => {
+  const handleRemove = async () => {
+    try {
+      await deleteFavourite(id); // Удаление из API
+      onRemove(id); // Уведомление родительского компонента об удалении
+    } catch (error) {
+      console.error("Failed to remove favourite:", error);
+    }
+  };
+
   return (
     <Card isHoverable>
       {/* Изображение товара */}
@@ -40,20 +52,18 @@ const ProductCard: React.FC<ProductCardProps> = ({
         <h4>{name}</h4>
       </CardBody>
 
-      {/* Цена и кнопка */}
+      {/* Цена и кнопки */}
       <CardFooter>
         <span style={{ marginRight: "10px" }}>${price.toFixed(2)}</span>
-        <Button
-          as="a"
-          color="primary"
-          href={`/item/${id}`} // Используем href для перехода
-          variant="solid"
-        >
+        <Button as="a" color="primary" href={`/item/${id}`} variant="solid">
           View Details
+        </Button>
+        <Button color="danger" onClick={handleRemove}>
+          Remove
         </Button>
       </CardFooter>
     </Card>
   );
 };
 
-export default ProductCard;
+export default FavouriteProductCard;

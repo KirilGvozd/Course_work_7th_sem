@@ -18,6 +18,7 @@ const user_service_1 = require("./user.service");
 const createUserDto_1 = require("./dto/createUserDto");
 const jwt_auth_guard_1 = require("../auth/jwt-auth.guard");
 const swagger_1 = require("@nestjs/swagger");
+const addToFavouritesDto_1 = require("./dto/addToFavouritesDto");
 let UserController = class UserController {
     constructor(userService) {
         this.userService = userService;
@@ -25,13 +26,30 @@ let UserController = class UserController {
     async create(createUserDto) {
         await this.userService.create(createUserDto);
     }
+    async addToFavourites(body, request) {
+        const itemId = body.itemId;
+        const userId = request.user.userId;
+        if (request.user.role === 'seller') {
+            throw new common_1.ForbiddenException("Seller can't add favourite items!");
+        }
+        return await this.userService.addFavouriteItem(itemId, userId);
+    }
     findOne(request) {
-        const id = request.user.id;
+        const id = request.user.userId;
+        console.log(id);
         return this.userService.findOne(id);
     }
-    delete(request) {
-        const id = request.user.id;
-        return this.userService.delete(id);
+    async findFavourites(request) {
+        const userId = request.user.userId;
+        const favourites = await this.userService.findFavourites(userId);
+        if (!favourites || favourites.length === 0) {
+            throw new common_1.NotFoundException('No favourites found for this user.');
+        }
+        return favourites;
+    }
+    async removeFromFavourites(itemId, request) {
+        const userId = request.user.userId;
+        return await this.userService.removeFromFavourites(userId, itemId);
     }
 };
 exports.UserController = UserController;
@@ -45,7 +63,20 @@ __decorate([
     __metadata("design:returntype", Promise)
 ], UserController.prototype, "create", null);
 __decorate([
-    (0, common_1.Get)(':id'),
+    (0, common_1.Post)('add-favourite'),
+    (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard),
+    (0, swagger_1.ApiResponse)({ status: 201, description: 'Item added to favourites.' }),
+    (0, swagger_1.ApiResponse)({ status: 401, description: 'Unauthorized access.' }),
+    (0, swagger_1.ApiResponse)({ status: 403, description: 'Seller can\'t add favourite items!' }),
+    (0, swagger_1.ApiResponse)({ status: 404, description: 'Item not found' }),
+    __param(0, (0, common_1.Body)()),
+    __param(1, (0, common_1.Req)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [addToFavouritesDto_1.AddToFavouritesDto, Object]),
+    __metadata("design:returntype", Promise)
+], UserController.prototype, "addToFavourites", null);
+__decorate([
+    (0, common_1.Get)(),
     (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard),
     (0, swagger_1.ApiResponse)({ status: 200, description: 'User profile has been found.' }),
     (0, swagger_1.ApiResponse)({ status: 401, description: 'Unauthorized access.' }),
@@ -56,16 +87,28 @@ __decorate([
     __metadata("design:returntype", void 0)
 ], UserController.prototype, "findOne", null);
 __decorate([
-    (0, common_1.Delete)(':id'),
+    (0, common_1.Get)('favourites'),
     (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard),
-    (0, swagger_1.ApiResponse)({ status: 200, description: 'User has been successfully deleted.' }),
+    (0, swagger_1.ApiResponse)({ status: 200, description: 'User favourites found.' }),
     (0, swagger_1.ApiResponse)({ status: 401, description: 'Unauthorized access.' }),
     (0, swagger_1.ApiResponse)({ status: 404, description: 'User not found.' }),
     __param(0, (0, common_1.Req)()),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [Object]),
-    __metadata("design:returntype", void 0)
-], UserController.prototype, "delete", null);
+    __metadata("design:returntype", Promise)
+], UserController.prototype, "findFavourites", null);
+__decorate([
+    (0, common_1.Delete)('remove-favourite/:id'),
+    (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard),
+    (0, swagger_1.ApiResponse)({ status: 200, description: 'Item has been successfully deleted.' }),
+    (0, swagger_1.ApiResponse)({ status: 401, description: 'Unauthorized access.' }),
+    (0, swagger_1.ApiResponse)({ status: 404, description: 'User or item not found.' }),
+    __param(0, (0, common_1.Param)('id')),
+    __param(1, (0, common_1.Req)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Number, Object]),
+    __metadata("design:returntype", Promise)
+], UserController.prototype, "removeFromFavourites", null);
 exports.UserController = UserController = __decorate([
     (0, swagger_1.ApiTags)('Users'),
     (0, common_1.Controller)('user'),

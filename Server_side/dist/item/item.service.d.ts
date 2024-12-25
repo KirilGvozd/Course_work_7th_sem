@@ -1,9 +1,13 @@
 import { Repository } from "typeorm";
 import { Item } from "../entities/item.entity";
 import { PaginationDto } from "../pagination.dto";
+import { MailService } from "../mail/mail.service";
+import { User } from "../entities/user.entity";
 export declare class ItemService {
     private itemRepo;
-    constructor(itemRepo: Repository<Item>);
+    private readonly mailService;
+    private userRepository;
+    constructor(itemRepo: Repository<Item>, mailService: MailService, userRepository: Repository<User>);
     findAll(paginationDto: PaginationDto, filters: {
         typeId?: number;
         minPrice?: number;
@@ -13,11 +17,24 @@ export declare class ItemService {
         items: Item[];
         total: number;
     }>;
-    findOne(id: number): Promise<Item>;
+    findOne(id: number): Promise<{
+        sellerName: string;
+        id: number;
+        userId: number;
+        user: User;
+        typeId: number;
+        type: import("../entities/type.entity").Type;
+        prices: number[];
+        images: string[];
+        name: string;
+        description: string;
+        price: number;
+        users: User[];
+    }>;
     create(body: any, user: {
         userId: number;
         role: string;
     }): Promise<any>;
-    update(id: number, body: any): Promise<import("typeorm").UpdateResult>;
+    update(id: number, body: any): Promise<any>;
     delete(id: number, userId: number): Promise<import("typeorm").DeleteResult>;
 }

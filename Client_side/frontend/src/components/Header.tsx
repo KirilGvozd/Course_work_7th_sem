@@ -38,7 +38,9 @@ const Header = () => {
                     Add Item
                   </Button>
                 ) : (
-                  <span>{user.role || user.email}</span> // Display user info
+                  <Button as="a" href="/favourites" variant="solid">
+                    Favourites
+                  </Button> // Display user info
                 )}
               </NavbarItem>
             )}
