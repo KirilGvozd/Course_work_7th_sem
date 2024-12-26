@@ -56,7 +56,7 @@ __decorate([
         description: "Rate of the seller",
         default: 5,
     }),
-    (0, class_validator_1.IsNumber)(),
+    (0, class_validator_1.IsInt)(),
     __metadata("design:type", Number)
 ], CreateCommentDto.prototype, "rate", void 0);
 //# sourceMappingURL=createCommentDto.js.map

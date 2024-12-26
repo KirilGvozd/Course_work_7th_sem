@@ -74,6 +74,16 @@ export class UserController {
         return favourites;
     }
 
+    @Get('rating')
+    @UseGuards(JwtAuthGuard)
+    @ApiResponse({ status: 200, description: 'User rating returned.'})
+    @ApiResponse({ status: 401, description: 'Unauthorized access.'})
+    @ApiResponse({ status: 404, description: 'User not found.'})
+    async getRating(@Req() request) {
+        const userId: number = request.user.userId;
+        return this.userService.countRate(userId);
+    }
+
     @Delete('remove-favourite/:id')
     @UseGuards(JwtAuthGuard)
     @ApiResponse({ status: 200, description: 'Item has been successfully deleted.'})

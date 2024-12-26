@@ -17,6 +17,7 @@ class CreateUserDto {
     constructor() {
         this.rate = 0;
         this.favourites = [];
+        this.rates = [];
     }
 }
 exports.CreateUserDto = CreateUserDto;
@@ -61,4 +62,9 @@ __decorate([
     (0, class_transformer_1.Type)(() => Number),
     __metadata("design:type", Array)
 ], CreateUserDto.prototype, "favourites", void 0);
+__decorate([
+    (0, class_validator_1.IsArray)(),
+    (0, class_transformer_1.Type)(() => Number),
+    __metadata("design:type", Array)
+], CreateUserDto.prototype, "rates", void 0);
 //# sourceMappingURL=createUserDto.js.map

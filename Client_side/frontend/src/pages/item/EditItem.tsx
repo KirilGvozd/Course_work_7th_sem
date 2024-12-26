@@ -1,8 +1,15 @@
 import React, { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { Input, Textarea, Button, Card, Spacer } from "@nextui-org/react";
+import {
+  Input,
+  Textarea,
+  Button,
+  Card,
+  Spacer,
+  Image,
+} from "@nextui-org/react";
 
-import { fetchItem, updateItem } from "@/services/itemService";
+import { fetchItem } from "@/services/itemService";
 
 const EditItemPage = () => {
   const { id } = useParams(); // Получаем ID из URL
@@ -11,19 +18,19 @@ const EditItemPage = () => {
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
   const [price, setPrice] = useState<string>("");
-  // @ts-ignore
-  const [images, setImages] = useState<File[]>([]);
+  const [existingImages, setExistingImages] = useState<string[]>([]); // Ссылки на текущие изображения
+  const [newImages, setNewImages] = useState<File[]>([]); // Новые изображения
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string>("");
 
   useEffect(() => {
     if (id) {
-      // Если есть ID, загружаем данные о товаре
       fetchItem(Number(id))
         .then((item) => {
           setName(item.name);
           setDescription(item.description);
           setPrice(item.price);
+          setExistingImages(item.images); // Ссылки на изображения с сервера
         })
         .catch((err) => {
           console.error("Failed to fetch item:", err);
@@ -40,19 +47,35 @@ const EditItemPage = () => {
     if (!price || isNaN(Number(price)) || Number(price) <= 0) {
       setError("Price must be a positive number.");
       setLoading(false);
-
       return;
     }
 
+    const formData = new FormData();
+
+    formData.append("name", name);
+    formData.append("description", description);
+    formData.append("price", price.toString());
+
+    // Передаем старые изображения как массив
+    existingImages.forEach((image) => formData.append("existingImages[]", image)); // Старые изображения как массив
+
+    // Добавляем новые изображения
+    newImages.forEach((image) => formData.append("images", image)); // Новые изображения
+
     try {
-      await updateItem(Number(id), {
-        name,
-        description,
-        price: Number(price),
-        typeId: 1,
+      const response = await fetch(`http://localhost:4000/item/${id}`, {
+        method: "PUT",
+        body: formData,
+        credentials: "include",
       });
-      alert("Item updated successfully");
-      navigate(`/item/${id}`); // Перенаправляем на страницу товара
+
+      if (response.ok) {
+        alert("Item updated successfully");
+        navigate(`/item/${id}`);
+      } else {
+        const errorData = await response.json();
+        setError(errorData.message || "Something went wrong.");
+      }
     } catch (err) {
       setError("Error: " + err);
     } finally {
@@ -60,10 +83,20 @@ const EditItemPage = () => {
     }
   };
 
+
+
   const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files) {
-      setImages(Array.from(e.target.files));
+      setNewImages([...newImages, ...Array.from(e.target.files)]);
     }
+  };
+
+  const handleRemoveExistingImage = (index: number) => {
+    setExistingImages(existingImages.filter((_, i) => i !== index));
+  };
+
+  const handleRemoveNewImage = (index: number) => {
+    setNewImages(newImages.filter((_, i) => i !== index));
   };
 
   return (
@@ -95,13 +128,78 @@ const EditItemPage = () => {
           onChange={(e) => setPrice(e.target.value)}
         />
         <Spacer y={1} />
+
+        <div>
+          <h4>Existing Images</h4>
+          <div style={{ display: "flex", flexWrap: "wrap", gap: "1rem" }}>
+            {existingImages.map((image, index) => (
+              <div key={index} style={{ position: "relative", width: "120px" }}>
+                <Image
+                  alt={`Existing image ${index + 1}`}
+                  height="auto"
+                  src={image}
+                  width="100%"
+                />
+                <Button
+                  color="danger"
+                  size="sm"
+                  style={{
+                    position: "absolute",
+                    top: "5px",
+                    right: "5px",
+                    padding: "0.5rem",
+                  }}
+                  onClick={() => handleRemoveExistingImage(index)}
+                >
+                  ✕
+                </Button>
+              </div>
+            ))}
+          </div>
+        </div>
         <Spacer y={1} />
+
         <Input
           multiple
-          label="Upload Images"
+          label="Add New Images"
           type="file"
           onChange={handleImageUpload}
         />
+        <Spacer y={1} />
+
+        {newImages.length > 0 && (
+          <div>
+            <h4>New Images</h4>
+            <div style={{ display: "flex", flexWrap: "wrap", gap: "1rem" }}>
+              {newImages.map((file, index) => (
+                <div
+                  key={index}
+                  style={{ position: "relative", width: "120px" }}
+                >
+                  <Image
+                    alt={`New image ${index + 1}`}
+                    height="auto"
+                    src={URL.createObjectURL(file)}
+                    width="100%"
+                  />
+                  <Button
+                    color="danger"
+                    size="sm"
+                    style={{
+                      position: "absolute",
+                      top: "5px",
+                      right: "5px",
+                      padding: "0.5rem",
+                    }}
+                    onClick={() => handleRemoveNewImage(index)}
+                  >
+                    ✕
+                  </Button>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
         <Spacer y={1} />
 
         <Button disabled={loading} type="submit">

@@ -22,6 +22,6 @@ export declare class ItemController {
         users: import("../entities/user.entity").User[];
     }>;
     create(body: any, request: any, files: Express.Multer.File[]): Promise<any>;
-    update(id: number, body: any, request: any, files: Express.Multer.File[]): Promise<any>;
+    update(id: number, body: any, files: Express.Multer.File[], request: any): Promise<any>;
     delete(id: number, request: any): Promise<import("typeorm").DeleteResult>;
 }

@@ -37,4 +37,8 @@ export class CreateUserDto {
     @IsArray()
     @Type(() => Number)
     favourites: number[] = [];
+
+    @IsArray()
+    @Type(() => Number)
+    rates: number[] = [];
 }

@@ -18,9 +18,11 @@ const typeorm_1 = require("typeorm");
 const comment_entity_1 = require("../entities/comment.entity");
 const typeorm_2 = require("@nestjs/typeorm");
 const constants_1 = require("../utils/constants");
+const user_entity_1 = require("../entities/user.entity");
 let CommentService = class CommentService {
-    constructor(commentRepository) {
+    constructor(commentRepository, userRepository) {
         this.commentRepository = commentRepository;
+        this.userRepository = userRepository;
     }
     async findAll(paginationDto, sellerId) {
         return await this.commentRepository.find({
@@ -31,11 +33,19 @@ let CommentService = class CommentService {
             take: paginationDto.limit ?? constants_1.DEFAULT_PAGE_SIZE,
         });
     }
-    async create(body, userRole) {
+    async create(body, userRole, userId) {
         if (userRole === "seller") {
             throw new common_1.UnauthorizedException("Sellers can't leave comments!");
         }
+        const seller = await this.userRepository.findOne({
+            where: {
+                id: body.sellerId,
+            }
+        });
+        seller.rates.push(+body.rate);
+        await this.userRepository.save(seller);
         body.date = new Date().toISOString();
+        body.userId = userId;
         return await this.commentRepository.save(body);
     }
     async update(id, data, userId) {
@@ -65,6 +75,8 @@ exports.CommentService = CommentService;
 exports.CommentService = CommentService = __decorate([
     (0, common_1.Injectable)(),
     __param(0, (0, typeorm_2.InjectRepository)(comment_entity_1.Comment)),
-    __metadata("design:paramtypes", [typeorm_1.Repository])
+    __param(1, (0, typeorm_2.InjectRepository)(user_entity_1.User)),
+    __metadata("design:paramtypes", [typeorm_1.Repository,
+        typeorm_1.Repository])
 ], CommentService);
 //# sourceMappingURL=comment.service.js.map

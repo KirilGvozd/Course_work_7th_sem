@@ -19,6 +19,9 @@ export class User {
     @Column()
     name: string;
 
+    @Column("int", { array: true })
+    rates: number[];
+
     @Column()
     rate: number;
 

@@ -7,7 +7,7 @@ import {
     ParseIntPipe,
     Post,
     Put,
-    Query, Req, UseGuards,
+    Query, Req, UploadedFiles, UseGuards, UseInterceptors,
     UsePipes,
     ValidationPipe
 } from "@nestjs/common";
@@ -16,6 +16,7 @@ import {CreateCommentDto} from "./dto/createCommentDto";
 import {PaginationDto} from "../pagination.dto";
 import {JwtAuthGuard} from "../auth/jwt-auth.guard";
 import {ApiResponse, ApiTags} from "@nestjs/swagger";
+import {FileInterceptor} from "@nestjs/platform-express";
 
 @ApiTags('Comments')
 @Controller('comment')
@@ -31,34 +32,16 @@ export class CommentController {
     }
 
     @Post()
+    @UseInterceptors(FileInterceptor('images'))
     @ApiResponse({ status: 201, description: 'Comment has been leaved.'})
     @ApiResponse({ status: 401, description: "You don't have access to leave comments!"})
     @ApiResponse({ status: 400, description: 'Invalid comment data provided.'})
     @UseGuards(JwtAuthGuard)
     @UsePipes(new ValidationPipe({ whitelist: true }))
-    create(@Body() body: CreateCommentDto, @Req() request) {
+    create(@Body() body: CreateCommentDto, @Req() request, @UploadedFiles() files: Express.Multer.File[]) {
         const userRole = request.user.role;
-        return this.commentService.create(body, userRole);
-    }
-
-    @Put(':id')
-    @ApiResponse({ status: 201, description: 'Comment has been updated.'})
-    @ApiResponse({ status: 401, description: "You don't have access to this comment."})
-    @ApiResponse({ status: 404, description: 'Comment not found.'})
-    @ApiResponse({ status: 400, description: 'Invalid comment data provided.'})
-    @UseGuards(JwtAuthGuard)
-    update(@Body() body: CreateCommentDto, @Param('id', ParseIntPipe) id: number, @Req() request) {
-        const userId = request.user.id;
-        return this.commentService.update(id, body, userId);
-    }
-
-    @Delete(':id')
-    @ApiResponse({ status: 200, description: 'Comment has been successfully removed.'})
-    @ApiResponse({ status: 401, description: "You don't have access to delete this comment!"})
-    @ApiResponse({ status: 404, description: 'Comment not found.'})
-    @UseGuards(JwtAuthGuard)
-    delete(@Param('id', ParseIntPipe) id: number, @Req() request) {
-        const userId = request.user.id;
-        return this.commentService.delete(id, userId);
+        const userId: number = +request.user.userId;
+        body.attachments = files?.map((file) => file.path) || [];
+        return this.commentService.create(body, userRole, userId);
     }
 }

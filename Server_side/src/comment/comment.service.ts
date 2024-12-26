@@ -6,12 +6,15 @@ import {CreateCommentDto} from "./dto/createCommentDto";
 import {PaginationDto} from "../pagination.dto";
 import {DEFAULT_PAGE_SIZE} from "../utils/constants";
 import {UpdateCommentDto} from "./dto/updateCommentDto";
+import {User} from "../entities/user.entity";
 
 @Injectable()
 export class CommentService {
     constructor(
         @InjectRepository(Comment)
-        private commentRepository: Repository<Comment>
+        private commentRepository: Repository<Comment>,
+        @InjectRepository(User)
+        private userRepository: Repository<User>
     ) {}
 
     async findAll(paginationDto: PaginationDto, sellerId: number) {
@@ -24,40 +27,21 @@ export class CommentService {
         });
     }
 
-    async create(body: CreateCommentDto, userRole: string) {
+    async create(body: CreateCommentDto, userRole: string, userId: number) {
         if (userRole === "seller") {
             throw new UnauthorizedException("Sellers can't leave comments!");
         }
 
+        const seller = await this.userRepository.findOne({
+            where: {
+                id: body.sellerId,
+            }
+        });
+
+        seller.rates.push(+body.rate);
+        await this.userRepository.save(seller);
         body.date = new Date().toISOString();
+        body.userId = userId;
         return await this.commentRepository.save(body);
-    }
-
-    async update(id: number, data: UpdateCommentDto, userId: number) {
-        const comment = await this.commentRepository.findOne({
-            where: {
-                userId: userId,
-            }
-        });
-
-        if (!comment) {
-            throw new UnauthorizedException("You don't have access to this comment.");
-        }
-
-        return await this.commentRepository.update(id, data);
-    }
-
-    async delete(id: number, userId: number) {
-        const comment = await this.commentRepository.findOne({
-            where: {
-                userId: userId,
-            }
-        });
-
-        if (!comment) {
-            throw new UnauthorizedException("You don't have access to this comment.");
-        }
-
-        return await this.commentRepository.delete(id);
     }
 }

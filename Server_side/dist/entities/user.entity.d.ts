@@ -5,6 +5,7 @@ export declare class User {
     role: string;
     password: string;
     name: string;
+    rates: number[];
     rate: number;
     favourites: Item[];
     refreshToken: string;

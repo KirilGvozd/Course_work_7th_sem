@@ -53,7 +53,7 @@ let ItemController = class ItemController {
         };
         return this.itemService.create(itemData, user);
     }
-    update(id, body, request, files) {
+    async update(id, body, files, request) {
         const price = Number(body.price);
         const typeId = 1;
         if (isNaN(price) || price <= 0) {
@@ -62,16 +62,22 @@ let ItemController = class ItemController {
         if (!Number.isInteger(typeId)) {
             throw new common_1.BadRequestException("Type ID must be an integer.");
         }
-        const itemData = {
+        const user = {
+            userId: request.user.userId,
+            role: request.user.role,
+        };
+        const existingImages = Array.isArray(body.existingImages) ? body.existingImages : [];
+        const images = files ? files.map((file) => file.path) : [];
+        const updatedItemData = {
             name: body.name,
             description: body.description,
             price,
             prices: [],
             typeId,
-            userId: request.user.userId,
-            images: files?.map((file) => file.path) || [],
+            userId: user.userId,
+            images: [...existingImages, ...images],
         };
-        return this.itemService.update(id, itemData);
+        return await this.itemService.update(id, updatedItemData);
     }
     delete(id, request) {
         const userId = request.user.id;
@@ -114,16 +120,14 @@ __decorate([
 __decorate([
     (0, common_1.Put)(':id'),
     (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard),
-    (0, swagger_1.ApiResponse)({ status: 200, description: 'Item has been successfully updated.' }),
-    (0, swagger_1.ApiResponse)({ status: 401, description: "You don't have permission to update this item!" }),
-    (0, swagger_1.ApiResponse)({ status: 404, description: 'Item not found.' }),
+    (0, common_1.UseInterceptors)((0, platform_express_1.FilesInterceptor)('images')),
     __param(0, (0, common_1.Param)('id')),
     __param(1, (0, common_1.Body)()),
-    __param(2, (0, common_1.Req)()),
-    __param(3, (0, common_1.UploadedFiles)()),
+    __param(2, (0, common_1.UploadedFiles)()),
+    __param(3, (0, common_1.Req)()),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [Number, Object, Object, Array]),
-    __metadata("design:returntype", void 0)
+    __metadata("design:paramtypes", [Number, Object, Array, Object]),
+    __metadata("design:returntype", Promise)
 ], ItemController.prototype, "update", null);
 __decorate([
     (0, common_1.Delete)(':id'),

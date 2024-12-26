@@ -47,6 +47,10 @@ let UserController = class UserController {
         }
         return favourites;
     }
+    async getRating(request) {
+        const userId = request.user.userId;
+        return this.userService.countRate(userId);
+    }
     async removeFromFavourites(itemId, request) {
         const userId = request.user.userId;
         return await this.userService.removeFromFavourites(userId, itemId);
@@ -97,6 +101,17 @@ __decorate([
     __metadata("design:paramtypes", [Object]),
     __metadata("design:returntype", Promise)
 ], UserController.prototype, "findFavourites", null);
+__decorate([
+    (0, common_1.Get)('rating'),
+    (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard),
+    (0, swagger_1.ApiResponse)({ status: 200, description: 'User rating returned.' }),
+    (0, swagger_1.ApiResponse)({ status: 401, description: 'Unauthorized access.' }),
+    (0, swagger_1.ApiResponse)({ status: 404, description: 'User not found.' }),
+    __param(0, (0, common_1.Req)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object]),
+    __metadata("design:returntype", Promise)
+], UserController.prototype, "getRating", null);
 __decorate([
     (0, common_1.Delete)('remove-favourite/:id'),
     (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard),

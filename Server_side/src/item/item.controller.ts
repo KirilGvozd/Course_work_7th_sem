@@ -16,7 +16,7 @@ import {CreateItemDto} from "./dto/createItemDto";
 import {PaginationDto} from "../pagination.dto";
 import {JwtAuthGuard} from "../auth/jwt-auth.guard";
 import {UpdateItemDto} from "./dto/updateItem.dto";
-import { ApiResponse, ApiTags } from "@nestjs/swagger";
+import {ApiConsumes, ApiResponse, ApiTags} from "@nestjs/swagger";
 import {FileInterceptor, FilesInterceptor} from "@nestjs/platform-express";
 
 @ApiTags('Items')
@@ -77,13 +77,15 @@ export class ItemController {
     }
 
 
-
     @Put(':id')
     @UseGuards(JwtAuthGuard)
-    @ApiResponse({ status: 200, description: 'Item has been successfully updated.'})
-    @ApiResponse({ status: 401, description: "You don't have permission to update this item!"})
-    @ApiResponse({ status: 404, description: 'Item not found.'})
-    update(@Param('id') id: number, @Body() body: any, @Req() request, @UploadedFiles() files: Express.Multer.File[],) {
+    @UseInterceptors(FilesInterceptor('images'))
+    async update(
+        @Param('id') id: number,
+        @Body() body: any,
+        @UploadedFiles() files: Express.Multer.File[],
+        @Req() request,
+    ) {
         const price = Number(body.price);
         const typeId: number = 1;
 
@@ -95,17 +97,32 @@ export class ItemController {
             throw new BadRequestException("Type ID must be an integer.");
         }
 
-        const itemData = {
+        const user = {
+            userId: request.user.userId,  // Получение userId из данных
+            role: request.user.role,       // Получение роли
+        };
+
+        // Обработка старых изображений. Если их нет, передаем пустой массив.
+        const existingImages = Array.isArray(body.existingImages) ? body.existingImages : [];
+
+        // Если переданы новые изображения
+        const images = files ? files.map((file) => file.path) : [];
+
+        // Формирование данных для обновления
+        const updatedItemData = {
             name: body.name,
             description: body.description,
             price,
             prices: [],
             typeId,
-            userId: request.user.userId,
-            images: files?.map((file) => file.path) || [],
+            userId: user.userId,
+            images: [...existingImages, ...images], // Слияние старых и новых изображений
         };
-        return this.itemService.update(id, itemData);
+
+        return await this.itemService.update(id, updatedItemData);
     }
+
+
 
     @Delete(':id')
     @UseGuards(JwtAuthGuard)

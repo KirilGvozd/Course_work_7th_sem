@@ -5,4 +5,5 @@ export declare class CreateUserDto {
     name: string;
     rate: number;
     favourites: number[];
+    rates: number[];
 }

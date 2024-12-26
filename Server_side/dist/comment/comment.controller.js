@@ -29,7 +29,8 @@ let CommentController = class CommentController {
     }
     create(body, request) {
         const userRole = request.user.role;
-        return this.commentService.create(body, userRole);
+        const userId = +request.user.userId;
+        return this.commentService.create(body, userRole, userId);
     }
     update(body, id, request) {
         const userId = request.user.id;

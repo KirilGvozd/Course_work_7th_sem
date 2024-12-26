@@ -1,4 +1,4 @@
-import {IsArray, IsInt, IsNumber, IsString} from "class-validator";
+import {IsArray, IsInt, IsString} from "class-validator";
 import {ApiProperty} from "@nestjs/swagger";
 
 export class CreateCommentDto {
@@ -37,6 +37,6 @@ export class CreateCommentDto {
         description: "Rate of the seller",
         default: 5,
     })
-    @IsNumber()
+    @IsInt()
     rate: number;
 }

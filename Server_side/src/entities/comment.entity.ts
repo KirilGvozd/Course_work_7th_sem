@@ -17,7 +17,7 @@ export class Comment {
     @Column()
     sellerId: number;
 
-    @ManyToOne(() => Item, (item) => item.id)
+    @ManyToOne(() => User, (user) => user.id)
     @JoinColumn({name: 'sellerId'})
     seller: User;
 
