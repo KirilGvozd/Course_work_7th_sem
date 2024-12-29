@@ -5,20 +5,17 @@ export class CreateCommentDto {
     @ApiProperty({
         description: "Id of the current user",
     })
-    @IsInt()
     userId: number;
 
     @ApiProperty({
         description: "Id of the seller",
     })
-    @IsInt()
     sellerId: number;
 
     @ApiProperty({
         description: "Images",
         default: [],
     })
-    @IsArray()
     attachments: string[]
 
     @ApiProperty({
@@ -37,6 +34,5 @@ export class CreateCommentDto {
         description: "Rate of the seller",
         default: 5,
     })
-    @IsInt()
     rate: number;
 }

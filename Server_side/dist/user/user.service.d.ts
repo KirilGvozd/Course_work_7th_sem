@@ -14,5 +14,4 @@ export declare class UserService {
     findByEmail(email: string): Promise<User>;
     findOne(id: number): Promise<User>;
     findFavourites(id: number): Promise<Item[]>;
-    countRate(userId: number): Promise<number>;
 }

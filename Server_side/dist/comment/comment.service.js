@@ -17,7 +17,6 @@ const common_1 = require("@nestjs/common");
 const typeorm_1 = require("typeorm");
 const comment_entity_1 = require("../entities/comment.entity");
 const typeorm_2 = require("@nestjs/typeorm");
-const constants_1 = require("../utils/constants");
 const user_entity_1 = require("../entities/user.entity");
 let CommentService = class CommentService {
     constructor(commentRepository, userRepository) {
@@ -25,18 +24,27 @@ let CommentService = class CommentService {
         this.userRepository = userRepository;
     }
     async findAll(paginationDto, sellerId) {
-        return await this.commentRepository.find({
+        const comments = await this.commentRepository.find({
             where: {
                 sellerId: sellerId,
             },
-            skip: paginationDto.skip,
-            take: paginationDto.limit ?? constants_1.DEFAULT_PAGE_SIZE,
         });
+        const seller = await this.userRepository.findOne({
+            where: {
+                id: sellerId,
+            }
+        });
+        return {
+            comments,
+            sellerName: seller.name,
+            sellerRate: seller.rate,
+        };
     }
     async create(body, userRole, userId) {
         if (userRole === "seller") {
             throw new common_1.UnauthorizedException("Sellers can't leave comments!");
         }
+        console.log(body);
         const seller = await this.userRepository.findOne({
             where: {
                 id: body.sellerId,
@@ -44,31 +52,26 @@ let CommentService = class CommentService {
         });
         seller.rates.push(+body.rate);
         await this.userRepository.save(seller);
+        seller.rate = await this.countRate(body.sellerId);
+        await this.userRepository.save(seller);
         body.date = new Date().toISOString();
         body.userId = userId;
         return await this.commentRepository.save(body);
     }
-    async update(id, data, userId) {
-        const comment = await this.commentRepository.findOne({
+    async countRate(userId) {
+        const user = await this.userRepository.findOne({
             where: {
-                userId: userId,
+                id: userId,
             }
         });
-        if (!comment) {
-            throw new common_1.UnauthorizedException("You don't have access to this comment.");
+        if (!user) {
+            throw new common_1.NotFoundException('User not found');
         }
-        return await this.commentRepository.update(id, data);
-    }
-    async delete(id, userId) {
-        const comment = await this.commentRepository.findOne({
-            where: {
-                userId: userId,
-            }
-        });
-        if (!comment) {
-            throw new common_1.UnauthorizedException("You don't have access to this comment.");
+        if (user.rates.length === 0) {
+            return 0;
         }
-        return await this.commentRepository.delete(id);
+        const totalRating = user.rates.reduce((sum, rate) => sum + rate, 0);
+        return parseFloat((totalRating / user.rates.length).toFixed(2));
     }
 };
 exports.CommentService = CommentService;

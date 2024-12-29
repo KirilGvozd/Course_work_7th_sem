@@ -149,7 +149,7 @@ const ItemPage = () => {
           <Spacer y={0.5} />
           <h4>Price: {item.price}$</h4>
           <h4>
-            <a href={"/user/:id"}>Seller: {item.sellerName}</a>
+            <a href={`/user/${item.userId}`}>Seller: {item.sellerName}</a>
           </h4>
         </div>
 

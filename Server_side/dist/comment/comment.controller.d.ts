@@ -4,8 +4,10 @@ import { PaginationDto } from "../pagination.dto";
 export declare class CommentController {
     private readonly commentService;
     constructor(commentService: CommentService);
-    findAll(paginationDto: PaginationDto, request: any): Promise<import("../entities/comment.entity").Comment[]>;
-    create(body: CreateCommentDto, request: any): Promise<CreateCommentDto & import("../entities/comment.entity").Comment>;
-    update(body: CreateCommentDto, id: number, request: any): Promise<import("typeorm").UpdateResult>;
-    delete(id: number, request: any): Promise<import("typeorm").DeleteResult>;
+    findAll(paginationDto: PaginationDto, request: any, id: number): Promise<{
+        comments: import("../entities/comment.entity").Comment[];
+        sellerName: string;
+        sellerRate: number;
+    }>;
+    create(body: any, request: any, files: Express.Multer.File[]): Promise<CreateCommentDto & import("../entities/comment.entity").Comment>;
 }

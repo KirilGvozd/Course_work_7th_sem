@@ -18,18 +18,8 @@ export declare class ItemService {
         total: number;
     }>;
     findOne(id: number): Promise<{
+        result: Item;
         sellerName: string;
-        id: number;
-        userId: number;
-        user: User;
-        typeId: number;
-        type: import("../entities/type.entity").Type;
-        prices: number[];
-        images: string[];
-        name: string;
-        description: string;
-        price: number;
-        users: User[];
     }>;
     create(body: any, user: {
         userId: number;

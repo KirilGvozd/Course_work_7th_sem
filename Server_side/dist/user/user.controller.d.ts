@@ -8,6 +8,5 @@ export declare class UserController {
     addToFavourites(body: AddToFavouritesDto, request: any): Promise<import("../entities/user.entity").User>;
     findOne(request: any): Promise<import("../entities/user.entity").User>;
     findFavourites(request: any): Promise<import("../entities/item.entity").Item[]>;
-    getRating(request: any): Promise<number>;
     removeFromFavourites(itemId: number, request: any): Promise<void>;
 }

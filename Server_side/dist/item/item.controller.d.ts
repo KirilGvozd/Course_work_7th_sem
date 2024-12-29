@@ -8,18 +8,8 @@ export declare class ItemController {
         total: number;
     }>;
     findOne(id: number): Promise<{
+        result: import("../entities/item.entity").Item;
         sellerName: string;
-        id: number;
-        userId: number;
-        user: import("../entities/user.entity").User;
-        typeId: number;
-        type: import("../entities/type.entity").Type;
-        prices: number[];
-        images: string[];
-        name: string;
-        description: string;
-        price: number;
-        users: import("../entities/user.entity").User[];
     }>;
     create(body: any, request: any, files: Express.Multer.File[]): Promise<any>;
     update(id: number, body: any, files: Express.Multer.File[], request: any): Promise<any>;

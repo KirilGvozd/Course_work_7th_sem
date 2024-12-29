@@ -55,7 +55,7 @@ let ItemService = class ItemService {
             throw new common_1.NotFoundException("Not Found");
         }
         return {
-            ...result,
+            result,
             sellerName: result.user.name,
         };
     }

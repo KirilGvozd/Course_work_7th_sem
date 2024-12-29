@@ -14,12 +14,18 @@ const typeorm_1 = require("@nestjs/typeorm");
 const comment_entity_1 = require("../entities/comment.entity");
 const jwt_strategy_1 = require("../auth/jwt.strategy");
 const user_entity_1 = require("../entities/user.entity");
+const platform_express_1 = require("@nestjs/platform-express");
 let CommentModule = class CommentModule {
 };
 exports.CommentModule = CommentModule;
 exports.CommentModule = CommentModule = __decorate([
     (0, common_1.Module)({
-        imports: [typeorm_1.TypeOrmModule.forFeature([comment_entity_1.Comment, user_entity_1.User])],
+        imports: [
+            typeorm_1.TypeOrmModule.forFeature([comment_entity_1.Comment, user_entity_1.User]),
+            platform_express_1.MulterModule.register({
+                dest: './uploads',
+            }),
+        ],
         controllers: [comment_controller_1.CommentController],
         providers: [comment_service_1.CommentService, jwt_strategy_1.JwtStrategy],
     })

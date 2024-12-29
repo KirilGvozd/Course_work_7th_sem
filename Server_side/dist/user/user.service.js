@@ -101,21 +101,6 @@ let UserService = class UserService {
         }
         return await this.itemRepository.findByIds(user.favourites);
     }
-    async countRate(userId) {
-        const user = await this.userRepository.findOne({
-            where: {
-                id: userId,
-            }
-        });
-        if (!user) {
-            throw new common_1.NotFoundException('User not found');
-        }
-        if (user.rates.length === 0) {
-            return 0;
-        }
-        const totalRating = user.rates.reduce((sum, rate) => sum + rate, 0);
-        return parseFloat((totalRating / user.rates.length).toFixed(2));
-    }
 };
 exports.UserService = UserService;
 exports.UserService = UserService = __decorate([

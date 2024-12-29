@@ -58,7 +58,7 @@ export class ItemService {
         }
 
         return {
-            ...result,
+            result,
             sellerName: result.user.name,
         };
     }

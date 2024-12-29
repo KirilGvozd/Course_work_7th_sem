@@ -9,42 +9,51 @@ import {
   Slider,
   Progress,
 } from "@nextui-org/react";
+import { useParams } from "react-router-dom";
+
+import api from "@/utils/api.ts";
 
 interface Review {
   id: number;
   name: string;
   text: string;
-  rating: number;
-  images: File[];
+  rate: number;
+  attachments: string[];
 }
 
 const SellerPage: React.FC = () => {
-  const [reviews, setReviews] = useState<Review[]>([
-    {
-      id: 1,
-      name: "Иван",
-      text: "Отличный продавец! Всё быстро и качественно.",
-      rating: 90,
-      images: [],
-    },
-    {
-      id: 2,
-      name: "Ольга",
-      text: "Товар соответствует описанию. Спасибо!",
-      rating: 80,
-      images: [],
-    },
-  ]);
+  const [reviews, setReviews] = useState<Review[]>([]);
+  const [sellerName, setSellerName] = useState<string>("");
+  const [sellerRate, setSellerRate] = useState<number>();
   const [newReview, setNewReview] = useState<Review>({
     id: 0,
     name: "",
     text: "",
-    rating: 50,
-    images: [],
+    rate: 3,
+    attachments: [],
   });
+  const [imageFiles, setImageFiles] = useState<File[]>([]);
   const [imagePreview, setImagePreview] = useState<string[]>([]);
   const [isImageOpen, setIsImageOpen] = useState(false);
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
+  const { id } = useParams();
+
+  useEffect(() => {
+    // Загрузка отзывов
+    const fetchReviews = async () => {
+      try {
+        const response = await api.get(`/comment/${id}`);
+
+        setReviews(response.data.comments);
+        setSellerName(response.data.sellerName);
+        setSellerRate(response.data.sellerRate);
+      } catch (error) {
+        console.error("Ошибка загрузки отзывов:", error);
+      }
+    };
+
+    fetchReviews();
+  }, [id]);
 
   const handleInputChange = (
     e: ChangeEvent<HTMLInputElement | HTMLTextAreaElement>,
@@ -57,7 +66,7 @@ const SellerPage: React.FC = () => {
   const handleRatingChange = (value: number | number[]) => {
     const rating = Array.isArray(value) ? value[0] : value;
 
-    setNewReview({ ...newReview, rating });
+    setNewReview({ ...newReview, rate: rating });
   };
 
   const handleImageUpload = (e: ChangeEvent<HTMLInputElement>) => {
@@ -66,14 +75,43 @@ const SellerPage: React.FC = () => {
     const previews = files.map((file) => URL.createObjectURL(file));
 
     setImagePreview(previews);
-    setNewReview({ ...newReview, images: files });
+    setImageFiles(files);
   };
 
-  const handleSubmitReview = () => {
-    if (newReview.name && newReview.text && newReview.rating) {
-      setReviews([...reviews, { ...newReview, id: reviews.length + 1 }]);
-      setNewReview({ id: 0, name: "", text: "", rating: 50, images: [] });
-      setImagePreview([]);
+  const handleSubmitReview = async () => {
+    if (newReview.name && newReview.text && newReview.rate) {
+      const formData = new FormData();
+
+      // Добавляем текстовые данные
+      formData.append("name", newReview.name);
+      formData.append("text", newReview.text);
+      formData.append("rate", newReview.rate.toString());
+      formData.append("sellerId", `${id}`);
+
+      imageFiles.forEach((file) => {
+        formData.append("images", file);
+      });
+
+      try {
+        const response = await fetch("http://localhost:4000/comment", {
+          method: "POST",
+          body: formData,
+          credentials: "include",
+        });
+
+        if (response.ok) {
+          const data = await response.json();
+
+          setReviews([...reviews, data]);
+          setNewReview({ id: 0, name: "", text: "", rate: 3, attachments: [] });
+          setImagePreview([]);
+          setImageFiles([]);
+        } else {
+          console.error("Ошибка отправки отзыва:", response.statusText);
+        }
+      } catch (error) {
+        console.error("Ошибка отправки отзыва:", error);
+      }
     } else {
       alert("Заполните все поля отзыва!");
     }
@@ -89,17 +127,10 @@ const SellerPage: React.FC = () => {
     setSelectedImage(null);
   };
 
-  // Clean up object URLs when no longer needed
-  useEffect(() => {
-    return () => {
-      imagePreview.forEach(URL.revokeObjectURL);
-    };
-  }, [imagePreview]);
-
   return (
     <div style={{ maxWidth: "800px", margin: "0 auto", padding: "20px" }}>
       <Card>
-        <h2>Имя продавца</h2>
+        <h2>{sellerName}</h2>
         <Progress
           aria-label="Рейтинг продавца"
           classNames={{
@@ -114,7 +145,7 @@ const SellerPage: React.FC = () => {
           maxValue={5}
           showValueLabel={true}
           size="md"
-          value={3.5}
+          value={sellerRate}
         />
       </Card>
 
@@ -125,7 +156,7 @@ const SellerPage: React.FC = () => {
         <Card key={review.id} style={{ marginBottom: "20px" }}>
           <h4>{review.name}</h4>
           <Progress
-            aria-label={`Рейтинг отзыва ${review.id}`}
+            aria-label={`Рейтинг отзыва ${review.rate}`}
             classNames={{
               base: "max-w-md",
               track: "drop-shadow-md border border-default",
@@ -134,33 +165,38 @@ const SellerPage: React.FC = () => {
               label: "tracking-wider font-medium text-default-600",
               value: "text-foreground/60",
             }}
+            formatOptions={{ style: "decimal" }}
             maxValue={5}
             showValueLabel={true}
             size="md"
-            value={review.rating / 20}
+            value={review.rate}
           />
           <p>{review.text}</p>
-          {review.images.length > 0 && (
-            <div style={{ display: "flex", gap: "10px", flexWrap: "wrap" }}>
-              {review.images.map((image, index) => (
-                <Image
-                  key={index}
-                  alt={`Review image ${index + 1}`}
-                  height={100}
-                  src={URL.createObjectURL(image)}
-                  style={{ cursor: "pointer" }}
-                  width={100}
-                  onClick={() => handleImageClick(URL.createObjectURL(image))}
-                />
-              ))}
-            </div>
-          )}
+          {Array.isArray(review.attachments) &&
+            review.attachments.length > 0 && (
+              <div style={{ display: "flex", gap: "10px", flexWrap: "wrap" }}>
+                {review.attachments.map((image, index) => {
+                  const imageUrl = `http://localhost:4000/${image}`;
+
+                  return (
+                    <Image
+                      key={index}
+                      alt={`Review image ${index + 1}`}
+                      height={100}
+                      src={imageUrl}
+                      style={{ cursor: "pointer" }}
+                      width={100}
+                      onClick={() => handleImageClick(imageUrl)}
+                    />
+                  );
+                })}
+              </div>
+            )}
         </Card>
       ))}
 
       {/* Всплывающее окно с картинкой */}
       {isImageOpen && selectedImage && (
-        // eslint-disable-next-line jsx-a11y/no-static-element-interactions,jsx-a11y/click-events-have-key-events
         <div
           style={{
             position: "fixed",
@@ -210,17 +246,17 @@ const SellerPage: React.FC = () => {
       />
       <Slider
         className="max-w-md"
-        defaultValue={newReview.rating}
+        defaultValue={newReview.rate}
         label="Оценка"
-        maxValue={100}
-        minValue={0}
+        maxValue={5}
+        minValue={1}
         step={1}
         onChange={handleRatingChange}
       />
       <Spacer y={1} />
-      <input
+      <Input
         multiple
-        accept="image/*"
+        label="Upload Images"
         type="file"
         onChange={handleImageUpload}
       />

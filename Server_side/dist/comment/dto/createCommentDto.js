@@ -19,14 +19,12 @@ __decorate([
     (0, swagger_1.ApiProperty)({
         description: "Id of the current user",
     }),
-    (0, class_validator_1.IsInt)(),
     __metadata("design:type", Number)
 ], CreateCommentDto.prototype, "userId", void 0);
 __decorate([
     (0, swagger_1.ApiProperty)({
         description: "Id of the seller",
     }),
-    (0, class_validator_1.IsInt)(),
     __metadata("design:type", Number)
 ], CreateCommentDto.prototype, "sellerId", void 0);
 __decorate([
@@ -34,7 +32,6 @@ __decorate([
         description: "Images",
         default: [],
     }),
-    (0, class_validator_1.IsArray)(),
     __metadata("design:type", Array)
 ], CreateCommentDto.prototype, "attachments", void 0);
 __decorate([
@@ -56,7 +53,6 @@ __decorate([
         description: "Rate of the seller",
         default: 5,
     }),
-    (0, class_validator_1.IsInt)(),
     __metadata("design:type", Number)
 ], CreateCommentDto.prototype, "rate", void 0);
 //# sourceMappingURL=createCommentDto.js.map
