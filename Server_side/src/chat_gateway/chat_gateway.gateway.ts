@@ -12,7 +12,8 @@ import { Chat } from '../entities/chat.entity';
 
 @WebSocketGateway({
   cors: {
-    origin: "*",
+    origin: "http://localhost:5173",
+    credentials: true,
   }
 })
 export class ChatGatewayGateway implements OnGatewayInit, OnGatewayConnection, OnGatewayDisconnect {
@@ -21,9 +22,19 @@ export class ChatGatewayGateway implements OnGatewayInit, OnGatewayConnection, O
   @WebSocketServer() server: Server;
 
   @SubscribeMessage('sendMessage')
-  async handleSendMessage(client: Socket, payload: Chat): Promise<void> {
-    await this.chatService.create(payload);
-    this.server.emit('recMessage', payload);
+  async handleSendMessage(client: Socket, payload: Chat) {
+    const savedMessage = await this.chatService.create(payload);
+    this.server.to(`item-${payload.itemId}`).emit('recMessage', savedMessage);
+  }
+
+  @SubscribeMessage('joinRoom')
+  handleJoinRoom(client: Socket, { itemId }: { itemId: number }): void {
+    client.join(`item-${itemId}`);
+  }
+
+  @SubscribeMessage('leaveRoom')
+  handleLeaveRoom(client: Socket, { itemId }: { itemId: number }): void {
+    client.leave(`item-${itemId}`);
   }
 
   afterInit(server: Server) {

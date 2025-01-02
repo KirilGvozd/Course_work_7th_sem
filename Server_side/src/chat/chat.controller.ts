@@ -1,7 +1,18 @@
-import {Body, Controller, Delete, Get, Param, ParseIntPipe, Post, Put, Query, Req, UseGuards} from "@nestjs/common";
+import {
+    Body,
+    Controller,
+    Delete,
+    ForbiddenException,
+    Get,
+    Param,
+    ParseIntPipe,
+    Post,
+    Put,
+    Req,
+    UseGuards
+} from "@nestjs/common";
 import {ChatService} from "./chat.service";
 import {CreateChatDto} from "./dto/createChatDto";
-import {PaginationDto} from "../pagination.dto";
 import {UpdateChatDto} from "./dto/updateChatDto.dto";
 import {JwtAuthGuard} from "../auth/jwt-auth.guard";
 import {ApiResponse} from "@nestjs/swagger";
@@ -11,28 +22,25 @@ import {ApiResponse} from "@nestjs/swagger";
 export class ChatController {
     constructor(private readonly chatService: ChatService) {}
 
-    @Get()
-    @ApiResponse({ status: 200, description: 'Your chats has been found.'})
-    @ApiResponse({ status: 401, description: "You don't have access to this chats."})
-    async findAll(@Query() paginationDto: PaginationDto, @Req() request) {
-        const userId = request.user.id;
-        return await this.chatService.findAll(paginationDto, userId);
+    @Get('/item/:itemId')
+    @ApiResponse({ status: 200, description: 'Chat has been successfully fetched.'})
+    @ApiResponse({ status: 401, description: "You don't have access to create chats!"})
+    async getChatsByItem(@Param('itemId') itemId: number, @Req() req) {
+        const userId = req.user.userId;
+        return this.chatService.findByItem(itemId, userId);
     }
 
-    @Get(':id')
-    @ApiResponse({ status: 200, description: 'Chat has been found.'})
-    @ApiResponse({ status: 401, description: "You don't have access to this chat."})
-    async findChat(@Req() request, @Param('id', ParseIntPipe) id: number) {
-        const userId = request.user.id;
-        const receiverId = request.receiver.id;
-        return await this.chatService.findChat(id, userId, receiverId);
+    @Get()
+    async getChatsForBuyer(@Req() req) {
+        const userId = req.user.userId;
+        return this.chatService.findChatsByBuyer(userId);
     }
 
     @Post()
     @ApiResponse({ status: 201, description: 'Chat has been successfully created.'})
     @ApiResponse({ status: 401, description: "You don't have access to create chats!"})
     async create(@Body() body: CreateChatDto) {
-        await this.chatService.create(body);
+        return await this.chatService.create(body);
     }
 
     @Put(':id')
@@ -47,7 +55,6 @@ export class ChatController {
     @ApiResponse({ status: 201, description: 'Message was successfully removed.'})
     @ApiResponse({ status: 401, description: "You don't have access to remove this message!"})
     async delete(@Param('id', ParseIntPipe) id: number, @Req() request) {
-        const userId = request.user.id;
-        await this.chatService.delete(id, userId);
+        await this.chatService.delete(id);
     }
 }

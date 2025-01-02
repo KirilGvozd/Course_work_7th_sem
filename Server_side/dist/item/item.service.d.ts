@@ -17,10 +17,7 @@ export declare class ItemService {
         items: Item[];
         total: number;
     }>;
-    findOne(id: number): Promise<{
-        result: Item;
-        sellerName: string;
-    }>;
+    findOne(id: number): Promise<Item>;
     create(body: any, user: {
         userId: number;
         role: string;

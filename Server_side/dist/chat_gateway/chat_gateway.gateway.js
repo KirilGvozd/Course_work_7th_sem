@@ -19,8 +19,14 @@ let ChatGatewayGateway = class ChatGatewayGateway {
         this.chatService = chatService;
     }
     async handleSendMessage(client, payload) {
-        await this.chatService.create(payload);
-        this.server.emit('recMessage', payload);
+        const savedMessage = await this.chatService.create(payload);
+        this.server.to(`item-${payload.itemId}`).emit('recMessage', savedMessage);
+    }
+    handleJoinRoom(client, { itemId }) {
+        client.join(`item-${itemId}`);
+    }
+    handleLeaveRoom(client, { itemId }) {
+        client.leave(`item-${itemId}`);
     }
     afterInit(server) {
         console.log(server);
@@ -43,10 +49,23 @@ __decorate([
     __metadata("design:paramtypes", [socket_io_1.Socket, chat_entity_1.Chat]),
     __metadata("design:returntype", Promise)
 ], ChatGatewayGateway.prototype, "handleSendMessage", null);
+__decorate([
+    (0, websockets_1.SubscribeMessage)('joinRoom'),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [socket_io_1.Socket, Object]),
+    __metadata("design:returntype", void 0)
+], ChatGatewayGateway.prototype, "handleJoinRoom", null);
+__decorate([
+    (0, websockets_1.SubscribeMessage)('leaveRoom'),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [socket_io_1.Socket, Object]),
+    __metadata("design:returntype", void 0)
+], ChatGatewayGateway.prototype, "handleLeaveRoom", null);
 exports.ChatGatewayGateway = ChatGatewayGateway = __decorate([
     (0, websockets_1.WebSocketGateway)({
         cors: {
-            origin: "*",
+            origin: "http://localhost:5173",
+            credentials: true,
         }
     }),
     __metadata("design:paramtypes", [chat_service_1.ChatService])

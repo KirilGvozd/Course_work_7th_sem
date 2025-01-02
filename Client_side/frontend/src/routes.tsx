@@ -9,6 +9,8 @@ import AddItemPage from "@/pages/item/AddItem.tsx";
 import EditItemPage from "@/pages/item/EditItem.tsx";
 import FavouritesPage from "@/pages/user/FavouritesPage.tsx";
 import SellerPage from "@/pages/user/[id].tsx";
+import ChatPage from "@/pages/chat/item/[id].tsx";
+import ChatList from "@/pages/chat/ChatList.tsx";
 
 const RoutesComponent = () => {
   return (
@@ -21,6 +23,8 @@ const RoutesComponent = () => {
       <Route element={<EditItemPage />} path="/edit-item/:id" />
       <Route element={<FavouritesPage />} path={"/favourites"} />
       <Route element={<SellerPage />} path="/user/:id" />
+      <Route element={<ChatPage />} path="/chat/item/:id" />
+      <Route element={<ChatList />} path="/chat" />
     </Routes>
   );
 };

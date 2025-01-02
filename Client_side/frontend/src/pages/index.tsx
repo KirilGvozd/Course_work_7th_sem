@@ -1,6 +1,5 @@
 import React, { useContext, useEffect, useState } from "react";
 
-import Header from "../components/Header";
 import ProductCard from "../components/ProductCard";
 import { fetchItems } from "../services/itemService";
 
@@ -52,7 +51,6 @@ const HomePage: React.FC = () => {
 
   return (
     <>
-      <Header />
       <main style={{ padding: "20px" }}>
         <h1>Available Products</h1>
 

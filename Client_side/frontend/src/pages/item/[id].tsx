@@ -13,7 +13,7 @@ import {
 const ItemPage = () => {
   const { id } = useParams(); // Используем useParams для получения параметра id
   const navigate = useNavigate(); // Для навигации по маршрутам
-  const { user } = useContext(AuthContext); // Получаем пользователя из контекста
+  const { user, isLoggedIn } = useContext(AuthContext); // Получаем пользователя из контекста
 
   const [item, setItem] = useState<any>(null);
   const [currentIndex, setCurrentIndex] = useState(0); // Индекс текущего изображения
@@ -149,7 +149,7 @@ const ItemPage = () => {
           <Spacer y={0.5} />
           <h4>Price: {item.price}$</h4>
           <h4>
-            <a href={`/user/${item.userId}`}>Seller: {item.sellerName}</a>
+            <a href={`/user/${item.user.id}`}>Seller: {item.user.name}</a>
           </h4>
         </div>
 
@@ -162,10 +162,15 @@ const ItemPage = () => {
         >
           <Button onClick={() => navigate("/")}>Назад</Button>
 
-          {/* Показываем кнопку "Добавить в избранное", если пользователь не админ и товар не в избранном */}
-          {!isAdmin && !isFavourite && (
+          {isLoggedIn && !isAdmin && !isFavourite && (
             <Button color="secondary" onClick={addItemToFavourites}>
               Добавить в избранное
+            </Button>
+          )}
+
+          {isLoggedIn && !isAdmin && (
+            <Button onClick={() => navigate(`/chat/item/${id}`)}>
+              Написать продавцу
             </Button>
           )}
 

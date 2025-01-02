@@ -20,7 +20,7 @@ export class Chat {
     messageText: string;
 
     @Column()
-    messageDate: string = new Date().toISOString();
+    messageDate: string;
 
     @ManyToOne(() => Item, (item) => item.id)
     @JoinColumn({name: 'itemId'})

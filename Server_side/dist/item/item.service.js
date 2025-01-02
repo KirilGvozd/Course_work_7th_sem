@@ -54,10 +54,7 @@ let ItemService = class ItemService {
         if (!result) {
             throw new common_1.NotFoundException("Not Found");
         }
-        return {
-            result,
-            sellerName: result.user.name,
-        };
+        return result;
     }
     async create(body, user) {
         if (user.role === "buyer") {

@@ -42,9 +42,10 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       });
 
       if (response.ok) {
-        const userData: User = await response.json(); // Type the response
+        const userData: User = await response.json();
 
         setIsLoggedIn(true);
+        console.log(isLoggedIn);
         setUser(userData);
       } else if (response.status === 401) {
         setIsLoggedIn(false);

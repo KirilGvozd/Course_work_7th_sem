@@ -14,9 +14,6 @@ const typeorm_1 = require("typeorm");
 const user_entity_1 = require("./user.entity");
 const item_entity_1 = require("./item.entity");
 let Chat = class Chat {
-    constructor() {
-        this.messageDate = new Date().toISOString();
-    }
 };
 exports.Chat = Chat;
 __decorate([

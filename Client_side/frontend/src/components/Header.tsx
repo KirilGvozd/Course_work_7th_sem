@@ -33,19 +33,26 @@ const Header = () => {
           <>
             {user && (
               <NavbarItem>
-                {user.role === "seller" ? ( // Check for seller role
-                  <Button as="a" href="/add-item" variant="solid">
-                    Add Item
-                  </Button>
+                {user.role === "seller" ? (
+                  <>
+                    <Button as="a" href="/add-item" variant="solid">
+                      Add Item
+                    </Button>
+                  </>
                 ) : (
                   <Button as="a" href="/favourites" variant="solid">
                     Favourites
-                  </Button> // Display user info
+                  </Button>
                 )}
               </NavbarItem>
             )}
             <NavbarItem>
-              <Button variant="solid" onClick={logout}>
+              <Button as="a" href="/chat" variant="solid">
+                Chats
+              </Button>
+            </NavbarItem>
+            <NavbarItem>
+              <Button as="a" href="/" variant="solid" onClick={logout}>
                 Logout
               </Button>
             </NavbarItem>

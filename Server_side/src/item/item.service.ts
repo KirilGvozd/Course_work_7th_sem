@@ -57,10 +57,7 @@ export class ItemService {
             throw new NotFoundException("Not Found");
         }
 
-        return {
-            result,
-            sellerName: result.user.name,
-        };
+        return result;
     }
 
     async create(body: any, user: {userId: number, role: string}) {

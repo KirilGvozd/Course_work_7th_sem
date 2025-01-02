@@ -1,6 +1,5 @@
 import React, { useEffect, useState } from "react";
 
-import Header from "@/components/Header.tsx";
 import { getFavourites } from "@/services/itemService.ts";
 import FavouriteProductCard from "@/components/FavouriteProductCard.tsx";
 
@@ -39,7 +38,6 @@ const FavouritesPage: React.FC = () => {
 
   return (
     <>
-      <Header />
       <main style={{ padding: "20px" }}>
         <h1>My Favourites</h1>
 

@@ -18,43 +18,53 @@ export class ChatService {
         private chatRepository: Repository<Chat>
     ) {}
 
-    async findAll(paginationDto: PaginationDto, userId: number) {
-        const chats = await this.chatRepository.find({
-            where: {
-                senderId: userId
-            },
-            skip: paginationDto.skip,
-            take: paginationDto.limit ?? DEFAULT_PAGE_SIZE,
+    async findByItem(itemId: number, userId: number) {
+        return this.chatRepository.find({
+            where: [
+                {
+                    itemId: itemId,
+                    senderId: userId,
+                },
+                {
+                    itemId: itemId,
+                    receiverId: userId,
+                }
+            ],
+            relations: ['sender', 'receiver', 'item'],
+            order: { messageDate: 'ASC' },
         });
-
-        if (chats.length === 0) {
-            return { message : "You have no chats!" };
-        }
-
-        return chats;
     }
 
-    async findChat(itemId: number, senderId: number, receiverId: number) {
-        const result = await this.chatRepository.find({
-            where: {
-                senderId: senderId,
-                receiverId: receiverId,
-            }
-        });
-
-        if (!result) {
-            throw new NotFoundException("There's no chat with this user!");
+    async findChatsByBuyer(buyerId: number) {
+        try {
+            return await this.chatRepository
+                .createQueryBuilder('chat')
+                .leftJoinAndSelect('chat.item', 'item')
+                .leftJoinAndSelect('chat.sender', 'sender')
+                .leftJoinAndSelect('chat.receiver', 'receiver')
+                .where('(chat.senderId = :buyerId OR chat.receiverId = :buyerId)', { buyerId })
+                .select([
+                    'DISTINCT item.id as itemId',
+                    'item.name as itemName',
+                    'CASE WHEN chat.senderId = :buyerId THEN receiver.id ELSE sender.id END as userId',
+                    'CASE WHEN chat.senderId = :buyerId THEN receiver.name ELSE sender.name END as userName',
+                ])
+                .getRawMany();
+        } catch (error) {
+            console.error("Error finding chats by buyer:", error);
+            throw error;
         }
-
-        return result;
     }
 
-    async create(body: CreateChatDto) {
+
+    async create(body: Partial<Chat>) {
         if (body.receiverId === body.senderId) {
             throw new ConflictException("Sender and receiver ID's are the same");
         }
 
-        await this.chatRepository.save(body);
+        body.messageDate = new Date().toISOString();
+
+        return await this.chatRepository.save(body);
     }
 
     async updateMessage(messageId: number, body: UpdateChatDto, userId: number) {
@@ -70,10 +80,10 @@ export class ChatService {
         await this.chatRepository.update(messageId, body);
     }
 
-    async delete(id: number, userId: number) {
+    async delete(id: number) {
         const chat = await this.chatRepository.findOne({
             where: {
-                senderId: userId,
+                id: id,
             }
         });
 
