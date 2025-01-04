@@ -10,7 +10,7 @@ import {
 import { AuthContext } from "../context/AuthContext";
 
 const Header = () => {
-  const { isLoggedIn, logout, user } = useContext(AuthContext);
+  const { isLoggedIn, logout, user } = useContext(AuthContext); // Получаем актуальные данные из контекста
 
   return (
     <Navbar isBordered>
@@ -35,11 +35,7 @@ const Header = () => {
               <NavbarItem>
                 {user.role === "seller" ? (
                   <>
-                    <Button
-                      as="a"
-                      href="/add-item"
-                      variant="solid"
-                    >
+                    <Button as="a" href="/add-item" variant="solid">
                       Добавить товар
                     </Button>
                   </>

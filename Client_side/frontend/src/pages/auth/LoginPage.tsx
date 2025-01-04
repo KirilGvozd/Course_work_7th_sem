@@ -1,6 +1,7 @@
 import { useNavigate } from "react-router-dom";
 import { Input, Button, Card, Spacer } from "@nextui-org/react";
 import { useState } from "react";
+
 import api from "@/utils/api.ts";
 
 const LoginPage = () => {

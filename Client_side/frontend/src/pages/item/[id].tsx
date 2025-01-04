@@ -122,11 +122,15 @@ const ItemPage = () => {
                   top: "50%",
                   left: "10px",
                   transform: "translateY(-50%)",
+                  zIndex: 10,
+                  backgroundColor: "rgba(0, 0, 0, 0.5)", // Тёмный полупрозрачный фон
+                  color: "white",
                 }}
                 onClick={prevImage}
               >
                 {"<"}
               </Button>
+
               <Button
                 color="primary"
                 size="sm"
@@ -135,6 +139,9 @@ const ItemPage = () => {
                   top: "50%",
                   right: "10px",
                   transform: "translateY(-50%)",
+                  zIndex: 10,
+                  backgroundColor: "rgba(0, 0, 0, 0.5)", // Тёмный полупрозрачный фон
+                  color: "white",
                 }}
                 onClick={nextImage}
               >

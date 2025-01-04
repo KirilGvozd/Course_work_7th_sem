@@ -31,10 +31,6 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [user, setUser] = useState<User | null>(null); // Type the user state
 
-  useEffect(() => {
-    checkAuthStatus();
-  }, []);
-
   const checkAuthStatus = async () => {
     try {
       const response = await fetch("http://localhost:4000/auth/user", {
@@ -45,7 +41,6 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         const userData: User = await response.json();
 
         setIsLoggedIn(true);
-        console.log(isLoggedIn);
         setUser(userData);
       } else if (response.status === 401) {
         setIsLoggedIn(false);
@@ -58,6 +53,11 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     }
   };
 
+  // Use useEffect to check authentication status on mount
+  useEffect(() => {
+    checkAuthStatus();
+  }, []); // Empty dependency array to run only on mount
+
   const login = async (credentials: { email: string; password: string }) => {
     try {
       const response = await fetch("http://localhost:4000/auth/login", {
@@ -67,7 +67,8 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       });
 
       if (response.ok) {
-        checkAuthStatus();
+        // Call checkAuthStatus again after login
+        await checkAuthStatus();
       } else {
         console.error("Login failed");
       }
