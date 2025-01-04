@@ -1,4 +1,4 @@
-import React, { useState, ChangeEvent, useEffect } from "react";
+import React, { useState, ChangeEvent, useEffect, useContext } from "react";
 import {
   Card,
   Spacer,
@@ -12,13 +12,15 @@ import {
 import { useParams } from "react-router-dom";
 
 import api from "@/utils/api.ts";
+import { AuthContext, User } from "@/context/AuthContext.tsx";
 
 interface Review {
   id: number;
-  name: string;
+  name?: string;
   text: string;
   rate: number;
   attachments: string[];
+  user?: User;
 }
 
 const SellerPage: React.FC = () => {
@@ -27,7 +29,6 @@ const SellerPage: React.FC = () => {
   const [sellerRate, setSellerRate] = useState<number>();
   const [newReview, setNewReview] = useState<Review>({
     id: 0,
-    name: "",
     text: "",
     rate: 3,
     attachments: [],
@@ -36,22 +37,23 @@ const SellerPage: React.FC = () => {
   const [imagePreview, setImagePreview] = useState<string[]>([]);
   const [isImageOpen, setIsImageOpen] = useState(false);
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
+  const { user, isLoggedIn } = useContext(AuthContext);
+  const isAdmin = user?.role === "seller";
   const { id } = useParams();
 
+  const fetchReviews = async () => {
+    try {
+      const response = await api.get(`/comment/${id}`);
+
+      setReviews(response.data.comments);
+      setSellerName(response.data.sellerName);
+      setSellerRate(response.data.sellerRate);
+    } catch (error) {
+      console.error("Ошибка загрузки отзывов:", error);
+    }
+  };
+
   useEffect(() => {
-    // Загрузка отзывов
-    const fetchReviews = async () => {
-      try {
-        const response = await api.get(`/comment/${id}`);
-
-        setReviews(response.data.comments);
-        setSellerName(response.data.sellerName);
-        setSellerRate(response.data.sellerRate);
-      } catch (error) {
-        console.error("Ошибка загрузки отзывов:", error);
-      }
-    };
-
     fetchReviews();
   }, [id]);
 
@@ -79,11 +81,9 @@ const SellerPage: React.FC = () => {
   };
 
   const handleSubmitReview = async () => {
-    if (newReview.name && newReview.text && newReview.rate) {
+    if (newReview.text && newReview.rate) {
       const formData = new FormData();
 
-      // Добавляем текстовые данные
-      formData.append("name", newReview.name);
       formData.append("text", newReview.text);
       formData.append("rate", newReview.rate.toString());
       formData.append("sellerId", `${id}`);
@@ -99,13 +99,19 @@ const SellerPage: React.FC = () => {
           credentials: "include",
         });
 
+        if (response.status === 401) {
+          alert("Нельзя оставлять больше одного отзыва!");
+        }
+
         if (response.ok) {
           const data = await response.json();
 
-          setReviews([...reviews, data]);
-          setNewReview({ id: 0, name: "", text: "", rate: 3, attachments: [] });
+          setReviews([...reviews, { ...data, user: { ...user } }]);
+          setNewReview({ id: 0, text: "", rate: 3, attachments: [] });
           setImagePreview([]);
           setImageFiles([]);
+
+          await fetchReviews();
         } else {
           console.error("Ошибка отправки отзыва:", response.statusText);
         }
@@ -115,6 +121,21 @@ const SellerPage: React.FC = () => {
     } else {
       alert("Заполните все поля отзыва!");
     }
+  };
+
+  const handleRemoveReview = async (id: number) => {
+    const response = await fetch(`http://localhost:4000/comment/${id}`, {
+      method: "DELETE",
+      credentials: "include",
+    });
+
+    await fetchReviews();
+
+    if (response.status === 401) {
+      alert("You don't have permission to remove this comment!");
+    }
+
+    setReviews(reviews.filter((review) => review.id !== id));
   };
 
   const handleImageClick = (src: string) => {
@@ -128,9 +149,9 @@ const SellerPage: React.FC = () => {
   };
 
   return (
-    <div style={{ maxWidth: "800px", margin: "0 auto", padding: "20px" }}>
-      <Card>
-        <h2>{sellerName}</h2>
+    <div style={{ maxWidth: "500px", margin: "0 auto", padding: "20px" }}>
+      <Card style={{ padding: "1rem" }}>
+        <h2 style={{ marginBottom: "1rem" }}>{sellerName}</h2>
         <Progress
           aria-label="Рейтинг продавца"
           classNames={{
@@ -153,8 +174,8 @@ const SellerPage: React.FC = () => {
 
       <h3>Отзывы</h3>
       {reviews.map((review) => (
-        <Card key={review.id} style={{ marginBottom: "20px" }}>
-          <h4>{review.name}</h4>
+        <Card key={review.id} style={{ marginBottom: "20px", padding: "1rem" }}>
+          <h4 style={{ marginBottom: "1rem" }}>{review.user?.name}</h4>
           <Progress
             aria-label={`Рейтинг отзыва ${review.rate}`}
             classNames={{
@@ -192,6 +213,16 @@ const SellerPage: React.FC = () => {
                 })}
               </div>
             )}
+          {user && review.user?.id === user.id && (
+            <Button
+              color="danger"
+              size="sm"
+              style={{ marginLeft: "auto" }}
+              onClick={() => handleRemoveReview(review.id)}
+            >
+              Удалить отзыв
+            </Button>
+          )}
         </Card>
       ))}
 
@@ -227,61 +258,57 @@ const SellerPage: React.FC = () => {
 
       <Spacer y={2} />
 
-      <h3>Оставить отзыв</h3>
-      <Input
-        fullWidth
-        name="name"
-        placeholder="Ваше имя"
-        style={{ marginBottom: "10px" }}
-        value={newReview.name}
-        onChange={handleInputChange}
-      />
-      <Textarea
-        fullWidth
-        name="text"
-        placeholder="Ваш отзыв"
-        style={{ marginBottom: "10px" }}
-        value={newReview.text}
-        onChange={handleInputChange}
-      />
-      <Slider
-        className="max-w-md"
-        defaultValue={newReview.rate}
-        label="Оценка"
-        maxValue={5}
-        minValue={1}
-        step={1}
-        onChange={handleRatingChange}
-      />
-      <Spacer y={1} />
-      <Input
-        multiple
-        label="Upload Images"
-        type="file"
-        onChange={handleImageUpload}
-      />
-      <div
-        style={{
-          display: "flex",
-          gap: "10px",
-          flexWrap: "wrap",
-          marginTop: "10px",
-        }}
-      >
-        {imagePreview.map((src, index) => (
-          <Image
-            key={index}
-            alt={`Preview ${index + 1}`}
-            height={100}
-            src={src}
-            style={{ cursor: "pointer" }}
-            width={100}
-            onClick={() => handleImageClick(src)}
+      {isLoggedIn && !isAdmin && (
+        <>
+          <h3>Оставить отзыв</h3>
+          <Textarea
+            fullWidth
+            name="text"
+            placeholder="Ваш отзыв"
+            style={{ marginBottom: "10px" }}
+            value={newReview.text}
+            onChange={handleInputChange}
           />
-        ))}
-      </div>
-      <Spacer y={1} />
-      <Button onClick={handleSubmitReview}>Отправить</Button>
+          <Slider
+            className="max-w-md"
+            defaultValue={newReview.rate}
+            label="Оценка"
+            maxValue={5}
+            minValue={1}
+            step={1}
+            onChange={handleRatingChange}
+          />
+          <Spacer y={1} />
+          <Input
+            multiple
+            label="Загрузите фотографии"
+            type="file"
+            onChange={handleImageUpload}
+          />
+          <div
+            style={{
+              display: "flex",
+              gap: "10px",
+              flexWrap: "wrap",
+              marginTop: "10px",
+            }}
+          >
+            {imagePreview.map((src, index) => (
+              <Image
+                key={index}
+                alt={`Preview ${index + 1}`}
+                height={100}
+                src={src}
+                style={{ cursor: "pointer" }}
+                width={100}
+                onClick={() => handleImageClick(src)}
+              />
+            ))}
+          </div>
+          <Spacer y={1} />
+          <Button onClick={handleSubmitReview}>Оставить отзыв</Button>
+        </>
+      )}
     </div>
   );
 };

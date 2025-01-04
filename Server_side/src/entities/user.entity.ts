@@ -22,10 +22,13 @@ export class User {
     @Column("int", { array: true })
     rates: number[];
 
-    @Column()
+    @Column("int", { array: true, nullable: true, default: {} })
+    removedRates: number[];
+
+    @Column("numeric", { precision: 5, scale: 2, default: 0 })
     rate: number;
 
-    @ManyToMany(() => Item, (item) => item.users)
+    @ManyToMany(() => Item, (item) => item.users, { onDelete: "CASCADE" })
     @JoinTable()
     favourites: Item[];
 

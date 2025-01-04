@@ -83,7 +83,7 @@ let ItemService = class ItemService {
         };
         await this.itemRepo.save(updatedItem);
         if (body.price !== item.price) {
-            const priceChange = body.price > item.price ? 'increased' : 'decreased';
+            const priceChange = body.price > item.price ? 'повышена' : 'понижена';
             const users = await this.userRepository.find({
                 relations: ['favourites'],
             });

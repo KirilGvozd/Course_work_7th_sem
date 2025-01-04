@@ -44,11 +44,15 @@ __decorate([
     __metadata("design:type", Array)
 ], User.prototype, "rates", void 0);
 __decorate([
-    (0, typeorm_1.Column)(),
+    (0, typeorm_1.Column)("int", { array: true, nullable: true, default: {} }),
+    __metadata("design:type", Array)
+], User.prototype, "removedRates", void 0);
+__decorate([
+    (0, typeorm_1.Column)("numeric", { precision: 5, scale: 2, default: 0 }),
     __metadata("design:type", Number)
 ], User.prototype, "rate", void 0);
 __decorate([
-    (0, typeorm_1.ManyToMany)(() => item_entity_1.Item, (item) => item.users),
+    (0, typeorm_1.ManyToMany)(() => item_entity_1.Item, (item) => item.users, { onDelete: "CASCADE" }),
     (0, typeorm_1.JoinTable)(),
     __metadata("design:type", Array)
 ], User.prototype, "favourites", void 0);

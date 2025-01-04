@@ -41,4 +41,8 @@ export class CreateUserDto {
     @IsArray()
     @Type(() => Number)
     rates: number[] = [];
+
+    @IsArray()
+    @Type(() => Number)
+    removedRates: number[] = [];
 }

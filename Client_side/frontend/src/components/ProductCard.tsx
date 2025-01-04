@@ -23,12 +23,11 @@ const ProductCard: React.FC<ProductCardProps> = ({
   image,
 }) => {
   return (
-    <Card isHoverable>
-      {/* Изображение товара */}
+    <Card isHoverable style={{ width: "auto" }}>
       <CardHeader>
         <Image
           alt={name}
-          height="auto"
+          height="300px"
           src={image}
           style={{ objectFit: "cover", borderRadius: "8px" }}
           width="100%"
@@ -49,7 +48,7 @@ const ProductCard: React.FC<ProductCardProps> = ({
           href={`/item/${id}`} // Используем href для перехода
           variant="solid"
         >
-          View Details
+          Подробнее
         </Button>
       </CardFooter>
     </Card>

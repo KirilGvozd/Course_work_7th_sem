@@ -6,6 +6,7 @@ export declare class User {
     password: string;
     name: string;
     rates: number[];
+    removedRates: number[];
     rate: number;
     favourites: Item[];
     refreshToken: string;

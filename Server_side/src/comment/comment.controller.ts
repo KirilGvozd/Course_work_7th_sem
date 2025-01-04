@@ -1,7 +1,7 @@
 import {
     BadRequestException,
     Body,
-    Controller,
+    Controller, Delete,
     Get,
     Param,
     Post,
@@ -61,15 +61,18 @@ export class CommentController {
         const commentData = {
             text,
             rate,
-            sellerId: body.sellerId, // Получаем ID продавца
+            sellerId: body.sellerId,
             userId: user.userId,
-            date: new Date().toISOString(),  // Дата создания комментария
-            attachments: files?.map((file) => file.path) || [],  // Добавляем пути файлов, если они есть
+            date: new Date().toISOString(),
+            attachments: files?.map((file) => file.path) || [],
         };
 
-        console.log('Comment data:', commentData);
-
-        // Передаем данные в сервис
         return this.commentService.create(commentData, user.role, user.userId);
+    }
+
+    @Delete(':id')
+    @UseGuards(JwtAuthGuard)
+    async delete(@Req() request, @Param('id') id: number) {
+        return this.commentService.delete(id, request.user.userId);
     }
 }

@@ -13,7 +13,7 @@ import {
 const ItemPage = () => {
   const { id } = useParams(); // Используем useParams для получения параметра id
   const navigate = useNavigate(); // Для навигации по маршрутам
-  const { user, isLoggedIn } = useContext(AuthContext); // Получаем пользователя из контекста
+  const { user, isLoggedIn } = useContext(AuthContext);
 
   const [item, setItem] = useState<any>(null);
   const [currentIndex, setCurrentIndex] = useState(0); // Индекс текущего изображения
@@ -86,7 +86,7 @@ const ItemPage = () => {
       await addToFavourites(Number(item.id));
       setIsFavourite(true);
 
-      return alert("Added to Favourites");
+      return alert("Товар добавлен в избранные");
     } catch (error) {
       console.error("Error adding item to favourites:", error);
     }
@@ -147,9 +147,15 @@ const ItemPage = () => {
         <div style={{ padding: "1rem" }}>
           <p>{item.description}</p>
           <Spacer y={0.5} />
-          <h4>Price: {item.price}$</h4>
+          <h4>Цена: {item.price}$</h4>
           <h4>
-            <a href={`/user/${item.user.id}`}>Seller: {item.user.name}</a>
+            Продавец:{" "}
+            <a
+              href={`/user/${item.user.id}`}
+              style={{ textDecoration: "underline" }}
+            >
+              {item.user.name}
+            </a>
           </h4>
         </div>
 

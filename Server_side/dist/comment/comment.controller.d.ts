@@ -10,4 +10,5 @@ export declare class CommentController {
         sellerRate: number;
     }>;
     create(body: any, request: any, files: Express.Multer.File[]): Promise<CreateCommentDto & import("../entities/comment.entity").Comment>;
+    delete(request: any, id: number): Promise<import("typeorm").DeleteResult>;
 }

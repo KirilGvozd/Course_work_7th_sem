@@ -1,11 +1,11 @@
 import React, { createContext, useState, useEffect, ReactNode } from "react";
 
 // Define types
-interface User {
+export interface User {
   id: number;
   email: string;
   role?: string; // Make name optional
-  // ... other user properties
+  name?: string;
 }
 
 interface AuthContextProps {

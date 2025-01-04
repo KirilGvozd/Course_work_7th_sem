@@ -39,8 +39,7 @@ let ChatController = class ChatController {
         await this.chatService.updateMessage(id, body, userId);
     }
     async delete(id, request) {
-        const userId = request.user.id;
-        await this.chatService.delete(id, userId);
+        await this.chatService.delete(id);
     }
 };
 exports.ChatController = ChatController;

@@ -44,7 +44,7 @@ const AddItemPage = () => {
       });
 
       if (response.ok) {
-        alert("Item created successfully");
+        alert("Товар добавлен!");
         setName("");
         setDescription("");
         setPrice("");
@@ -71,41 +71,41 @@ const AddItemPage = () => {
   return (
     <Card style={{ maxWidth: 600, margin: "auto", padding: "2rem" }}>
       <form onSubmit={handleSubmit}>
-        <h2>Add Item</h2>
+        <h2>Добавить товар</h2>
 
         {error && <div style={{ color: "red" }}>{error}</div>}
 
         <Input
           required
-          label="Item Name"
+          label="Имя товара"
           value={name}
           onChange={(e) => setName(e.target.value)}
         />
         <Spacer y={1} />
         <Textarea
           required
-          label="Description"
+          label="Описание"
           value={description}
           onChange={(e) => setDescription(e.target.value)}
         />
         <Spacer y={1} />
         <Input
           required
-          label="Price"
+          label="Цена"
           type="number"
           onChange={(e) => setPrice(e.target.value)}
         />
         <Spacer y={1} />
         <Input
           multiple
-          label="Upload Images"
+          label="Загрузите фотографии"
           type="file"
           onChange={handleImageUpload}
         />
         <Spacer y={1} />
 
         <Button disabled={loading} type="submit">
-          {loading ? "Adding..." : "Add Item"}
+          {loading ? "Добавляем..." : "Добавить товар"}
         </Button>
       </form>
     </Card>

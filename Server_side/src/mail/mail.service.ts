@@ -28,10 +28,10 @@ export class MailService {
         const message = {
             from: 'no-reply@example.com',
             to: email,
-            subject: `Price Update: ${itemName}`,
-            text: `The price for the item "${itemName}" has ${priceChange}. 
-Previous Price: ${previousPrice} 
-New Price: ${newPrice}.`,
+            subject: `Обновление цены: ${itemName}`,
+            text: `Цена на товар "${itemName}" была ${priceChange}. 
+Предыдущая цена: ${previousPrice} 
+Новая цена: ${newPrice}.`,
         };
 
         await this.transporter.sendMail(message);

@@ -40,7 +40,7 @@ const FavouriteProductCard: React.FC<FavouriteProductCardProps> = ({
       <CardHeader>
         <Image
           alt={name}
-          height="auto"
+          height="300px"
           src={image}
           style={{ objectFit: "cover", borderRadius: "8px" }}
           width="100%"
@@ -55,11 +55,17 @@ const FavouriteProductCard: React.FC<FavouriteProductCardProps> = ({
       {/* Цена и кнопки */}
       <CardFooter>
         <span style={{ marginRight: "10px" }}>${price.toFixed(2)}</span>
-        <Button as="a" color="primary" href={`/item/${id}`} variant="solid">
-          View Details
+        <Button
+          as="a"
+          color="primary"
+          href={`/item/${id}`}
+          style={{ margin: "10px" }}
+          variant="solid"
+        >
+          Подробнее
         </Button>
         <Button color="danger" onClick={handleRemove}>
-          Remove
+          Удалить
         </Button>
       </CardFooter>
     </Card>

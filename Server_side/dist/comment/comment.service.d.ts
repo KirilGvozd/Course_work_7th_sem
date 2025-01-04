@@ -13,5 +13,6 @@ export declare class CommentService {
         sellerRate: number;
     }>;
     create(body: CreateCommentDto, userRole: string, userId: number): Promise<CreateCommentDto & Comment>;
+    delete(id: number, userId: number): Promise<import("typeorm").DeleteResult>;
     private countRate;
 }

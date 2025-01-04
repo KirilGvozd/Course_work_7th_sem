@@ -28,6 +28,7 @@ let CommentService = class CommentService {
             where: {
                 sellerId: sellerId,
             },
+            relations: ['user'],
         });
         const seller = await this.userRepository.findOne({
             where: {
@@ -44,12 +45,20 @@ let CommentService = class CommentService {
         if (userRole === "seller") {
             throw new common_1.UnauthorizedException("Sellers can't leave comments!");
         }
-        console.log(body);
         const seller = await this.userRepository.findOne({
             where: {
                 id: body.sellerId,
             }
         });
+        const comment = await this.commentRepository.findOne({
+            where: {
+                sellerId: seller.id,
+                userId: userId
+            }
+        });
+        if (comment) {
+            throw new common_1.UnauthorizedException("Вам нельзя отправлять повторно отзыв!");
+        }
         seller.rates.push(+body.rate);
         await this.userRepository.save(seller);
         seller.rate = await this.countRate(body.sellerId);
@@ -57,6 +66,29 @@ let CommentService = class CommentService {
         body.date = new Date().toISOString();
         body.userId = userId;
         return await this.commentRepository.save(body);
+    }
+    async delete(id, userId) {
+        const comment = await this.commentRepository.findOne({
+            where: {
+                id: id,
+            }
+        });
+        if (!comment) {
+            throw new common_1.NotFoundException("Comment does not exist.");
+        }
+        if (comment.userId !== userId) {
+            throw new common_1.UnauthorizedException("You don't have access to this comment!.");
+        }
+        const seller = await this.userRepository.findOne({
+            where: {
+                id: comment.sellerId,
+            }
+        });
+        seller.removedRates.push(+comment.rate);
+        await this.userRepository.save(seller);
+        seller.rate = await this.countRate(comment.sellerId);
+        await this.userRepository.save(seller);
+        return await this.commentRepository.delete(id);
     }
     async countRate(userId) {
         const user = await this.userRepository.findOne({
@@ -70,8 +102,16 @@ let CommentService = class CommentService {
         if (user.rates.length === 0) {
             return 0;
         }
+        if (user.rates.length === user.removedRates.length) {
+            return 0;
+        }
+        if (user.removedRates.length === 0) {
+            const totalRating = user.rates.reduce((sum, rate) => sum + rate, 0);
+            return parseFloat((totalRating / user.rates.length).toFixed(2));
+        }
         const totalRating = user.rates.reduce((sum, rate) => sum + rate, 0);
-        return parseFloat((totalRating / user.rates.length).toFixed(2));
+        const removedTotalRating = user.removedRates.reduce((sum, rate) => sum + rate, 0);
+        return parseFloat(((totalRating - removedTotalRating) / (user.rates.length - user.removedRates.length)).toFixed(2));
     }
 };
 exports.CommentService = CommentService;

@@ -48,8 +48,10 @@ let CommentController = class CommentController {
             date: new Date().toISOString(),
             attachments: files?.map((file) => file.path) || [],
         };
-        console.log('Comment data:', commentData);
         return this.commentService.create(commentData, user.role, user.userId);
+    }
+    async delete(request, id) {
+        return this.commentService.delete(id, request.user.userId);
     }
 };
 exports.CommentController = CommentController;
@@ -75,6 +77,15 @@ __decorate([
     __metadata("design:paramtypes", [Object, Object, Array]),
     __metadata("design:returntype", Promise)
 ], CommentController.prototype, "create", null);
+__decorate([
+    (0, common_1.Delete)(':id'),
+    (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard),
+    __param(0, (0, common_1.Req)()),
+    __param(1, (0, common_1.Param)('id')),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object, Number]),
+    __metadata("design:returntype", Promise)
+], CommentController.prototype, "delete", null);
 exports.CommentController = CommentController = __decorate([
     (0, swagger_1.ApiTags)('Comments'),
     (0, common_1.Controller)('comment'),

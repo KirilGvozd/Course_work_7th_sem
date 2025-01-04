@@ -6,4 +6,5 @@ export declare class CreateUserDto {
     rate: number;
     favourites: number[];
     rates: number[];
+    removedRates: number[];
 }

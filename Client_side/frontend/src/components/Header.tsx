@@ -35,13 +35,17 @@ const Header = () => {
               <NavbarItem>
                 {user.role === "seller" ? (
                   <>
-                    <Button as="a" href="/add-item" variant="solid">
-                      Add Item
+                    <Button
+                      as="a"
+                      href="/add-item"
+                      variant="solid"
+                    >
+                      Добавить товар
                     </Button>
                   </>
                 ) : (
                   <Button as="a" href="/favourites" variant="solid">
-                    Favourites
+                    Избранные
                   </Button>
                 )}
               </NavbarItem>

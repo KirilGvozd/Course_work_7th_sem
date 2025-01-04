@@ -47,6 +47,7 @@ const EditItemPage = () => {
     if (!price || isNaN(Number(price)) || Number(price) <= 0) {
       setError("Price must be a positive number.");
       setLoading(false);
+
       return;
     }
 
@@ -57,7 +58,9 @@ const EditItemPage = () => {
     formData.append("price", price.toString());
 
     // Передаем старые изображения как массив
-    existingImages.forEach((image) => formData.append("existingImages[]", image)); // Старые изображения как массив
+    existingImages.forEach((image) =>
+      formData.append("existingImages[]", image),
+    ); // Старые изображения как массив
 
     // Добавляем новые изображения
     newImages.forEach((image) => formData.append("images", image)); // Новые изображения
@@ -70,10 +73,11 @@ const EditItemPage = () => {
       });
 
       if (response.ok) {
-        alert("Item updated successfully");
+        alert("Информация была изменена");
         navigate(`/item/${id}`);
       } else {
         const errorData = await response.json();
+
         setError(errorData.message || "Something went wrong.");
       }
     } catch (err) {
@@ -82,8 +86,6 @@ const EditItemPage = () => {
       setLoading(false);
     }
   };
-
-
 
   const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files) {
@@ -102,27 +104,27 @@ const EditItemPage = () => {
   return (
     <Card style={{ maxWidth: 600, margin: "auto", padding: "2rem" }}>
       <form onSubmit={handleSubmit}>
-        <h2>Edit Item</h2>
+        <h2>Изменить информацию</h2>
 
         {error && <div style={{ color: "red" }}>{error}</div>}
 
         <Input
           required
-          label="Item Name"
+          label="Имя товара"
           value={name}
           onChange={(e) => setName(e.target.value)}
         />
         <Spacer y={1} />
         <Textarea
           required
-          label="Description"
+          label="Описание"
           value={description}
           onChange={(e) => setDescription(e.target.value)}
         />
         <Spacer y={1} />
         <Input
           required
-          label="Price"
+          label="Цена"
           type="number"
           value={price}
           onChange={(e) => setPrice(e.target.value)}
@@ -130,21 +132,21 @@ const EditItemPage = () => {
         <Spacer y={1} />
 
         <div>
-          <h4>Existing Images</h4>
+          <h4>Текущие фотографии</h4>
           <div style={{ display: "flex", flexWrap: "wrap", gap: "1rem" }}>
             {existingImages.map((image, index) => (
               <div key={index} style={{ position: "relative", width: "120px" }}>
                 <Image
                   alt={`Existing image ${index + 1}`}
                   height="auto"
-                  src={image}
+                  src={`http://localhost:4000/${image}`}
                   width="100%"
                 />
                 <Button
                   color="danger"
                   size="sm"
                   style={{
-                    position: "absolute",
+                    position: "sticky",
                     top: "5px",
                     right: "5px",
                     padding: "0.5rem",
@@ -161,7 +163,7 @@ const EditItemPage = () => {
 
         <Input
           multiple
-          label="Add New Images"
+          label="Добавить новые фотографии"
           type="file"
           onChange={handleImageUpload}
         />
@@ -169,7 +171,7 @@ const EditItemPage = () => {
 
         {newImages.length > 0 && (
           <div>
-            <h4>New Images</h4>
+            <h4>Новые фотографии</h4>
             <div style={{ display: "flex", flexWrap: "wrap", gap: "1rem" }}>
               {newImages.map((file, index) => (
                 <div
@@ -186,7 +188,7 @@ const EditItemPage = () => {
                     color="danger"
                     size="sm"
                     style={{
-                      position: "absolute",
+                      position: "sticky",
                       top: "5px",
                       right: "5px",
                       padding: "0.5rem",
@@ -203,7 +205,7 @@ const EditItemPage = () => {
         <Spacer y={1} />
 
         <Button disabled={loading} type="submit">
-          {loading ? "Updating..." : "Update Item"}
+          {loading ? "Обновляем..." : "Обновить информацию"}
         </Button>
       </form>
     </Card>

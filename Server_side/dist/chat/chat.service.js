@@ -76,10 +76,10 @@ let ChatService = class ChatService {
         }
         await this.chatRepository.update(messageId, body);
     }
-    async delete(id, userId) {
+    async delete(id) {
         const chat = await this.chatRepository.findOne({
             where: {
-                senderId: userId,
+                id: id,
             }
         });
         if (!chat) {

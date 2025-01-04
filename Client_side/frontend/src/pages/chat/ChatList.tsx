@@ -1,4 +1,5 @@
 import React, { useContext, useEffect, useState } from "react";
+import { Card } from "@nextui-org/react";
 
 import { AuthContext } from "../../context/AuthContext";
 
@@ -66,16 +67,22 @@ const ChatList: React.FC = () => {
   return (
     <>
       <div>
-        <h1>Ваши чаты</h1>
-        <ul>
+        <div style={{ display: "flex", flexWrap: "wrap", gap: "20px", marginTop: "20px", marginLeft: "20px" }}>
           {chats.map((chat) => (
-            <li key={chat.itemid}>
-              <a href={`/chat/item/${chat.itemid}`}>
-                {chat.itemname} - {chat.username}
-              </a>
-            </li>
+            <Card
+              key={chat.itemid}
+              isHoverable
+              isPressable
+              style={{ width: "300px", padding: "1rem", cursor: "pointer" }}
+              onClick={() =>
+                (window.location.href = `/chat/item/${chat.itemid}`)
+              }
+            >
+              <h3>{chat.itemname}</h3>
+              <p>Пользователь: {chat.username}</p>
+            </Card>
           ))}
-        </ul>
+        </div>
       </div>
     </>
   );
