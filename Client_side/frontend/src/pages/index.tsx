@@ -38,7 +38,6 @@ const HomePage: React.FC = () => {
         setItems(data.items);
         setTotalItems(data.total || 0);
       } catch (error) {
-        console.error("Failed to load items:", error);
       } finally {
         setLoading(false);
       }
@@ -54,7 +53,6 @@ const HomePage: React.FC = () => {
       <main style={{ padding: "20px" }}>
         <h1>Available Products</h1>
 
-        {/* Фильтры */}
         <div style={{ marginBottom: "20px" }}>
           <label style={{ marginLeft: "20px" }}>
             Min Price:
@@ -104,7 +102,6 @@ const HomePage: React.FC = () => {
           </div>
         )}
 
-        {/* Пагинация */}
         <div
           style={{
             display: "flex",

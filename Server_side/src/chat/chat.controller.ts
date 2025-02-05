@@ -2,7 +2,6 @@ import {
     Body,
     Controller,
     Delete,
-    ForbiddenException,
     Get,
     Param,
     ParseIntPipe,
@@ -24,14 +23,14 @@ export class ChatController {
 
     @Get('/item/:itemId')
     @ApiResponse({ status: 200, description: 'Chat has been successfully fetched.'})
-    @ApiResponse({ status: 401, description: "You don't have access to create chats!"})
-    async getChatsByItem(@Param('itemId') itemId: number, @Req() req) {
+    @ApiResponse({ status: 401, description: "You don't have access to access this chat!"})
+    async getChatByItem(@Param('itemId') itemId: number, @Req() req) {
         const userId = req.user.userId;
         return this.chatService.findByItem(itemId, userId);
     }
 
     @Get()
-    async getChatsForBuyer(@Req() req) {
+    async getChats(@Req() req) {
         const userId = req.user.userId;
         return this.chatService.findChatsByBuyer(userId);
     }
@@ -54,7 +53,7 @@ export class ChatController {
     @Delete(':id')
     @ApiResponse({ status: 201, description: 'Message was successfully removed.'})
     @ApiResponse({ status: 401, description: "You don't have access to remove this message!"})
-    async delete(@Param('id', ParseIntPipe) id: number, @Req() request) {
+    async delete(@Param('id', ParseIntPipe) id: number) {
         await this.chatService.delete(id);
     }
 }

@@ -1,13 +1,13 @@
-import {IsArray, IsInt, IsNumber, IsPositive, IsString, Length} from "class-validator";
+import {IsArray, IsString, Length} from "class-validator";
 import { ApiProperty } from "@nestjs/swagger";
 
 export class CreateItemDto {
     @ApiProperty({
-        description: 'ID of the item type/category',
+        description: 'ID of the item category',
         type: Number,
         example: 1
     })
-    typeId: number;
+    categoryId: number;
 
     @ApiProperty({
         description: 'ID of the user who created the item',

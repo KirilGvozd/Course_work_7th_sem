@@ -2,7 +2,7 @@ import { useEffect, useState, useContext } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { Card, Button, Image, Spacer } from "@nextui-org/react";
 
-import { AuthContext } from "@/context/AuthContext"; // Импорт контекста
+import { AuthContext } from "@/context/AuthContext";
 import {
   fetchItem,
   deleteItem,
@@ -11,13 +11,13 @@ import {
 } from "@/services/itemService.ts";
 
 const ItemPage = () => {
-  const { id } = useParams(); // Используем useParams для получения параметра id
-  const navigate = useNavigate(); // Для навигации по маршрутам
+  const { id } = useParams();
+  const navigate = useNavigate();
   const { user, isLoggedIn } = useContext(AuthContext);
 
   const [item, setItem] = useState<any>(null);
-  const [currentIndex, setCurrentIndex] = useState(0); // Индекс текущего изображения
-  const [loading, setLoading] = useState(true); // Стейт загрузки
+  const [currentIndex, setCurrentIndex] = useState(0);
+  const [loading, setLoading] = useState(true);
   const [isFavourite, setIsFavourite] = useState(false);
 
   useEffect(() => {
@@ -25,33 +25,28 @@ const ItemPage = () => {
       fetchItem(Number(id))
         .then((data) => {
           setItem(data);
-          setCurrentIndex(0); // Сбрасываем индекс на 0, когда товар загружается
-          setLoading(false); // Ожидание завершено
+          setCurrentIndex(0);
+          setLoading(false);
         })
-        .catch((err) => {
-          console.error("Failed to fetch item:", err);
-          setLoading(false); // Если произошла ошибка, завершение загрузки
+        .catch(() => {
+          setLoading(false);
         });
     }
   }, [id]);
 
   useEffect(() => {
     if (id) {
-      checkFavouriteItems(); // Проверяем, находится ли товар в избранном
+      checkFavouriteItems();
     }
   }, [id]);
 
   const checkFavouriteItems = async () => {
-    try {
-      const favouriteIds = await checkFavourites(); // Получаем список ID избранных товаров
+    const favouriteIds = await checkFavourites();
 
-      setIsFavourite(favouriteIds.includes(Number(id))); // Проверяем, есть ли текущий товар в избранном
-    } catch (error) {
-      console.error("Ошибка при проверке избранных товаров:", error);
-    }
+    setIsFavourite(favouriteIds.includes(Number(id)));
   };
 
-  if (loading) return <p>Loading...</p>; // Показываем "Loading..." до полной загрузки данных
+  if (loading) return <p>Loading...</p>;
 
   const nextImage = () => {
     setCurrentIndex((prevIndex) => (prevIndex + 1) % item.images.length);
@@ -68,40 +63,30 @@ const ItemPage = () => {
   };
 
   const handleDelete = async () => {
-    if (!user) return; // Если нет пользователя, не выполняем удаление
+    if (!user) return;
 
-    try {
-      await deleteItem(Number(id)); // Передаем токен для авторизации
-      navigate("/");
-    } catch (error) {
-      console.error("Error deleting item:", error);
-    }
+    await deleteItem(Number(id));
+    navigate("/");
   };
 
   const addItemToFavourites = async () => {
     if (!user) return;
 
-    try {
-      console.log(item.id);
-      await addToFavourites(Number(item.id));
-      setIsFavourite(true);
+    await addToFavourites(Number(item.id));
+    setIsFavourite(true);
 
-      return alert("Товар добавлен в избранные");
-    } catch (error) {
-      console.error("Error adding item to favourites:", error);
-    }
+    return alert("Товар добавлен в избранные");
   };
 
-  const isAdmin = user?.role === "seller"; // Проверяем роль пользователя
+  const isAdmin = user?.role === "seller";
 
   return (
     <div style={{ display: "flex", justifyContent: "center", padding: "2rem" }}>
-      <Card style={{ maxWidth: "600px", width: "100%" }}>
+      <Card style={{ maxWidth: "fit-content", maxHeight: "fit-content" }}>
         <div style={{ padding: "1rem" }}>
           <h2>{item.name}</h2>
         </div>
 
-        {/* Слайдер изображений */}
         <div style={{ position: "relative" }}>
           <Image
             alt={item.name}
@@ -111,7 +96,6 @@ const ItemPage = () => {
             width="100%"
           />
 
-          {/* Кнопки переключения изображений */}
           {!loading && (
             <>
               <Button
@@ -123,10 +107,10 @@ const ItemPage = () => {
                   left: "10px",
                   transform: "translateY(-50%)",
                   zIndex: 10,
-                  backgroundColor: "rgba(0, 0, 0, 0.5)", // Тёмный полупрозрачный фон
+                  backgroundColor: "rgba(0, 0, 0, 0.5)",
                   color: "white",
                 }}
-                onClick={prevImage}
+                onPress={prevImage}
               >
                 {"<"}
               </Button>
@@ -140,10 +124,10 @@ const ItemPage = () => {
                   right: "10px",
                   transform: "translateY(-50%)",
                   zIndex: 10,
-                  backgroundColor: "rgba(0, 0, 0, 0.5)", // Тёмный полупрозрачный фон
+                  backgroundColor: "rgba(0, 0, 0, 0.5)",
                   color: "white",
                 }}
-                onClick={nextImage}
+                onPress={nextImage}
               >
                 {">"}
               </Button>
@@ -173,27 +157,26 @@ const ItemPage = () => {
             padding: "1rem",
           }}
         >
-          <Button onClick={() => navigate("/")}>Назад</Button>
+          <Button onPress={() => navigate("/")}>Назад</Button>
 
           {isLoggedIn && !isAdmin && !isFavourite && (
-            <Button color="secondary" onClick={addItemToFavourites}>
+            <Button color="secondary" onPress={addItemToFavourites}>
               Добавить в избранное
             </Button>
           )}
 
           {isLoggedIn && !isAdmin && (
-            <Button onClick={() => navigate(`/chat/item/${id}`)}>
+            <Button onPress={() => navigate(`/chat/item/${id}`)}>
               Написать продавцу
             </Button>
           )}
 
-          {/* Кнопки для администратора */}
           {isAdmin && (
             <div style={{ display: "flex", gap: "1rem" }}>
-              <Button color="warning" onClick={handleEdit}>
+              <Button color="warning" onPress={handleEdit}>
                 Редактировать
               </Button>
-              <Button color="danger" onClick={handleDelete}>
+              <Button color="danger" onPress={handleDelete}>
                 Удалить
               </Button>
             </div>

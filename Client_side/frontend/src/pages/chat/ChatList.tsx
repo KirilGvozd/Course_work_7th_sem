@@ -67,14 +67,22 @@ const ChatList: React.FC = () => {
   return (
     <>
       <div>
-        <div style={{ display: "flex", flexWrap: "wrap", gap: "20px", marginTop: "20px", marginLeft: "20px" }}>
+        <div
+          style={{
+            display: "flex",
+            flexWrap: "wrap",
+            gap: "20px",
+            marginTop: "20px",
+            marginLeft: "20px",
+          }}
+        >
           {chats.map((chat) => (
             <Card
               key={chat.itemid}
               isHoverable
               isPressable
               style={{ width: "300px", padding: "1rem", cursor: "pointer" }}
-              onClick={() =>
+              onPress={() =>
                 (window.location.href = `/chat/item/${chat.itemid}`)
               }
             >

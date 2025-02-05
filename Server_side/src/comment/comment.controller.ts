@@ -5,17 +5,12 @@ import {
     Get,
     Param,
     Post,
-    Query,
     Req,
     UploadedFiles,
     UseGuards,
     UseInterceptors,
-    UsePipes,
-    ValidationPipe
 } from "@nestjs/common";
 import {CommentService} from "./comment.service";
-import {CreateCommentDto} from "./dto/createCommentDto";
-import {PaginationDto} from "../pagination.dto";
 import {JwtAuthGuard} from "../auth/jwt-auth.guard";
 import {ApiResponse, ApiTags} from "@nestjs/swagger";
 import {FilesInterceptor} from "@nestjs/platform-express";
@@ -28,19 +23,18 @@ export class CommentController {
     @Get(':id')
     @ApiResponse({ status: 200, description: 'Comments has been found.'})
     @ApiResponse({ status: 404, description: 'No comments found for this seller.'})
-    findAll(@Query() paginationDto: PaginationDto, @Req() request, @Param('id') id: number) {
-        return this.commentService.findAll(paginationDto, id);
+    findAll(@Param('id') id: number) {
+        return this.commentService.findAll(id);
     }
 
     @Post()
     @UseGuards(JwtAuthGuard)
-    @UseInterceptors(FilesInterceptor('images'))  // Обрабатываем несколько файлов
+    @UseInterceptors(FilesInterceptor('images'))
     async create(
-        @Body() body: any,  // Получаем тело запроса
-        @Req() request,    // Получаем данные о пользователе
+        @Body() body: any,
+        @Req() request,
         @UploadedFiles() files: Express.Multer.File[],
     ) {
-        // Проверяем и преобразуем данные
         const rate = Number(body.rate);
         const text = body.text;
 
@@ -57,7 +51,6 @@ export class CommentController {
             role: request.user.role,
         };
 
-        console.log(files);
         const commentData = {
             text,
             rate,

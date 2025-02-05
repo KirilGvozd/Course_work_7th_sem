@@ -1,5 +1,4 @@
 import {
-    BadRequestException,
     Body,
     Controller,
     Delete,
@@ -9,15 +8,15 @@ import {
     Put,
     Query,
     Req, UploadedFiles,
-    UseGuards, UseInterceptors, ValidationPipe,
+    UseGuards, UseInterceptors,
 } from "@nestjs/common";
 import {ItemService} from "./item.service";
-import {CreateItemDto} from "./dto/createItemDto";
 import {PaginationDto} from "../pagination.dto";
 import {JwtAuthGuard} from "../auth/jwt-auth.guard";
+import {ApiQuery, ApiResponse, ApiTags} from "@nestjs/swagger";
+import {FilesInterceptor} from "@nestjs/platform-express";
+import {CreateItemDto} from "./dto/createItemDto";
 import {UpdateItemDto} from "./dto/updateItem.dto";
-import {ApiConsumes, ApiResponse, ApiTags} from "@nestjs/swagger";
-import {FileInterceptor, FilesInterceptor} from "@nestjs/platform-express";
 
 @ApiTags('Items')
 @Controller('item')
@@ -26,6 +25,10 @@ export class ItemController {
 
     @Get()
     @ApiResponse({ status: 200, description: 'Successfully retrieved items list.'})
+    @ApiQuery({ name: 'typeId', required: false, type: Number })
+    @ApiQuery({ name: 'minPrice', required: false, type: Number })
+    @ApiQuery({ name: 'maxPrice', required: false, type: Number })
+    @ApiQuery({ name: 'sellerId', required: false, type: Number })
     findAll(@Query() paginationDto: PaginationDto, @Query('typeId') typeId?: number, @Query('minPrice') minPrice?: number,
             @Query('maxPrice') maxPrice?: number, @Query('sellerId') sellerId?: number) {
         return this.itemService.findAll(paginationDto, { typeId, minPrice, maxPrice, sellerId });
@@ -43,37 +46,18 @@ export class ItemController {
     @UseGuards(JwtAuthGuard)
     @UseInterceptors(FilesInterceptor('images'))
     async create(
-        @Body() body: any,
+        @Body() body: CreateItemDto,
         @Req() request,
         @UploadedFiles() files: Express.Multer.File[],
     ) {
-        const price = Number(body.price);
-        const typeId: number = 1;
-
-        if (isNaN(price) || price <= 0) {
-            throw new BadRequestException("Price must be a positive number.");
-        }
-
-        if (!Number.isInteger(typeId)) {
-            throw new BadRequestException("Type ID must be an integer.");
-        }
-
         const user = {
             userId: request.user.userId,
             role: request.user.role,
         };
 
-        const itemData = {
-            name: body.name,
-            description: body.description,
-            price,
-            prices: [],
-            typeId,
-            userId: user.userId,
-            images: files?.map((file) => file.path) || [],
-        };
+        body.images = files?.map((file) => file.path) || []
 
-        return this.itemService.create(itemData, user);
+        return this.itemService.create(body, user);
     }
 
 
@@ -82,47 +66,17 @@ export class ItemController {
     @UseInterceptors(FilesInterceptor('images'))
     async update(
         @Param('id') id: number,
-        @Body() body: any,
+        @Body() body: UpdateItemDto,
         @UploadedFiles() files: Express.Multer.File[],
         @Req() request,
     ) {
-        const price = Number(body.price);
-        const typeId: number = 1;
-
-        if (isNaN(price) || price <= 0) {
-            throw new BadRequestException("Price must be a positive number.");
-        }
-
-        if (!Number.isInteger(typeId)) {
-            throw new BadRequestException("Type ID must be an integer.");
-        }
-
-        const user = {
-            userId: request.user.userId,  // Получение userId из данных
-            role: request.user.role,       // Получение роли
-        };
-
-        // Обработка старых изображений. Если их нет, передаем пустой массив.
-        const existingImages = Array.isArray(body.existingImages) ? body.existingImages : [];
-
-        // Если переданы новые изображения
+        const existingImages = await this.itemService.retrieveExistingImages(id);
         const images = files ? files.map((file) => file.path) : [];
 
-        // Формирование данных для обновления
-        const updatedItemData = {
-            name: body.name,
-            description: body.description,
-            price,
-            prices: [],
-            typeId,
-            userId: user.userId,
-            images: [...existingImages, ...images], // Слияние старых и новых изображений
-        };
+        body.images = [...existingImages, ...images];
 
-        return await this.itemService.update(id, updatedItemData);
+        return await this.itemService.update(id, body, request.user.userId);
     }
-
-
 
     @Delete(':id')
     @UseGuards(JwtAuthGuard)
@@ -131,6 +85,7 @@ export class ItemController {
     @ApiResponse({ status: 404, description: 'Item not found.'})
     delete(@Param('id') id: number, @Req() request) {
         const userId = request.user.id;
+
         return this.itemService.delete(id, userId);
     }
 }

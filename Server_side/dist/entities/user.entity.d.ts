@@ -9,6 +9,4 @@ export declare class User {
     removedRates: number[];
     rate: number;
     favourites: Item[];
-    refreshToken: string;
-    hashPassword(): Promise<void>;
 }

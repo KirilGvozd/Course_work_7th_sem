@@ -1,5 +1,5 @@
 import { useParams, useNavigate } from "react-router-dom"; // Импортируем useNavigate
-import { useContext } from "react";
+import React, { useContext } from "react";
 
 import Chat from "../../../components/Chat";
 

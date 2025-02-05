@@ -10,7 +10,7 @@ import {
 import { AuthContext } from "../context/AuthContext";
 
 const Header = () => {
-  const { isLoggedIn, logout, user } = useContext(AuthContext); // Получаем актуальные данные из контекста
+  const { isLoggedIn, logout, user } = useContext(AuthContext);
 
   return (
     <Navbar isBordered>
@@ -52,7 +52,7 @@ const Header = () => {
               </Button>
             </NavbarItem>
             <NavbarItem>
-              <Button as="a" href="/" variant="solid" onClick={logout}>
+              <Button as="a" href="/" variant="solid" onPress={logout}>
                 Logout
               </Button>
             </NavbarItem>
@@ -66,7 +66,7 @@ const Header = () => {
             </NavbarItem>
             <NavbarItem>
               <Button as="a" href="/register" variant="flat">
-                Register
+                Регистрация
               </Button>
             </NavbarItem>
           </>

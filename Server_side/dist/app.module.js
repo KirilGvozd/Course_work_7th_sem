@@ -8,27 +8,28 @@ var __decorate = (this && this.__decorate) || function (decorators, target, key,
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.AppModule = void 0;
 const common_1 = require("@nestjs/common");
-const app_controller_1 = require("./app.controller");
 const app_service_1 = require("./app.service");
 const typeorm_1 = require("@nestjs/typeorm");
-const basketItem_module_1 = require("./basket_item/basketItem.module");
 const chat_module_1 = require("./chat/chat.module");
 const comment_module_1 = require("./comment/comment.module");
 const item_module_1 = require("./item/item.module");
-const type_module_1 = require("./type/type.module");
 const user_module_1 = require("./user/user.module");
 const bodyParser = require("body-parser");
 const config_1 = require("@nestjs/config");
 const item_entity_1 = require("./entities/item.entity");
 const user_entity_1 = require("./entities/user.entity");
-const basketItem_entity_1 = require("./entities/basketItem.entity");
 const chat_entity_1 = require("./entities/chat.entity");
 const comment_entity_1 = require("./entities/comment.entity");
-const type_entity_1 = require("./entities/type.entity");
 const auth_module_1 = require("./auth/auth.module");
 const chat_gateway_gateway_1 = require("./chat_gateway/chat_gateway.gateway");
 const serve_static_1 = require("@nestjs/serve-static");
 const path_1 = require("path");
+const attribute_entity_1 = require("./entities/attribute.entity");
+const category_entity_1 = require("./entities/category.entity");
+const itemAttribute_entity_1 = require("./entities/itemAttribute.entity");
+const attribute_module_1 = require("./attribute/attribute.module");
+const category_module_1 = require("./category/category.module");
+const item_attribute_module_1 = require("./item-attribute/item-attribute.module");
 let AppModule = class AppModule {
     configure(consumer) {
         consumer.apply(bodyParser.json()).forRoutes('*');
@@ -42,12 +43,11 @@ exports.AppModule = AppModule = __decorate([
                 isGlobal: true,
             }),
             auth_module_1.AuthModule,
-            basketItem_module_1.BasketItemModule,
             chat_module_1.ChatModule,
             comment_module_1.CommentModule,
             item_module_1.ItemModule,
-            type_module_1.TypeModule,
             user_module_1.UserModule,
+            attribute_module_1.AttributeModule,
             typeorm_1.TypeOrmModule.forRootAsync({
                 inject: [config_1.ConfigService],
                 useFactory: (configService) => ({
@@ -57,16 +57,23 @@ exports.AppModule = AppModule = __decorate([
                     username: configService.get("DATABASE_USERNAME"),
                     password: configService.get("DATABASE_PASSWORD"),
                     database: configService.get("DATABASE_NAME"),
-                    entities: [item_entity_1.Item, user_entity_1.User, basketItem_entity_1.BasketItem, chat_entity_1.Chat, comment_entity_1.Comment, type_entity_1.Type],
+                    entities: [item_entity_1.Item, user_entity_1.User, chat_entity_1.Chat, comment_entity_1.Comment, attribute_entity_1.Attribute, category_entity_1.Category, itemAttribute_entity_1.ItemAttribute],
                     synchronize: true,
+                    keepAlive: true,
+                    logging: true,
+                    extra: {
+                        max: 10,
+                    }
                 })
             }),
             serve_static_1.ServeStaticModule.forRoot({
                 rootPath: (0, path_1.join)(__dirname, '..', 'uploads'),
                 serveRoot: '/uploads',
             }),
+            attribute_module_1.AttributeModule,
+            category_module_1.CategoryModule,
+            item_attribute_module_1.ItemAttributeModule,
         ],
-        controllers: [app_controller_1.AppController],
         providers: [app_service_1.AppService, chat_gateway_gateway_1.ChatGatewayGateway],
     })
 ], AppModule);

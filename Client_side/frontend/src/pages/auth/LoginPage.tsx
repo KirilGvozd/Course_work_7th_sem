@@ -12,17 +12,14 @@ const LoginPage = () => {
 
   const handleLogin = async () => {
     try {
-      // Отправка запроса на сервер для авторизации
       await api.post(
         "/auth/login",
         { email, password },
-        { withCredentials: true }, // Обязательный параметр для работы с куки
+        { withCredentials: true },
       );
 
-      // Перенаправление на главную страницу
       navigate("/");
     } catch (err: any) {
-      // Обработка ошибок
       setError(err.response?.data?.message || "Не удалось выполнить вход");
     }
   };
@@ -49,11 +46,11 @@ const LoginPage = () => {
           onChange={(e) => setPassword(e.target.value)}
         />
         <Spacer y={1} />
-        <Button fullWidth onClick={handleLogin}>
+        <Button fullWidth onPress={handleLogin}>
           Войти
         </Button>
         <Spacer y={0.5} />
-        <Button fullWidth variant="flat" onClick={() => navigate("/register")}>
+        <Button fullWidth variant="flat" onPress={() => navigate("/register")}>
           Регистрация
         </Button>
       </Card>

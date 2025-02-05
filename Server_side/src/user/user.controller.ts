@@ -6,14 +6,11 @@ import {
     NotFoundException,
     Param,
     Post,
-    Put,
-    Query,
     Req,
     UseGuards
 } from "@nestjs/common";
 import {UserService} from "./user.service";
 import {CreateUserDto} from "./dto/createUserDto";
-import {PaginationDto} from "../pagination.dto";
 import {JwtAuthGuard} from "../auth/jwt-auth.guard";
 import { ApiResponse, ApiTags } from "@nestjs/swagger";
 import {AddToFavouritesDto} from "./dto/addToFavouritesDto";
@@ -86,5 +83,4 @@ export class UserController {
         const userId = request.user.userId;
         return await this.userService.removeFromFavourites(userId, itemId);
     }
-
 }

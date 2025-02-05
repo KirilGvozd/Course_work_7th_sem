@@ -6,9 +6,6 @@ import {
 import {Repository} from "typeorm";
 import {Chat} from "../entities/chat.entity";
 import {InjectRepository} from "@nestjs/typeorm";
-import {CreateChatDto} from "./dto/createChatDto";
-import {PaginationDto} from "../pagination.dto";
-import {DEFAULT_PAGE_SIZE} from "../utils/constants";
 import {UpdateChatDto} from "./dto/updateChatDto.dto";
 
 @Injectable()

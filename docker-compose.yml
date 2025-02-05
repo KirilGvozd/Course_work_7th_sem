@@ -1,0 +1,48 @@
+services:
+  backend:
+    container_name: nestJS
+    restart: always
+    build:
+      context: ./Server_side
+      dockerfile: Dockerfile
+    env_file:
+      - ./Server_side/.env
+    volumes:
+      - ./Server_side/uploads:/app/uploads
+    ports:
+      - "4000:4000"
+    depends_on:
+      - postgres
+    networks:
+      - my_network
+
+  frontend:
+    container_name: frontend
+    build:
+      context: ./Client_side/frontend
+      dockerfile: Dockerfile
+    ports:
+      - "5173:5173"
+    networks:
+      - my_network
+
+  postgres:
+    container_name: postgres
+    image: postgres:15
+    restart: always
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: KirillGvozd123
+      POSTGRES_DB: flea_market_app_db
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    networks:
+      - my_network
+
+volumes:
+  postgres-data:
+
+networks:
+  my_network:

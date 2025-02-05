@@ -3,7 +3,6 @@ import {Repository} from "typeorm";
 import {Comment} from "../entities/comment.entity";
 import {InjectRepository} from "@nestjs/typeorm";
 import {CreateCommentDto} from "./dto/createCommentDto";
-import {PaginationDto} from "../pagination.dto";
 import {User} from "../entities/user.entity";
 
 @Injectable()
@@ -15,7 +14,7 @@ export class CommentService {
         private userRepository: Repository<User>
     ) {}
 
-    async findAll(paginationDto: PaginationDto, sellerId: number) {
+    async findAll(sellerId: number) {
         const comments = await this.commentRepository.find({
             where: {
                 sellerId: sellerId,

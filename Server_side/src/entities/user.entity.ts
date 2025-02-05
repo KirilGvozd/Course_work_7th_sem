@@ -1,5 +1,4 @@
-import {BeforeInsert, Column, Entity, JoinTable, ManyToMany, ManyToOne, PrimaryGeneratedColumn} from "typeorm";
-import * as bcrypt from "bcrypt";
+import {Column, Entity, JoinTable, ManyToMany, PrimaryGeneratedColumn} from "typeorm";
 import {Item} from "./item.entity";
 
 @Entity()
@@ -31,12 +30,4 @@ export class User {
     @ManyToMany(() => Item, (item) => item.users, { onDelete: "CASCADE" })
     @JoinTable()
     favourites: Item[];
-
-    @Column({ nullable: true })
-    refreshToken: string;
-
-    @BeforeInsert()
-    async hashPassword() {
-        this.password = await bcrypt.hash(this.password, 10);
-    }
 }

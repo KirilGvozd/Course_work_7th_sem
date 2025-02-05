@@ -18,7 +18,6 @@ const auth_service_1 = require("./auth.service");
 const createUserDto_1 = require("../user/dto/createUserDto");
 const bcrypt = require("bcrypt");
 const jwt_1 = require("@nestjs/jwt");
-const passport_1 = require("@nestjs/passport");
 const user_service_1 = require("../user/user.service");
 const auth_dto_1 = require("./dto/auth.dto");
 const swagger_1 = require("@nestjs/swagger");
@@ -30,32 +29,20 @@ let AuthController = class AuthController {
     }
     async user(req) {
         try {
-            console.log('Auth check request received');
             const cookie = req.cookies['jwt'];
-            console.log('JWT cookie:', cookie ? 'present' : 'missing');
             const data = await this.jwtService.verifyAsync(cookie, { secret: process.env.JWT_SECRET });
-            console.log(data);
-            console.log('JWT verified:', data);
-            if (!data) {
-                throw new common_1.UnauthorizedException();
-            }
-            const user = await this.authService.findOne({ id: data.id });
-            console.log('User found:', user ? 'yes' : 'no');
-            if (!user) {
-                throw new common_1.UnauthorizedException('User not found');
-            }
-            return user;
+            return await this.authService.findOne({ id: data.id });
         }
-        catch (err) {
-            console.error('Auth check error:', err);
-            throw new common_1.UnauthorizedException();
+        catch (error) {
+            throw new common_1.UnauthorizedException("User not found");
         }
     }
-    async register(createUserDto, response) {
+    async register(createUserDto) {
         const user = await this.userService.findByEmail(createUserDto.email);
         if (user) {
             throw new common_1.BadRequestException("User with this email already exists!");
         }
+        createUserDto.password = await bcrypt.hash(createUserDto.password, 12);
         await this.userService.create(createUserDto);
     }
     async login(authDto, response) {
@@ -63,50 +50,19 @@ let AuthController = class AuthController {
         if (!user || !await bcrypt.compare(authDto.password, user.password)) {
             throw new common_1.BadRequestException('Invalid credentials!');
         }
-        const tokens = await this.authService.generateTokens(user);
-        await this.authService.updateRefreshToken(user.id, tokens.refreshToken);
-        response.cookie("jwt", tokens.accessToken, { httpOnly: true });
-        response.cookie("refreshToken", tokens.refreshToken, { httpOnly: true, path: '/auth/refresh' });
+        const token = await this.authService.generateToken(user);
+        response.cookie("jwt", token, { httpOnly: true });
         return {
             message: "Login successful",
-            accessToken: tokens.accessToken,
+            accessToken: token,
         };
-    }
-    async refresh(req, res) {
-        const refreshToken = req.cookies['refreshToken'];
-        if (!refreshToken) {
-            throw new common_1.UnauthorizedException("No refresh token found.");
-        }
-        try {
-            const data = await this.jwtService.verifyAsync(refreshToken, { secret: process.env.JWT_REFRESH_SECRET });
-            const isValid = await this.authService.validateRefreshToken(data.id, refreshToken);
-            if (!isValid) {
-                throw new common_1.UnauthorizedException("Invalid refresh token.");
-            }
-            const newAccessToken = await this.jwtService.signAsync({ id: data.id, role: data.role }, { secret: process.env.JWT_SECRET, expiresIn: process.env.JWT_TOKEN_EXPIRE });
-            res.cookie("jwt", newAccessToken, { httpOnly: true, sameSite: "none", secure: false });
-            return { message: "Token refreshed successfully" };
-        }
-        catch (err) {
-            throw new common_1.UnauthorizedException("Invalid refresh token.");
-        }
     }
     async logout(response, request) {
         if (!request.cookies.jwt) {
             throw new common_1.UnauthorizedException("You're not logged in!");
         }
         response.clearCookie("jwt");
-        return { message: "Success" };
-    }
-    async googleAuth() {
-    }
-    async googleAuthRedirect(req, res) {
-        const user = req.user;
-        const tokens = await this.authService.generateTokens(user);
-        await this.authService.updateRefreshToken(user.id, tokens.refreshToken);
-        res.cookie("jwt", tokens.accessToken, { httpOnly: true, sameSite: "none", secure: false });
-        res.cookie("refreshToken", tokens.refreshToken, { httpOnly: true, path: '/auth/refresh', sameSite: "none", secure: false });
-        res.redirect('http://localhost:3000');
+        return { message: "Cookie has been cleared" };
     }
 };
 exports.AuthController = AuthController;
@@ -124,9 +80,8 @@ __decorate([
     (0, swagger_1.ApiResponse)({ status: 201, description: 'User has been successfully registered.' }),
     (0, swagger_1.ApiResponse)({ status: 400, description: 'Invalid registration data or user already exists.' }),
     __param(0, (0, common_1.Body)()),
-    __param(1, (0, common_1.Res)({ passthrough: true })),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [createUserDto_1.CreateUserDto, Object]),
+    __metadata("design:paramtypes", [createUserDto_1.CreateUserDto]),
     __metadata("design:returntype", Promise)
 ], AuthController.prototype, "register", null);
 __decorate([
@@ -140,16 +95,6 @@ __decorate([
     __metadata("design:returntype", Promise)
 ], AuthController.prototype, "login", null);
 __decorate([
-    (0, common_1.Post)('refresh'),
-    (0, swagger_1.ApiResponse)({ status: 201, description: 'Token refreshed successfully.' }),
-    (0, swagger_1.ApiResponse)({ status: 401, description: 'Invalid refresh token.' }),
-    __param(0, (0, common_1.Req)()),
-    __param(1, (0, common_1.Res)({ passthrough: true })),
-    __metadata("design:type", Function),
-    __metadata("design:paramtypes", [Object, Object]),
-    __metadata("design:returntype", Promise)
-], AuthController.prototype, "refresh", null);
-__decorate([
     (0, common_1.Post)('logout'),
     (0, swagger_1.ApiResponse)({ status: 200, description: 'Successfully logged out.' }),
     (0, swagger_1.ApiResponse)({ status: 401, description: 'You are not logged in.' }),
@@ -159,24 +104,6 @@ __decorate([
     __metadata("design:paramtypes", [Object, Object]),
     __metadata("design:returntype", Promise)
 ], AuthController.prototype, "logout", null);
-__decorate([
-    (0, common_1.Get)('google'),
-    (0, swagger_1.ApiExcludeEndpoint)(),
-    (0, common_1.UseGuards)((0, passport_1.AuthGuard)('google')),
-    __metadata("design:type", Function),
-    __metadata("design:paramtypes", []),
-    __metadata("design:returntype", Promise)
-], AuthController.prototype, "googleAuth", null);
-__decorate([
-    (0, common_1.Get)('google/callback'),
-    (0, swagger_1.ApiExcludeEndpoint)(),
-    (0, common_1.UseGuards)((0, passport_1.AuthGuard)('google')),
-    __param(0, (0, common_1.Req)()),
-    __param(1, (0, common_1.Res)()),
-    __metadata("design:type", Function),
-    __metadata("design:paramtypes", [Object, Object]),
-    __metadata("design:returntype", Promise)
-], AuthController.prototype, "googleAuthRedirect", null);
 exports.AuthController = AuthController = __decorate([
     (0, swagger_1.ApiTags)('Authentication'),
     (0, common_1.Controller)('auth'),

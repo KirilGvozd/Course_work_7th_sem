@@ -2,12 +2,11 @@ import {Injectable, NotFoundException, UnauthorizedException} from "@nestjs/comm
 import {Repository} from "typeorm";
 import {Item} from "../entities/item.entity";
 import {InjectRepository} from "@nestjs/typeorm";
-import {CreateItemDto} from "./dto/createItemDto";
 import {PaginationDto} from "../pagination.dto";
 import {DEFAULT_PAGE_SIZE} from "../utils/constants";
-import {UpdateItemDto} from "./dto/updateItem.dto";
 import {MailService} from "../mail/mail.service";
 import {User} from "../entities/user.entity";
+import {UpdateItemDto} from "./dto/updateItem.dto";
 
 @Injectable()
 export class ItemService {
@@ -68,7 +67,7 @@ export class ItemService {
         return await this.itemRepo.save(body);
     }
 
-    async update(id: number, body: any) {
+    async update(id: number, body: UpdateItemDto, userId: number) {
         const item = await this.itemRepo.findOne({
             where: { id },
         });
@@ -77,7 +76,7 @@ export class ItemService {
             throw new NotFoundException("Item not found.");
         }
 
-        if (item.userId !== body.userId) {
+        if (item.userId !== userId) {
             throw new UnauthorizedException("You don't have the permission to update this item!");
         }
 
@@ -106,9 +105,6 @@ export class ItemService {
                 user.favourites.some((favourite) => favourite.id == id),
             );
 
-            console.log(usersToNotify);
-
-            // Отправляем уведомления этим пользователям
             for (const user of usersToNotify) {
                 await this.mailService.sendPriceUpdateNotification(
                     user.email,
@@ -135,5 +131,15 @@ export class ItemService {
         }
 
         return await this.itemRepo.delete(id);
+    }
+
+    async retrieveExistingImages(id: number) {
+        const item = await this.itemRepo.findOne({
+            where: {
+                id
+            }
+        });
+
+        return item.images;
     }
 }

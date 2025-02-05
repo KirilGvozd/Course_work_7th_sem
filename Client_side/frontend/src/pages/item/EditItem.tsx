@@ -12,14 +12,13 @@ import {
 import { fetchItem } from "@/services/itemService";
 
 const EditItemPage = () => {
-  const { id } = useParams(); // Получаем ID из URL
-  const navigate = useNavigate(); // Для перенаправления
-
+  const { id } = useParams();
+  const navigate = useNavigate();
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
   const [price, setPrice] = useState<string>("");
-  const [existingImages, setExistingImages] = useState<string[]>([]); // Ссылки на текущие изображения
-  const [newImages, setNewImages] = useState<File[]>([]); // Новые изображения
+  const [existingImages, setExistingImages] = useState<string[]>([]);
+  const [newImages, setNewImages] = useState<File[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string>("");
 
@@ -30,10 +29,9 @@ const EditItemPage = () => {
           setName(item.name);
           setDescription(item.description);
           setPrice(item.price);
-          setExistingImages(item.images); // Ссылки на изображения с сервера
+          setExistingImages(item.images);
         })
-        .catch((err) => {
-          console.error("Failed to fetch item:", err);
+        .catch(() => {
           setError("Failed to load item data.");
         });
     }
@@ -57,13 +55,11 @@ const EditItemPage = () => {
     formData.append("description", description);
     formData.append("price", price.toString());
 
-    // Передаем старые изображения как массив
     existingImages.forEach((image) =>
       formData.append("existingImages[]", image),
-    ); // Старые изображения как массив
+    );
 
-    // Добавляем новые изображения
-    newImages.forEach((image) => formData.append("images", image)); // Новые изображения
+    newImages.forEach((image) => formData.append("images", image));
 
     try {
       const response = await fetch(`http://localhost:4000/item/${id}`, {
@@ -151,7 +147,7 @@ const EditItemPage = () => {
                     right: "5px",
                     padding: "0.5rem",
                   }}
-                  onClick={() => handleRemoveExistingImage(index)}
+                  onPress={() => handleRemoveExistingImage(index)}
                 >
                   ✕
                 </Button>
@@ -193,7 +189,7 @@ const EditItemPage = () => {
                       right: "5px",
                       padding: "0.5rem",
                     }}
-                    onClick={() => handleRemoveNewImage(index)}
+                    onPress={() => handleRemoveNewImage(index)}
                   >
                     ✕
                   </Button>

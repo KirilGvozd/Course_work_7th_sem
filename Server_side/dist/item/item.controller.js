@@ -19,6 +19,8 @@ const pagination_dto_1 = require("../pagination.dto");
 const jwt_auth_guard_1 = require("../auth/jwt-auth.guard");
 const swagger_1 = require("@nestjs/swagger");
 const platform_express_1 = require("@nestjs/platform-express");
+const createItemDto_1 = require("./dto/createItemDto");
+const updateItem_dto_1 = require("./dto/updateItem.dto");
 let ItemController = class ItemController {
     constructor(itemService) {
         this.itemService = itemService;
@@ -30,54 +32,18 @@ let ItemController = class ItemController {
         return this.itemService.findOne(id);
     }
     async create(body, request, files) {
-        const price = Number(body.price);
-        const typeId = 1;
-        if (isNaN(price) || price <= 0) {
-            throw new common_1.BadRequestException("Price must be a positive number.");
-        }
-        if (!Number.isInteger(typeId)) {
-            throw new common_1.BadRequestException("Type ID must be an integer.");
-        }
         const user = {
             userId: request.user.userId,
             role: request.user.role,
         };
-        const itemData = {
-            name: body.name,
-            description: body.description,
-            price,
-            prices: [],
-            typeId,
-            userId: user.userId,
-            images: files?.map((file) => file.path) || [],
-        };
-        return this.itemService.create(itemData, user);
+        body.images = files?.map((file) => file.path) || [];
+        return this.itemService.create(body, user);
     }
     async update(id, body, files, request) {
-        const price = Number(body.price);
-        const typeId = 1;
-        if (isNaN(price) || price <= 0) {
-            throw new common_1.BadRequestException("Price must be a positive number.");
-        }
-        if (!Number.isInteger(typeId)) {
-            throw new common_1.BadRequestException("Type ID must be an integer.");
-        }
-        const user = {
-            userId: request.user.userId,
-            role: request.user.role,
-        };
-        const existingImages = Array.isArray(body.existingImages) ? body.existingImages : [];
+        const existingImages = await this.itemService.retrieveExistingImages(id);
         const images = files ? files.map((file) => file.path) : [];
-        const updatedItemData = {
-            name: body.name,
-            description: body.description,
-            price,
-            prices: [],
-            typeId,
-            userId: user.userId,
-            images: [...existingImages, ...images],
-        };
-        return await this.itemService.update(id, updatedItemData);
+        body.images = [...existingImages, ...images];
+        return await this.itemService.update(id, body, request.user.userId);
     }
     delete(id, request) {
         const userId = request.user.id;
@@ -88,6 +54,10 @@ exports.ItemController = ItemController;
 __decorate([
     (0, common_1.Get)(),
     (0, swagger_1.ApiResponse)({ status: 200, description: 'Successfully retrieved items list.' }),
+    (0, swagger_1.ApiQuery)({ name: 'typeId', required: false, type: Number }),
+    (0, swagger_1.ApiQuery)({ name: 'minPrice', required: false, type: Number }),
+    (0, swagger_1.ApiQuery)({ name: 'maxPrice', required: false, type: Number }),
+    (0, swagger_1.ApiQuery)({ name: 'sellerId', required: false, type: Number }),
     __param(0, (0, common_1.Query)()),
     __param(1, (0, common_1.Query)('typeId')),
     __param(2, (0, common_1.Query)('minPrice')),
@@ -114,7 +84,7 @@ __decorate([
     __param(1, (0, common_1.Req)()),
     __param(2, (0, common_1.UploadedFiles)()),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [Object, Object, Array]),
+    __metadata("design:paramtypes", [createItemDto_1.CreateItemDto, Object, Array]),
     __metadata("design:returntype", Promise)
 ], ItemController.prototype, "create", null);
 __decorate([
@@ -126,7 +96,7 @@ __decorate([
     __param(2, (0, common_1.UploadedFiles)()),
     __param(3, (0, common_1.Req)()),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [Number, Object, Array, Object]),
+    __metadata("design:paramtypes", [Number, updateItem_dto_1.UpdateItemDto, Array, Object]),
     __metadata("design:returntype", Promise)
 ], ItemController.prototype, "update", null);
 __decorate([

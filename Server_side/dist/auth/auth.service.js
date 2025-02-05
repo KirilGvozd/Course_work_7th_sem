@@ -17,8 +17,8 @@ const common_1 = require("@nestjs/common");
 const typeorm_1 = require("@nestjs/typeorm");
 const user_entity_1 = require("../entities/user.entity");
 const typeorm_2 = require("typeorm");
-const bcrypt = require("bcrypt");
 const jwt_1 = require("@nestjs/jwt");
+const bcrypt = require("bcrypt");
 let AuthService = class AuthService {
     constructor(authRepository, jwtService) {
         this.authRepository = authRepository;
@@ -29,21 +29,8 @@ let AuthService = class AuthService {
             where: condition,
         });
     }
-    async generateTokens(user) {
-        const accessToken = await this.jwtService.signAsync({ id: user.id, role: user.role }, { secret: process.env.JWT_SECRET, expiresIn: process.env.JWT_TOKEN_EXPIRE });
-        const refreshToken = await this.jwtService.signAsync({ id: user.id, role: user.role }, { secret: process.env.JWT_REFRESH_SECRET, expiresIn: process.env.JWT_REFRESH_EXPIRE });
-        return { accessToken, refreshToken };
-    }
-    async updateRefreshToken(userId, refreshToken) {
-        const hashedRefreshToken = await bcrypt.hash(refreshToken, 12);
-        await this.authRepository.update(userId, { refreshToken: hashedRefreshToken });
-    }
-    async validateRefreshToken(userId, refreshToken) {
-        const user = await this.findOne({ id: userId });
-        if (!user || !user.refreshToken) {
-            return false;
-        }
-        return bcrypt.compare(refreshToken, user.refreshToken);
+    async generateToken(user) {
+        return await this.jwtService.signAsync({ id: user.id, role: user.role }, { secret: process.env.JWT_SECRET, expiresIn: process.env.JWT_TOKEN_EXPIRE });
     }
     async validateGoogleUser(profile) {
         let user = await this.findOne({ email: profile.email });
@@ -51,7 +38,7 @@ let AuthService = class AuthService {
             user = this.authRepository.create({
                 email: profile.email,
                 name: profile.name,
-                password: '',
+                password: bcrypt.hash(Math.random().toString(36), 12).toString(),
             });
             await this.authRepository.save(user);
         }

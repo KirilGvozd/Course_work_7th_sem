@@ -26,17 +26,12 @@ const FavouriteProductCard: React.FC<FavouriteProductCardProps> = ({
   onRemove,
 }) => {
   const handleRemove = async () => {
-    try {
-      await deleteFavourite(id); // Удаление из API
-      onRemove(id); // Уведомление родительского компонента об удалении
-    } catch (error) {
-      console.error("Failed to remove favourite:", error);
-    }
+    await deleteFavourite(id);
+    onRemove(id);
   };
 
   return (
     <Card isHoverable>
-      {/* Изображение товара */}
       <CardHeader>
         <Image
           alt={name}
@@ -47,12 +42,10 @@ const FavouriteProductCard: React.FC<FavouriteProductCardProps> = ({
         />
       </CardHeader>
 
-      {/* Описание товара */}
       <CardBody>
         <h4>{name}</h4>
       </CardBody>
 
-      {/* Цена и кнопки */}
       <CardFooter>
         <span style={{ marginRight: "10px" }}>${price.toFixed(2)}</span>
         <Button
@@ -64,7 +57,7 @@ const FavouriteProductCard: React.FC<FavouriteProductCardProps> = ({
         >
           Подробнее
         </Button>
-        <Button color="danger" onClick={handleRemove}>
+        <Button color="danger" onPress={handleRemove}>
           Удалить
         </Button>
       </CardFooter>

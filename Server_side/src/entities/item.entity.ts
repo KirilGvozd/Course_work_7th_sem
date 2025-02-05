@@ -1,6 +1,7 @@
-import {Column, Entity, JoinColumn, ManyToMany, ManyToOne, PrimaryGeneratedColumn} from "typeorm";
+import {Column, Entity, JoinColumn, ManyToMany, ManyToOne, OneToMany, PrimaryGeneratedColumn} from "typeorm";
 import {User} from "./user.entity";
-import {Type} from "./type.entity";
+import {Category} from "./category.entity";
+import {ItemAttribute} from "./itemAttribute.entity";
 
 @Entity()
 export class Item {
@@ -14,14 +15,7 @@ export class Item {
     @JoinColumn({name: 'userId'})
     user: User;
 
-    @Column()
-    typeId: number;
-
-    @ManyToOne(() => Type, (type) => type.id)
-    @JoinColumn({name: 'typeId'})
-    type: Type;
-
-    @Column("int", { array: true} )
+    @Column("money", { array: true} )
     prices: number[];
 
     @Column("text", {array: true} )
@@ -33,9 +27,19 @@ export class Item {
     @Column()
     description: string;
 
-    @Column()
+    @Column("money")
     price: number;
 
     @ManyToMany(() => User, (user) => user.favourites, {onDelete: "CASCADE"})
     users: User[];
+
+    @ManyToOne(() => Category, {onDelete: "CASCADE"})
+    @JoinColumn({ name: "categoryId" })
+    category: Category;
+
+    @Column()
+    categoryId: number;
+
+    @OneToMany(() => ItemAttribute, itemAttr => itemAttr.item, {onDelete: "CASCADE"})
+    attributes: ItemAttribute[];
 }

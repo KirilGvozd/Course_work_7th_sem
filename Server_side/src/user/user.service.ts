@@ -1,10 +1,8 @@
-import {BadRequestException, Injectable, NotFoundException} from "@nestjs/common";
+import {BadRequestException, Injectable, InternalServerErrorException, NotFoundException} from "@nestjs/common";
 import {Repository} from "typeorm";
 import {InjectRepository} from "@nestjs/typeorm";
 import {User} from "../entities/user.entity";
 import {CreateUserDto} from "./dto/createUserDto";
-import {PaginationDto} from "../pagination.dto";
-import {DEFAULT_PAGE_SIZE} from "../utils/constants";
 import {Item} from "../entities/item.entity";
 
 @Injectable()
@@ -16,14 +14,17 @@ export class UserService {
 
     async create(createUserDto: CreateUserDto) {
         const { favourites, ...userData } = createUserDto;
-        const favouriteItems = await this.itemRepository.findByIds(favourites);
 
         const newUser = this.userRepository.create({
             ...userData,
-            favourites: favouriteItems,
         });
 
-        return await this.userRepository.save(newUser);
+        try {
+            return await this.userRepository.save(newUser);
+        } catch (error) {
+            console.error(error);
+            throw new InternalServerErrorException();
+        }
     }
 
     async addFavouriteItem(itemId: number, userId: number) {
@@ -63,19 +64,16 @@ export class UserService {
             .remove(itemId);
     }
 
-    async findAll(paginationDto: PaginationDto) {
-        return await this.userRepository.find({
-            skip: paginationDto.skip,
-            take: paginationDto.limit ?? DEFAULT_PAGE_SIZE,
-        });
-    }
-
     async findByEmail(email: string) {
-        return await this.userRepository.findOne({
-            where: {
-                email,
-            }
-        })
+        try {
+            return await this.userRepository.findOne({
+                where: {
+                    email,
+                }
+            })
+        } catch (error) {
+            throw new BadRequestException(error);
+        }
     }
 
     async findOne(id: number) {

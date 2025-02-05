@@ -1,13 +1,6 @@
-import type { NavigateOptions } from "react-router-dom";
-
 import { NextUIProvider } from "@nextui-org/system";
 import { useHref, useNavigate } from "react-router-dom";
-
-declare module "@react-types/shared" {
-  interface RouterConfig {
-    routerOptions: NavigateOptions;
-  }
-}
+import React from "react";
 
 export function Provider({ children }: { children: React.ReactNode }) {
   const navigate = useNavigate();

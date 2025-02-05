@@ -34,20 +34,13 @@ const ProductCard: React.FC<ProductCardProps> = ({
         />
       </CardHeader>
 
-      {/* Описание товара */}
       <CardBody>
         <h4>{name}</h4>
       </CardBody>
 
-      {/* Цена и кнопка */}
       <CardFooter>
         <span style={{ marginRight: "10px" }}>${price.toFixed(2)}</span>
-        <Button
-          as="a"
-          color="primary"
-          href={`/item/${id}`} // Используем href для перехода
-          variant="solid"
-        >
+        <Button as="a" color="primary" href={`/item/${id}`} variant="solid">
           Подробнее
         </Button>
       </CardFooter>

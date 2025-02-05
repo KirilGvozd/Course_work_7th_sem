@@ -56,7 +56,6 @@ const Chat: React.FC<ChatProps> = ({ itemId }) => {
 
         setItem(data);
       } catch (error: any) {
-        console.error("Ошибка при получении данных товара:", error);
         setItemError(error.message);
       } finally {
         setItemLoading(false);
@@ -76,7 +75,7 @@ const Chat: React.FC<ChatProps> = ({ itemId }) => {
 
         if (!response.ok) {
           if (response.status === 404) {
-            return; // Не обрабатываем 404 как ошибку, просто нет сообщений
+            return;
           }
           throw new Error(`Ошибка при загрузке сообщений: ${response.status}`);
         }
@@ -84,7 +83,6 @@ const Chat: React.FC<ChatProps> = ({ itemId }) => {
 
         setMessages(data);
       } catch (error: any) {
-        console.error("Ошибка при загрузке сообщений:", error);
         toast.error("Не удалось загрузить историю сообщений.");
       }
     };
@@ -103,8 +101,7 @@ const Chat: React.FC<ChatProps> = ({ itemId }) => {
 
         socketRef.current.emit("joinRoom", { itemId });
 
-        socketRef.current.on("connect_error", (error) => {
-          console.error("Socket connection error:", error);
+        socketRef.current.on("connect_error", () => {
           toast.error(
             "Ошибка подключения к чату. Пожалуйста, обновите страницу.",
           );
@@ -122,7 +119,6 @@ const Chat: React.FC<ChatProps> = ({ itemId }) => {
           }
         };
       } catch (error) {
-        console.error("Ошибка при создании сокета:", error);
         toast.error("Произошла ошибка. Пожалуйста, попробуйте позже.");
       }
     } else if (socketRef.current) {
@@ -163,7 +159,6 @@ const Chat: React.FC<ChatProps> = ({ itemId }) => {
         return;
       }
 
-      // Отправка сообщения
       socketRef.current.emit("sendMessage", {
         itemId,
         senderId: user.id,
@@ -198,7 +193,6 @@ const Chat: React.FC<ChatProps> = ({ itemId }) => {
       );
       toast.success("Сообщение удалено.");
     } catch (error: any) {
-      console.error("Ошибка при удалении сообщения:", error);
       toast.error("Ошибка при удалении сообщения.");
     }
   };
@@ -277,7 +271,7 @@ const Chat: React.FC<ChatProps> = ({ itemId }) => {
         />
         <Button
           disabled={!socketRef.current?.connected || !item}
-          onClick={sendMessage}
+          onPress={sendMessage}
         >
           Отправить
         </Button>

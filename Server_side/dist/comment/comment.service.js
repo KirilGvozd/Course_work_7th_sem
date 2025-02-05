@@ -23,7 +23,7 @@ let CommentService = class CommentService {
         this.commentRepository = commentRepository;
         this.userRepository = userRepository;
     }
-    async findAll(paginationDto, sellerId) {
+    async findAll(sellerId) {
         const comments = await this.commentRepository.find({
             where: {
                 sellerId: sellerId,

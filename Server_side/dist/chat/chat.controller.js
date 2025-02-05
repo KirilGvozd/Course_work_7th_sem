@@ -23,11 +23,11 @@ let ChatController = class ChatController {
     constructor(chatService) {
         this.chatService = chatService;
     }
-    async getChatsByItem(itemId, req) {
+    async getChatByItem(itemId, req) {
         const userId = req.user.userId;
         return this.chatService.findByItem(itemId, userId);
     }
-    async getChatsForBuyer(req) {
+    async getChats(req) {
         const userId = req.user.userId;
         return this.chatService.findChatsByBuyer(userId);
     }
@@ -38,7 +38,7 @@ let ChatController = class ChatController {
         const userId = request.user.id;
         await this.chatService.updateMessage(id, body, userId);
     }
-    async delete(id, request) {
+    async delete(id) {
         await this.chatService.delete(id);
     }
 };
@@ -46,20 +46,20 @@ exports.ChatController = ChatController;
 __decorate([
     (0, common_1.Get)('/item/:itemId'),
     (0, swagger_1.ApiResponse)({ status: 200, description: 'Chat has been successfully fetched.' }),
-    (0, swagger_1.ApiResponse)({ status: 401, description: "You don't have access to create chats!" }),
+    (0, swagger_1.ApiResponse)({ status: 401, description: "You don't have access to access this chat!" }),
     __param(0, (0, common_1.Param)('itemId')),
     __param(1, (0, common_1.Req)()),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [Number, Object]),
     __metadata("design:returntype", Promise)
-], ChatController.prototype, "getChatsByItem", null);
+], ChatController.prototype, "getChatByItem", null);
 __decorate([
     (0, common_1.Get)(),
     __param(0, (0, common_1.Req)()),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [Object]),
     __metadata("design:returntype", Promise)
-], ChatController.prototype, "getChatsForBuyer", null);
+], ChatController.prototype, "getChats", null);
 __decorate([
     (0, common_1.Post)(),
     (0, swagger_1.ApiResponse)({ status: 201, description: 'Chat has been successfully created.' }),
@@ -85,9 +85,8 @@ __decorate([
     (0, swagger_1.ApiResponse)({ status: 201, description: 'Message was successfully removed.' }),
     (0, swagger_1.ApiResponse)({ status: 401, description: "You don't have access to remove this message!" }),
     __param(0, (0, common_1.Param)('id', common_1.ParseIntPipe)),
-    __param(1, (0, common_1.Req)()),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [Number, Object]),
+    __metadata("design:paramtypes", [Number]),
     __metadata("design:returntype", Promise)
 ], ChatController.prototype, "delete", null);
 exports.ChatController = ChatController = __decorate([

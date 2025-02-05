@@ -42,15 +42,11 @@ const SellerPage: React.FC = () => {
   const { id } = useParams();
 
   const fetchReviews = async () => {
-    try {
-      const response = await api.get(`/comment/${id}`);
+    const response = await api.get(`/comment/${id}`);
 
-      setReviews(response.data.comments);
-      setSellerName(response.data.sellerName);
-      setSellerRate(response.data.sellerRate);
-    } catch (error) {
-      console.error("Ошибка загрузки отзывов:", error);
-    }
+    setReviews(response.data.comments);
+    setSellerName(response.data.sellerName);
+    setSellerRate(response.data.sellerRate);
   };
 
   useEffect(() => {
@@ -92,31 +88,25 @@ const SellerPage: React.FC = () => {
         formData.append("images", file);
       });
 
-      try {
-        const response = await fetch("http://localhost:4000/comment", {
-          method: "POST",
-          body: formData,
-          credentials: "include",
-        });
+      const response = await fetch("http://localhost:4000/comment", {
+        method: "POST",
+        body: formData,
+        credentials: "include",
+      });
 
-        if (response.status === 401) {
-          alert("Нельзя оставлять больше одного отзыва!");
-        }
+      if (response.status === 401) {
+        alert("Нельзя оставлять больше одного отзыва!");
+      }
 
-        if (response.ok) {
-          const data = await response.json();
+      if (response.ok) {
+        const data = await response.json();
 
-          setReviews([...reviews, { ...data, user: { ...user } }]);
-          setNewReview({ id: 0, text: "", rate: 3, attachments: [] });
-          setImagePreview([]);
-          setImageFiles([]);
+        setReviews([...reviews, { ...data, user: { ...user } }]);
+        setNewReview({ id: 0, text: "", rate: 3, attachments: [] });
+        setImagePreview([]);
+        setImageFiles([]);
 
-          await fetchReviews();
-        } else {
-          console.error("Ошибка отправки отзыва:", response.statusText);
-        }
-      } catch (error) {
-        console.error("Ошибка отправки отзыва:", error);
+        await fetchReviews();
       }
     } else {
       alert("Заполните все поля отзыва!");
@@ -218,7 +208,7 @@ const SellerPage: React.FC = () => {
               color="danger"
               size="sm"
               style={{ marginLeft: "auto" }}
-              onClick={() => handleRemoveReview(review.id)}
+              onPress={() => handleRemoveReview(review.id)}
             >
               Удалить отзыв
             </Button>
@@ -226,8 +216,8 @@ const SellerPage: React.FC = () => {
         </Card>
       ))}
 
-      {/* Всплывающее окно с картинкой */}
       {isImageOpen && selectedImage && (
+        // eslint-disable-next-line jsx-a11y/no-static-element-interactions
         <div
           style={{
             position: "fixed",
@@ -251,7 +241,7 @@ const SellerPage: React.FC = () => {
               maxHeight: "90%",
               cursor: "pointer",
             }}
-            onClick={(e) => e.stopPropagation()} // Останавливаем всплытие события, чтобы картинка не закрылась при клике на неё
+            onClick={(e) => e.stopPropagation()}
           />
         </div>
       )}
@@ -306,7 +296,7 @@ const SellerPage: React.FC = () => {
             ))}
           </div>
           <Spacer y={1} />
-          <Button onClick={handleSubmitReview}>Оставить отзыв</Button>
+          <Button onPress={handleSubmitReview}>Оставить отзыв</Button>
         </>
       )}
     </div>

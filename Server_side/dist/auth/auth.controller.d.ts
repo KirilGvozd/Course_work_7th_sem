@@ -10,17 +10,12 @@ export declare class AuthController {
     private readonly userService;
     constructor(authService: AuthService, jwtService: JwtService, userService: UserService);
     user(req: Request): Promise<import("../entities/user.entity").User>;
-    register(createUserDto: CreateUserDto, response: Response): Promise<void>;
+    register(createUserDto: CreateUserDto): Promise<void>;
     login(authDto: AuthDto, response: Response): Promise<{
         message: string;
         accessToken: string;
     }>;
-    refresh(req: Request, res: Response): Promise<{
-        message: string;
-    }>;
     logout(response: Response, request: any): Promise<{
         message: string;
     }>;
-    googleAuth(): Promise<void>;
-    googleAuthRedirect(req: Request, res: Response): Promise<void>;
 }

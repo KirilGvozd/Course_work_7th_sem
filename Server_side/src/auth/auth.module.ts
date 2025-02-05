@@ -5,9 +5,7 @@ import {TypeOrmModule} from "@nestjs/typeorm";
 import {User} from "../entities/user.entity";
 import {JwtModule} from "@nestjs/jwt";
 import {ConfigService} from "@nestjs/config";
-import {GoogleStrategy} from "./google.strategy";
 import {UserModule} from "../user/user.module";
-import {UserService} from "../user/user.service";
 import {JwtStrategy} from "./jwt.strategy";
 
 @Module({
@@ -22,18 +20,9 @@ import {JwtStrategy} from "./jwt.strategy";
           }
         })
       }),
-      JwtModule.registerAsync({
-          inject: [ConfigService],
-          useFactory: (configService: ConfigService) => ({
-              secret: configService.get<string>("JWT_REFRESH_SECRET"),
-              signOptions: {
-                  expiresIn: configService.get<string>("JWT_REFRESH_EXPIRE")
-              }
-          }),
-      }),
       UserModule,
   ],
   controllers: [AuthController],
-  providers: [AuthService, GoogleStrategy, JwtStrategy],
+  providers: [AuthService, JwtStrategy],
 })
 export class AuthModule {}

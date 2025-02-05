@@ -6,12 +6,7 @@ export declare class AuthService {
     private readonly jwtService;
     constructor(authRepository: Repository<User>, jwtService: JwtService);
     findOne(condition: any): Promise<User>;
-    generateTokens(user: User): Promise<{
-        accessToken: string;
-        refreshToken: string;
-    }>;
-    updateRefreshToken(userId: number, refreshToken: string): Promise<void>;
-    validateRefreshToken(userId: number, refreshToken: string): Promise<boolean>;
+    generateToken(user: User): Promise<string>;
     validateGoogleUser(profile: {
         email: string;
         name: string;

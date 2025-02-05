@@ -15,7 +15,6 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.CommentController = void 0;
 const common_1 = require("@nestjs/common");
 const comment_service_1 = require("./comment.service");
-const pagination_dto_1 = require("../pagination.dto");
 const jwt_auth_guard_1 = require("../auth/jwt-auth.guard");
 const swagger_1 = require("@nestjs/swagger");
 const platform_express_1 = require("@nestjs/platform-express");
@@ -23,8 +22,8 @@ let CommentController = class CommentController {
     constructor(commentService) {
         this.commentService = commentService;
     }
-    findAll(paginationDto, request, id) {
-        return this.commentService.findAll(paginationDto, id);
+    findAll(id) {
+        return this.commentService.findAll(id);
     }
     async create(body, request, files) {
         const rate = Number(body.rate);
@@ -39,7 +38,6 @@ let CommentController = class CommentController {
             userId: request.user.userId,
             role: request.user.role,
         };
-        console.log(files);
         const commentData = {
             text,
             rate,
@@ -59,11 +57,9 @@ __decorate([
     (0, common_1.Get)(':id'),
     (0, swagger_1.ApiResponse)({ status: 200, description: 'Comments has been found.' }),
     (0, swagger_1.ApiResponse)({ status: 404, description: 'No comments found for this seller.' }),
-    __param(0, (0, common_1.Query)()),
-    __param(1, (0, common_1.Req)()),
-    __param(2, (0, common_1.Param)('id')),
+    __param(0, (0, common_1.Param)('id')),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [pagination_dto_1.PaginationDto, Object, Number]),
+    __metadata("design:paramtypes", [Number]),
     __metadata("design:returntype", void 0)
 ], CommentController.prototype, "findAll", null);
 __decorate([

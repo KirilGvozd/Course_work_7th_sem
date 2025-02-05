@@ -20,7 +20,7 @@ const RegisterPage = () => {
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
-  const [selectedRole, setSelectedRole] = useState<string>("buyer"); // Default role
+  const [selectedRole, setSelectedRole] = useState<string>("buyer");
 
   const handleRegister = async () => {
     if (password !== confirmPassword) {
@@ -107,11 +107,11 @@ const RegisterPage = () => {
           </DropdownMenu>
         </Dropdown>
         <Spacer y={1.5} />
-        <Button fullWidth onClick={handleRegister}>
+        <Button fullWidth onPress={handleRegister}>
           Зарегистрироваться
         </Button>
         <Spacer y={0.5} />
-        <Button fullWidth variant="flat" onClick={() => navigate("/login")}>
+        <Button fullWidth variant="flat" onPress={() => navigate("/login")}>
           Уже есть аккаунт? Войти
         </Button>
       </Card>

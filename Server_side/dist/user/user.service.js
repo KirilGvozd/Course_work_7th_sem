@@ -17,7 +17,6 @@ const common_1 = require("@nestjs/common");
 const typeorm_1 = require("typeorm");
 const typeorm_2 = require("@nestjs/typeorm");
 const user_entity_1 = require("../entities/user.entity");
-const constants_1 = require("../utils/constants");
 const item_entity_1 = require("../entities/item.entity");
 let UserService = class UserService {
     constructor(userRepository, itemRepository) {
@@ -26,12 +25,16 @@ let UserService = class UserService {
     }
     async create(createUserDto) {
         const { favourites, ...userData } = createUserDto;
-        const favouriteItems = await this.itemRepository.findByIds(favourites);
         const newUser = this.userRepository.create({
             ...userData,
-            favourites: favouriteItems,
         });
-        return await this.userRepository.save(newUser);
+        try {
+            return await this.userRepository.save(newUser);
+        }
+        catch (error) {
+            console.error(error);
+            throw new common_1.InternalServerErrorException();
+        }
     }
     async addFavouriteItem(itemId, userId) {
         const user = await this.userRepository.findOne({
@@ -66,18 +69,17 @@ let UserService = class UserService {
             .of(userId)
             .remove(itemId);
     }
-    async findAll(paginationDto) {
-        return await this.userRepository.find({
-            skip: paginationDto.skip,
-            take: paginationDto.limit ?? constants_1.DEFAULT_PAGE_SIZE,
-        });
-    }
     async findByEmail(email) {
-        return await this.userRepository.findOne({
-            where: {
-                email,
-            }
-        });
+        try {
+            return await this.userRepository.findOne({
+                where: {
+                    email,
+                }
+            });
+        }
+        catch (error) {
+            throw new common_1.BadRequestException(error);
+        }
     }
     async findOne(id) {
         const result = await this.userRepository.findOne({

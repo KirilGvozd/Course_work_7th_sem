@@ -1,14 +1,12 @@
 import { CommentService } from "./comment.service";
-import { CreateCommentDto } from "./dto/createCommentDto";
-import { PaginationDto } from "../pagination.dto";
 export declare class CommentController {
     private readonly commentService;
     constructor(commentService: CommentService);
-    findAll(paginationDto: PaginationDto, request: any, id: number): Promise<{
+    findAll(id: number): Promise<{
         comments: import("../entities/comment.entity").Comment[];
         sellerName: string;
         sellerRate: number;
     }>;
-    create(body: any, request: any, files: Express.Multer.File[]): Promise<CreateCommentDto & import("../entities/comment.entity").Comment>;
+    create(body: any, request: any, files: Express.Multer.File[]): Promise<import("./dto/createCommentDto").CreateCommentDto & import("../entities/comment.entity").Comment>;
     delete(request: any, id: number): Promise<import("typeorm").DeleteResult>;
 }

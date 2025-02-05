@@ -62,14 +62,14 @@ let ItemService = class ItemService {
         }
         return await this.itemRepo.save(body);
     }
-    async update(id, body) {
+    async update(id, body, userId) {
         const item = await this.itemRepo.findOne({
             where: { id },
         });
         if (!item) {
             throw new common_1.NotFoundException("Item not found.");
         }
-        if (item.userId !== body.userId) {
+        if (item.userId !== userId) {
             throw new common_1.UnauthorizedException("You don't have the permission to update this item!");
         }
         const previousPrice = item.prices.length > 0 ? item.prices[0] : item.price;
@@ -88,7 +88,6 @@ let ItemService = class ItemService {
                 relations: ['favourites'],
             });
             const usersToNotify = users.filter((user) => user.favourites.some((favourite) => favourite.id == id));
-            console.log(usersToNotify);
             for (const user of usersToNotify) {
                 await this.mailService.sendPriceUpdateNotification(user.email, item.name, previousPrice, body.price, priceChange);
             }
@@ -105,6 +104,14 @@ let ItemService = class ItemService {
             throw new common_1.UnauthorizedException("You don't have the permission to delete this item!");
         }
         return await this.itemRepo.delete(id);
+    }
+    async retrieveExistingImages(id) {
+        const item = await this.itemRepo.findOne({
+            where: {
+                id
+            }
+        });
+        return item.images;
     }
 };
 exports.ItemService = ItemService;

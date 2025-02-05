@@ -11,9 +11,9 @@ const FavouritesPage: React.FC = () => {
   useEffect(() => {
     const loadFavourites = async () => {
       setLoading(true);
-      setError(null); // Сбрасываем ошибки перед новой загрузкой
+      setError(null);
       try {
-        const data = await getFavourites(); // Загружаем избранные товары
+        const data = await getFavourites();
 
         setFavourites(data);
       } catch (error: any) {
