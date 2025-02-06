@@ -21,12 +21,12 @@ class CreateItemDto {
 exports.CreateItemDto = CreateItemDto;
 __decorate([
     (0, swagger_1.ApiProperty)({
-        description: 'ID of the item type/category',
+        description: 'ID of the item category',
         type: Number,
         example: 1
     }),
     __metadata("design:type", Number)
-], CreateItemDto.prototype, "typeId", void 0);
+], CreateItemDto.prototype, "categoryId", void 0);
 __decorate([
     (0, swagger_1.ApiProperty)({
         description: 'ID of the user who created the item',

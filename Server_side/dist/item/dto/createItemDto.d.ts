@@ -1,5 +1,5 @@
 export declare class CreateItemDto {
-    typeId: number;
+    categoryId: number;
     userId: number;
     prices: number[];
     images: string[];

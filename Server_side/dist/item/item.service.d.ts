@@ -3,6 +3,7 @@ import { Item } from "../entities/item.entity";
 import { PaginationDto } from "../pagination.dto";
 import { MailService } from "../mail/mail.service";
 import { User } from "../entities/user.entity";
+import { UpdateItemDto } from "./dto/updateItem.dto";
 export declare class ItemService {
     private itemRepo;
     private readonly mailService;
@@ -22,6 +23,20 @@ export declare class ItemService {
         userId: number;
         role: string;
     }): Promise<any>;
-    update(id: number, body: any): Promise<any>;
+    update(id: number, body: UpdateItemDto, userId: number): Promise<{
+        prices: number[];
+        images: string[];
+        name: string;
+        description: string;
+        price: number;
+        id: number;
+        userId: number;
+        user: User;
+        users: User[];
+        category: import("../entities/category.entity").Category;
+        categoryId: number;
+        attributes: import("../entities/itemAttribute.entity").ItemAttribute[];
+    }>;
     delete(id: number, userId: number): Promise<import("typeorm").DeleteResult>;
+    retrieveExistingImages(id: number): Promise<string[]>;
 }

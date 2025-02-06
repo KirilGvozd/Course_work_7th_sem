@@ -16,9 +16,9 @@ export class ItemAttribute {
     @Column({ nullable: true })
     stringValue: string;
 
-    @Column({ nullable: true })
+    @Column("numeric", { nullable: true, precision: 5, scale: 2 })
     numberValue: number;
 
-    @Column({ nullable: true })
+    @Column({ nullable: true})
     booleanValue: boolean;
 }

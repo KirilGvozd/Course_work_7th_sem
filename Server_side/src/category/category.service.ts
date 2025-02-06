@@ -1,26 +1,49 @@
-import { Injectable } from '@nestjs/common';
+import {Injectable, UnauthorizedException} from '@nestjs/common';
 import { CreateCategoryDto } from './dto/create-category.dto';
 import { UpdateCategoryDto } from './dto/update-category.dto';
+import {Repository} from "typeorm";
+import {Category} from "../entities/category.entity";
+import {InjectRepository} from "@nestjs/typeorm";
 
 @Injectable()
 export class CategoryService {
-  create(createCategoryDto: CreateCategoryDto) {
-    return 'This action adds a new category';
+  constructor(@InjectRepository(Category) private categoryRepository: Repository<Category>) {}
+
+  async create(createCategoryDto: CreateCategoryDto, userRole: string) {
+    if (this.checkUserRole(userRole)) {
+      return await this.categoryRepository.save(createCategoryDto);
+    } else {
+      throw new UnauthorizedException("You don't have admin rights!");
+    }
   }
 
-  findAll() {
-    return `This action returns all category`;
+  async findAll() {
+    return await this.categoryRepository.findAndCount();
   }
 
-  findOne(id: number) {
-    return `This action returns a #${id} category`;
+  async findOne(id: number) {
+    return await this.categoryRepository.findOne({
+      where: { id }
+    });
   }
 
-  update(id: number, updateCategoryDto: UpdateCategoryDto) {
-    return `This action updates a #${id} category`;
+  async update(id: number, updateCategoryDto: UpdateCategoryDto, userRole: string) {
+    if (this.checkUserRole(userRole)) {
+      return await this.categoryRepository.update(id, updateCategoryDto);
+    } else {
+      throw new UnauthorizedException("You don't have admin rights!");
+    }
   }
 
-  remove(id: number) {
-    return `This action removes a #${id} category`;
+  async remove(id: number, userRole: string) {
+    if (this.checkUserRole(userRole)) {
+      return await this.categoryRepository.delete(id);
+    } else {
+      throw new UnauthorizedException("You don't have admin rights!");
+    }
+  }
+
+  private checkUserRole(userRole: string) {
+    return userRole === "admin";
   }
 }
