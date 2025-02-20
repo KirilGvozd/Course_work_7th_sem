@@ -36,4 +36,82 @@ export class MailService {
 
         await this.transporter.sendMail(message);
     }
+
+    async sendCredentialsToNewModerator(
+        email: string,
+        userName: string,
+        password: string,
+    ) {
+        const message = {
+            from: 'kirillgvozd0@gmail.com',
+            to: email,
+            subject: "Данные для входа в аккаунт модератора",
+            text: `Ваши данные для входа в аккаунт модератора: \nЛогин: ${email}\nПароль: ${password}`,
+        };
+
+        await this.transporter.sendMail(message);
+    }
+
+    async sendReservationOfItemNotification(
+        email: string,
+        itemName: string,
+        userName: string,
+    ) {
+        const message = {
+            from: 'no-reply@example.com',
+            to: email,
+            subject: `Бронирование товара ${itemName}`,
+            text: `Ваш товар ${itemName} хочет купить пользователь ${userName}. 
+            Ответьте на его предложение в течении 24 часов или бронь на товар истечёт.`,
+        }
+
+        await this.transporter.sendMail(message);
+    }
+
+    async sendApprovedReservationNotification(
+        email: string,
+        itemName: string,
+        userName: string,
+    ) {
+        const message = {
+            from: 'no-reply@example.com',
+            to: email,
+            subject: `Бронирование товара ${itemName} прошло успешно`,
+            text: `Здравствуйте, ${userName}. Рады вам сообщить, 
+            что бронь товара ${itemName} была успешно подтверждена продавцом.`,
+        }
+
+        await this.transporter.sendMail(message);
+    }
+
+    async sendRejectReservationNotification(
+        email: string,
+        itemName: string,
+        userName: string,
+    ) {
+        const message = {
+            from: 'no-reply@example.com',
+            to: email,
+            subject: `Бронирование товара ${itemName} было отклонено`,
+            text: `Здравствуйте, ${userName}. К сожалению, бронь товара ${itemName} была отклонена продавцом.`,
+        }
+
+        await this.transporter.sendMail(message);
+    }
+
+    async sendRemovalOfReservationNotification(
+        email: string,
+        itemName: string,
+        userName: string,
+        buyerName: string,
+    ) {
+        const message = {
+            from: 'no-reply@example.com',
+            to: email,
+            subject: `Бронирование товара ${itemName} было отменено`,
+            text: `Здравствуйте, ${userName}. К сожалению, бронь товара ${itemName} была отклонена покупателем ${buyerName}.`,
+        }
+
+        await this.transporter.sendMail(message);
+    }
 }

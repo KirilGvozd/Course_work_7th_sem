@@ -21,11 +21,13 @@ const jwt_1 = require("@nestjs/jwt");
 const user_service_1 = require("../user/user.service");
 const auth_dto_1 = require("./dto/auth.dto");
 const swagger_1 = require("@nestjs/swagger");
+const mail_service_1 = require("../mail/mail.service");
 let AuthController = class AuthController {
-    constructor(authService, jwtService, userService) {
+    constructor(authService, jwtService, userService, mailService) {
         this.authService = authService;
         this.jwtService = jwtService;
         this.userService = userService;
+        this.mailService = mailService;
     }
     async user(req) {
         try {
@@ -37,13 +39,16 @@ let AuthController = class AuthController {
             throw new common_1.UnauthorizedException("User not found");
         }
     }
-    async register(createUserDto) {
+    async register(createUserDto, res) {
         const user = await this.userService.findByEmail(createUserDto.email);
         if (user) {
             throw new common_1.BadRequestException("User with this email already exists!");
         }
+        if (createUserDto.role === 'moderator') {
+            await this.mailService.sendCredentialsToNewModerator(createUserDto.email, createUserDto.name, createUserDto.password);
+        }
         createUserDto.password = await bcrypt.hash(createUserDto.password, 12);
-        await this.userService.create(createUserDto);
+        return res.status(201).json(await this.userService.create(createUserDto));
     }
     async login(authDto, response) {
         const user = await this.userService.findByEmail(authDto.email);
@@ -52,17 +57,17 @@ let AuthController = class AuthController {
         }
         const token = await this.authService.generateToken(user);
         response.cookie("jwt", token, { httpOnly: true });
-        return {
+        return response.status(200).json({
             message: "Login successful",
             accessToken: token,
-        };
+        });
     }
     async logout(response, request) {
         if (!request.cookies.jwt) {
             throw new common_1.UnauthorizedException("You're not logged in!");
         }
         response.clearCookie("jwt");
-        return { message: "Cookie has been cleared" };
+        return response.status(200).json({ message: "Cookie has been cleared" });
     }
 };
 exports.AuthController = AuthController;
@@ -77,11 +82,12 @@ __decorate([
 ], AuthController.prototype, "user", null);
 __decorate([
     (0, common_1.Post)('register'),
-    (0, swagger_1.ApiResponse)({ status: 201, description: 'User has been successfully registered.' }),
+    (0, swagger_1.ApiResponse)({ status: 200, description: 'User has been successfully registered.' }),
     (0, swagger_1.ApiResponse)({ status: 400, description: 'Invalid registration data or user already exists.' }),
     __param(0, (0, common_1.Body)()),
+    __param(1, (0, common_1.Res)()),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [createUserDto_1.CreateUserDto]),
+    __metadata("design:paramtypes", [createUserDto_1.CreateUserDto, Object]),
     __metadata("design:returntype", Promise)
 ], AuthController.prototype, "register", null);
 __decorate([
@@ -109,6 +115,7 @@ exports.AuthController = AuthController = __decorate([
     (0, common_1.Controller)('auth'),
     __metadata("design:paramtypes", [auth_service_1.AuthService,
         jwt_1.JwtService,
-        user_service_1.UserService])
+        user_service_1.UserService,
+        mail_service_1.MailService])
 ], AuthController);
 //# sourceMappingURL=auth.controller.js.map

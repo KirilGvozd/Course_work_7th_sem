@@ -65,17 +65,6 @@ let ChatService = class ChatService {
         body.messageDate = new Date().toISOString();
         return await this.chatRepository.save(body);
     }
-    async updateMessage(messageId, body, userId) {
-        const chat = await this.chatRepository.findOne({
-            where: {
-                senderId: userId,
-            }
-        });
-        if (!chat) {
-            throw new common_1.NotFoundException("Not Found");
-        }
-        await this.chatRepository.update(messageId, body);
-    }
     async delete(id) {
         const chat = await this.chatRepository.findOne({
             where: {

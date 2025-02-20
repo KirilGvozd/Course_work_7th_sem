@@ -6,13 +6,13 @@ import {
     NotFoundException,
     Param,
     Post,
-    Req,
+    Req, Res,
     UseGuards
 } from "@nestjs/common";
 import {UserService} from "./user.service";
 import {CreateUserDto} from "./dto/createUserDto";
 import {JwtAuthGuard} from "../auth/jwt-auth.guard";
-import { ApiResponse, ApiTags } from "@nestjs/swagger";
+import {ApiExcludeEndpoint, ApiResponse, ApiTags} from "@nestjs/swagger";
 import {AddToFavouritesDto} from "./dto/addToFavouritesDto";
 
 @ApiTags('Users')
@@ -21,19 +21,18 @@ export class UserController {
     constructor(private readonly userService: UserService) {}
 
     @Post()
-    @ApiResponse({ status: 201, description: 'User has been successfully created.'})
-    @ApiResponse({ status: 400, description: 'Invalid user data provided or user already exists.'})
+    @ApiExcludeEndpoint()
     async create(@Body() createUserDto: CreateUserDto) {
         await this.userService.create(createUserDto);
     }
 
     @Post('add-favourite')
     @UseGuards(JwtAuthGuard)
-    @ApiResponse({ status: 201, description: 'Item added to favourites.'})
+    @ApiResponse({ status: 200, description: 'Item added to favourites.'})
     @ApiResponse({ status: 401, description: 'Unauthorized access.'})
     @ApiResponse({ status: 403, description: 'Seller can\'t add favourite items!'})
     @ApiResponse({ status: 404, description: 'Item not found'})
-    async addToFavourites(@Body() body: AddToFavouritesDto, @Req() request) {
+    async addToFavourites(@Body() body: AddToFavouritesDto, @Req() request, @Res() response) {
         const itemId = body.itemId;
         const userId: number = request.user.userId;
 
@@ -41,17 +40,14 @@ export class UserController {
             throw new ForbiddenException("Seller can't add favourite items!");
         }
 
-        return await this.userService.addFavouriteItem(itemId, userId);
+        return response.status(200).json(await this.userService.addFavouriteItem(itemId, userId));
     }
 
     @Get()
+    @ApiExcludeEndpoint()
     @UseGuards(JwtAuthGuard)
-    @ApiResponse({ status: 200, description: 'User profile has been found.'})
-    @ApiResponse({ status: 401, description: 'Unauthorized access.'})
-    @ApiResponse({ status: 404, description: 'User not found.'})
     findOne(@Req() request) {
         const id = request.user.userId;
-        console.log(id);
         return this.userService.findOne(id);
     }
 
@@ -79,8 +75,10 @@ export class UserController {
     async removeFromFavourites(
         @Param('id') itemId: number,
         @Req() request,
+        @Res() response
     ) {
         const userId = request.user.userId;
-        return await this.userService.removeFromFavourites(userId, itemId);
+        await this.userService.removeFromFavourites(userId, itemId);
+        return response.status(200).json("Item removed from your favourites");
     }
 }

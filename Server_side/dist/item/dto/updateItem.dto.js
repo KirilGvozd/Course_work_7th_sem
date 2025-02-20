@@ -20,11 +20,22 @@ class UpdateItemDto {
 exports.UpdateItemDto = UpdateItemDto;
 __decorate([
     (0, swagger_1.ApiProperty)({
+        description: 'Id of the category',
+        minimum: 0,
+        example: 29.99
+    }),
+    (0, class_validator_1.IsPositive)(),
+    (0, class_validator_1.IsOptional)(),
+    __metadata("design:type", Number)
+], UpdateItemDto.prototype, "categoryId", void 0);
+__decorate([
+    (0, swagger_1.ApiProperty)({
         description: 'Array of image URLs for the item',
         type: [String],
         example: ['http://example.com/image1.jpg', 'http://example.com/image2.jpg']
     }),
-    (0, class_validator_1.IsArray)(),
+    (0, class_validator_1.IsString)({ each: true }),
+    (0, class_validator_1.IsOptional)(),
     __metadata("design:type", Array)
 ], UpdateItemDto.prototype, "images", void 0);
 __decorate([
@@ -34,7 +45,8 @@ __decorate([
         example: [10.99, 9.99, 8.99],
         default: []
     }),
-    (0, class_validator_1.IsArray)(),
+    (0, class_validator_1.IsPositive)({ each: true }),
+    (0, class_validator_1.IsOptional)(),
     __metadata("design:type", Array)
 ], UpdateItemDto.prototype, "prices", void 0);
 __decorate([
@@ -45,6 +57,7 @@ __decorate([
         example: 'Vintage Chair'
     }),
     (0, class_validator_1.IsString)(),
+    (0, class_validator_1.IsOptional)(),
     (0, class_validator_1.Length)(1, 40, { message: 'Length error' }),
     __metadata("design:type", String)
 ], UpdateItemDto.prototype, "name", void 0);
@@ -54,6 +67,7 @@ __decorate([
         example: 'Beautiful vintage chair in excellent condition'
     }),
     (0, class_validator_1.IsString)(),
+    (0, class_validator_1.IsOptional)(),
     __metadata("design:type", String)
 ], UpdateItemDto.prototype, "description", void 0);
 __decorate([
@@ -62,8 +76,8 @@ __decorate([
         minimum: 0,
         example: 29.99
     }),
-    (0, class_validator_1.IsNumber)(),
     (0, class_validator_1.IsPositive)(),
+    (0, class_validator_1.IsOptional)(),
     __metadata("design:type", Number)
 ], UpdateItemDto.prototype, "price", void 0);
 //# sourceMappingURL=updateItem.dto.js.map

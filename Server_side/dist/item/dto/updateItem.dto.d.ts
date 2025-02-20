@@ -1,4 +1,5 @@
 export declare class UpdateItemDto {
+    categoryId: number;
     images: string[];
     prices: number[];
     name: string;

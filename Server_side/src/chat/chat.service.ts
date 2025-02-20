@@ -6,7 +6,6 @@ import {
 import {Repository} from "typeorm";
 import {Chat} from "../entities/chat.entity";
 import {InjectRepository} from "@nestjs/typeorm";
-import {UpdateChatDto} from "./dto/updateChatDto.dto";
 
 @Injectable()
 export class ChatService {
@@ -62,19 +61,6 @@ export class ChatService {
         body.messageDate = new Date().toISOString();
 
         return await this.chatRepository.save(body);
-    }
-
-    async updateMessage(messageId: number, body: UpdateChatDto, userId: number) {
-        const chat = await this.chatRepository.findOne({
-            where: {
-                senderId: userId,
-            }
-        });
-
-        if (!chat) {
-            throw new NotFoundException("Not Found");
-        }
-        await this.chatRepository.update(messageId, body);
     }
 
     async delete(id: number) {

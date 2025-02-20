@@ -7,6 +7,7 @@ import {Request, Response} from "express";
 import {UserService} from "../user/user.service";
 import {AuthDto} from "./dto/auth.dto";
 import {ApiResponse, ApiTags} from "@nestjs/swagger";
+import {MailService} from "../mail/mail.service";
 
 @ApiTags('Authentication')
 @Controller('auth')
@@ -15,6 +16,7 @@ export class AuthController {
       private readonly authService: AuthService,
       private readonly jwtService: JwtService,
       private readonly userService: UserService,
+      private readonly mailService: MailService
   ) {}
 
   @Get('user')
@@ -36,17 +38,23 @@ export class AuthController {
   }
 
   @Post('register')
-  @ApiResponse({ status: 201, description: 'User has been successfully registered.'})
+  @ApiResponse({ status: 200, description: 'User has been successfully registered.'})
   @ApiResponse({ status: 400, description: 'Invalid registration data or user already exists.'})
   async register(
-    @Body() createUserDto: CreateUserDto
+    @Body() createUserDto: CreateUserDto,
+    @Res() res
   ) {
     const user = await this.userService.findByEmail(createUserDto.email);
     if (user) {
       throw new BadRequestException("User with this email already exists!");
     }
+
+    if (createUserDto.role === 'moderator') {
+      await this.mailService.sendCredentialsToNewModerator(createUserDto.email, createUserDto.name, createUserDto.password);
+    }
+
     createUserDto.password = await bcrypt.hash(createUserDto.password, 12);
-    await this.userService.create(createUserDto);
+    return res.status(201).json(await this.userService.create(createUserDto));
   }
 
   @Post('login')
@@ -66,10 +74,10 @@ export class AuthController {
 
     response.cookie("jwt", token, { httpOnly: true },);
 
-    return {
+    return response.status(200).json({
       message: "Login successful",
       accessToken: token,
-    };
+    });
   }
 
   @Post('logout')
@@ -80,6 +88,6 @@ export class AuthController {
       throw new UnauthorizedException("You're not logged in!");
     }
     response.clearCookie("jwt");
-    return { message: "Cookie has been cleared" };
+    return response.status(200).json({ message: "Cookie has been cleared" });
   }
 }

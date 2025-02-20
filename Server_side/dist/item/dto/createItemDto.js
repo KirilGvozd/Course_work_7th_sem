@@ -25,6 +25,7 @@ __decorate([
         type: Number,
         example: 1
     }),
+    (0, class_validator_1.IsPositive)(),
     __metadata("design:type", Number)
 ], CreateItemDto.prototype, "categoryId", void 0);
 __decorate([
@@ -42,7 +43,7 @@ __decorate([
         example: [10.99, 9.99],
         default: []
     }),
-    (0, class_validator_1.IsArray)(),
+    (0, class_validator_1.IsPositive)({ each: true }),
     __metadata("design:type", Array)
 ], CreateItemDto.prototype, "prices", void 0);
 __decorate([
@@ -52,7 +53,7 @@ __decorate([
         example: ['http://example.com/image1.jpg'],
         default: []
     }),
-    (0, class_validator_1.IsArray)(),
+    (0, class_validator_1.IsString)({ each: true }),
     __metadata("design:type", Array)
 ], CreateItemDto.prototype, "images", void 0);
 __decorate([
@@ -80,6 +81,7 @@ __decorate([
         minimum: 0,
         example: 299.99
     }),
+    (0, class_validator_1.IsPositive)(),
     __metadata("design:type", Number)
 ], CreateItemDto.prototype, "price", void 0);
 //# sourceMappingURL=createItemDto.js.map

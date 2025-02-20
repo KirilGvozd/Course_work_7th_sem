@@ -1,13 +1,23 @@
-import {IsArray, IsNumber, IsPositive, IsString, Length} from "class-validator";
+import {IsOptional, IsPositive, IsString, Length} from "class-validator";
 import { ApiProperty } from "@nestjs/swagger";
 
 export class UpdateItemDto {
+    @ApiProperty({
+        description: 'Id of the category',
+        minimum: 0,
+        example: 29.99
+    })
+    @IsPositive()
+    @IsOptional()
+    categoryId: number;
+
     @ApiProperty({
         description: 'Array of image URLs for the item',
         type: [String],
         example: ['http://example.com/image1.jpg', 'http://example.com/image2.jpg']
     })
-    @IsArray()
+    @IsString({ each: true })
+    @IsOptional()
     images: string[];
 
     @ApiProperty({
@@ -16,7 +26,8 @@ export class UpdateItemDto {
         example: [10.99, 9.99, 8.99],
         default: []
     })
-    @IsArray()
+    @IsPositive({ each: true })
+    @IsOptional()
     prices: number[] = [];
 
     @ApiProperty({
@@ -26,6 +37,7 @@ export class UpdateItemDto {
         example: 'Vintage Chair'
     })
     @IsString()
+    @IsOptional()
     @Length(1, 40, { message: 'Length error' })
     name: string;
 
@@ -34,6 +46,7 @@ export class UpdateItemDto {
         example: 'Beautiful vintage chair in excellent condition'
     })
     @IsString()
+    @IsOptional()
     description: string;
 
     @ApiProperty({
@@ -41,7 +54,7 @@ export class UpdateItemDto {
         minimum: 0,
         example: 29.99
     })
-    @IsNumber()
     @IsPositive()
+    @IsOptional()
     price: number;
 }

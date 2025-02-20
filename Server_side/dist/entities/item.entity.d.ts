@@ -5,6 +5,10 @@ export declare class Item {
     id: number;
     userId: number;
     user: User;
+    reservedById?: number;
+    reservedBy?: User;
+    reservationExpiry?: Date;
+    isApprovedByModerator: boolean;
     prices: number[];
     images: string[];
     name: string;

@@ -1,4 +1,4 @@
-import {IsArray, IsString, Length} from "class-validator";
+import { IsPositive, IsString, Length } from "class-validator";
 import { ApiProperty } from "@nestjs/swagger";
 
 export class CreateItemDto {
@@ -7,6 +7,7 @@ export class CreateItemDto {
         type: Number,
         example: 1
     })
+    @IsPositive()
     categoryId: number;
 
     @ApiProperty({
@@ -22,7 +23,7 @@ export class CreateItemDto {
         example: [10.99, 9.99],
         default: []
     })
-    @IsArray()
+    @IsPositive({ each: true })
     prices: number[] = [];
 
     @ApiProperty({
@@ -31,7 +32,7 @@ export class CreateItemDto {
         example: ['http://example.com/image1.jpg'],
         default: []
     })
-    @IsArray()
+    @IsString({ each: true })
     images: string[] = [];
 
     @ApiProperty({
@@ -56,5 +57,6 @@ export class CreateItemDto {
         minimum: 0,
         example: 299.99
     })
+    @IsPositive()
     price: number;
 }

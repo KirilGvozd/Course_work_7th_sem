@@ -30,6 +30,8 @@ const itemAttribute_entity_1 = require("./entities/itemAttribute.entity");
 const attribute_module_1 = require("./attribute/attribute.module");
 const category_module_1 = require("./category/category.module");
 const item_attribute_module_1 = require("./item-attribute/item-attribute.module");
+const report_module_1 = require("./report/report.module");
+const report_entity_1 = require("./entities/report.entity");
 let AppModule = class AppModule {
     configure(consumer) {
         consumer.apply(bodyParser.json()).forRoutes('*');
@@ -57,7 +59,7 @@ exports.AppModule = AppModule = __decorate([
                     username: configService.get("DATABASE_USERNAME"),
                     password: configService.get("DATABASE_PASSWORD"),
                     database: configService.get("DATABASE_NAME"),
-                    entities: [item_entity_1.Item, user_entity_1.User, chat_entity_1.Chat, comment_entity_1.Comment, attribute_entity_1.Attribute, category_entity_1.Category, itemAttribute_entity_1.ItemAttribute],
+                    entities: [item_entity_1.Item, user_entity_1.User, chat_entity_1.Chat, comment_entity_1.Comment, attribute_entity_1.Attribute, category_entity_1.Category, itemAttribute_entity_1.ItemAttribute, report_entity_1.Report],
                     synchronize: true,
                     keepAlive: true,
                     logging: true,
@@ -73,6 +75,7 @@ exports.AppModule = AppModule = __decorate([
             attribute_module_1.AttributeModule,
             category_module_1.CategoryModule,
             item_attribute_module_1.ItemAttributeModule,
+            report_module_1.ReportModule,
         ],
         providers: [app_service_1.AppService, chat_gateway_gateway_1.ChatGatewayGateway],
     })

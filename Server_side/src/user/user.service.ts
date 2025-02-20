@@ -1,4 +1,4 @@
-import {BadRequestException, Injectable, InternalServerErrorException, NotFoundException} from "@nestjs/common";
+import {BadRequestException, Injectable, NotFoundException} from "@nestjs/common";
 import {Repository} from "typeorm";
 import {InjectRepository} from "@nestjs/typeorm";
 import {User} from "../entities/user.entity";
@@ -19,12 +19,7 @@ export class UserService {
             ...userData,
         });
 
-        try {
-            return await this.userRepository.save(newUser);
-        } catch (error) {
-            console.error(error);
-            throw new InternalServerErrorException();
-        }
+        return await this.userRepository.save(newUser);
     }
 
     async addFavouriteItem(itemId: number, userId: number) {

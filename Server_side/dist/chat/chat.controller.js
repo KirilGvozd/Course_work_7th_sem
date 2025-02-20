@@ -16,7 +16,6 @@ exports.ChatController = void 0;
 const common_1 = require("@nestjs/common");
 const chat_service_1 = require("./chat.service");
 const createChatDto_1 = require("./dto/createChatDto");
-const updateChatDto_dto_1 = require("./dto/updateChatDto.dto");
 const jwt_auth_guard_1 = require("../auth/jwt-auth.guard");
 const swagger_1 = require("@nestjs/swagger");
 let ChatController = class ChatController {
@@ -34,12 +33,9 @@ let ChatController = class ChatController {
     async create(body) {
         return await this.chatService.create(body);
     }
-    async update(body, id, request) {
-        const userId = request.user.id;
-        await this.chatService.updateMessage(id, body, userId);
-    }
-    async delete(id) {
+    async delete(id, res) {
         await this.chatService.delete(id);
+        return res.status(200).json("Message was deleted successfully.");
     }
 };
 exports.ChatController = ChatController;
@@ -70,23 +66,13 @@ __decorate([
     __metadata("design:returntype", Promise)
 ], ChatController.prototype, "create", null);
 __decorate([
-    (0, common_1.Put)(':id'),
-    (0, swagger_1.ApiResponse)({ status: 201, description: 'Message was updated.' }),
-    (0, swagger_1.ApiResponse)({ status: 401, description: "You don't have access to edit this message!" }),
-    __param(0, (0, common_1.Body)()),
-    __param(1, (0, common_1.Param)('id', common_1.ParseIntPipe)),
-    __param(2, (0, common_1.Req)()),
-    __metadata("design:type", Function),
-    __metadata("design:paramtypes", [updateChatDto_dto_1.UpdateChatDto, Number, Object]),
-    __metadata("design:returntype", Promise)
-], ChatController.prototype, "update", null);
-__decorate([
     (0, common_1.Delete)(':id'),
     (0, swagger_1.ApiResponse)({ status: 201, description: 'Message was successfully removed.' }),
     (0, swagger_1.ApiResponse)({ status: 401, description: "You don't have access to remove this message!" }),
     __param(0, (0, common_1.Param)('id', common_1.ParseIntPipe)),
+    __param(1, (0, common_1.Res)()),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [Number]),
+    __metadata("design:paramtypes", [Number, Object]),
     __metadata("design:returntype", Promise)
 ], ChatController.prototype, "delete", null);
 exports.ChatController = ChatController = __decorate([

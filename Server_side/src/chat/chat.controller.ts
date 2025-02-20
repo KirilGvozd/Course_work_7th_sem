@@ -6,13 +6,11 @@ import {
     Param,
     ParseIntPipe,
     Post,
-    Put,
-    Req,
+    Req, Res,
     UseGuards
 } from "@nestjs/common";
 import {ChatService} from "./chat.service";
 import {CreateChatDto} from "./dto/createChatDto";
-import {UpdateChatDto} from "./dto/updateChatDto.dto";
 import {JwtAuthGuard} from "../auth/jwt-auth.guard";
 import {ApiResponse} from "@nestjs/swagger";
 
@@ -42,18 +40,11 @@ export class ChatController {
         return await this.chatService.create(body);
     }
 
-    @Put(':id')
-    @ApiResponse({ status: 201, description: 'Message was updated.'})
-    @ApiResponse({ status: 401, description: "You don't have access to edit this message!"})
-    async update(@Body() body: UpdateChatDto, @Param('id', ParseIntPipe) id: number, @Req() request) {
-        const userId = request.user.id;
-        await this.chatService.updateMessage(id, body, userId);
-    }
-
     @Delete(':id')
     @ApiResponse({ status: 201, description: 'Message was successfully removed.'})
     @ApiResponse({ status: 401, description: "You don't have access to remove this message!"})
-    async delete(@Param('id', ParseIntPipe) id: number) {
+    async delete(@Param('id', ParseIntPipe) id: number, @Res() res) {
         await this.chatService.delete(id);
+        return res.status(200).json("Message was deleted successfully.");
     }
 }

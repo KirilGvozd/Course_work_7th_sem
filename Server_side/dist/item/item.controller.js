@@ -25,8 +25,23 @@ let ItemController = class ItemController {
     constructor(itemService) {
         this.itemService = itemService;
     }
-    findAll(paginationDto, typeId, minPrice, maxPrice, sellerId) {
-        return this.itemService.findAll(paginationDto, { typeId, minPrice, maxPrice, sellerId });
+    findAll(paginationDto, typeId, minPrice, maxPrice, sellerId, attributes) {
+        const attributeFilters = attributes ? JSON.parse(attributes) : {};
+        return this.itemService.findAll(paginationDto, { typeId, minPrice, maxPrice, sellerId, attributes: attributeFilters });
+    }
+    async getReservedItems(req) {
+        if (req.user.role !== 'buyer') {
+            return await this.itemService.getReservedItems(req.user.userId);
+        }
+        else {
+            throw new common_1.ForbiddenException("You dont have rights to make or store reservations!");
+        }
+    }
+    async getItemsPendingApproval(req) {
+        if (req.user.role !== 'seller') {
+            throw new common_1.ForbiddenException("You don't have rights to watch pending approvals!");
+        }
+        return await this.itemService.getItemsPendingApproval(req.user.userId);
     }
     findOne(id) {
         return this.itemService.findOne(id);
@@ -36,16 +51,51 @@ let ItemController = class ItemController {
             userId: request.user.userId,
             role: request.user.role,
         };
+        body.userId = user.userId;
         body.images = files?.map((file) => file.path) || [];
         return this.itemService.create(body, user);
     }
+    async reserve(itemId, req) {
+        if (req.user.role === 'buyer') {
+            return await this.itemService.reserveItem(itemId, req.user.userId);
+        }
+        else {
+            throw new common_1.ForbiddenException("You don't have rights to reserve items!");
+        }
+    }
+    async deleteReservation(itemId, req) {
+        if (req.user.role === 'buyer') {
+            return await this.itemService.removeReservation(itemId, req.user.userId);
+        }
+        else {
+            throw new common_1.ForbiddenException("You don't have rights to remove reserved items!");
+        }
+    }
+    async approveReservation(itemId, req) {
+        if (req.user.role !== 'seller') {
+            throw new common_1.ForbiddenException("You don't have rights to approve reservations!");
+        }
+        return await this.itemService.approveReservation(itemId, req.user.userId);
+    }
+    async rejectReservation(itemId, req) {
+        if (req.user.role !== 'seller') {
+            throw new common_1.ForbiddenException("You don't have rights to reject reservations!");
+        }
+        return await this.itemService.rejectReservation(itemId, req.user.userId);
+    }
     async update(id, body, files, request) {
+        if (request.user.role !== 'seller') {
+            throw new common_1.ForbiddenException("You don't have rights to edit items!");
+        }
         const existingImages = await this.itemService.retrieveExistingImages(id);
         const images = files ? files.map((file) => file.path) : [];
         body.images = [...existingImages, ...images];
         return await this.itemService.update(id, body, request.user.userId);
     }
     delete(id, request) {
+        if (request.user.role !== 'seller') {
+            throw new common_1.ForbiddenException("You don't have rights to delete the item!");
+        }
         const userId = request.user.id;
         return this.itemService.delete(id, userId);
     }
@@ -58,15 +108,39 @@ __decorate([
     (0, swagger_1.ApiQuery)({ name: 'minPrice', required: false, type: Number }),
     (0, swagger_1.ApiQuery)({ name: 'maxPrice', required: false, type: Number }),
     (0, swagger_1.ApiQuery)({ name: 'sellerId', required: false, type: Number }),
+    (0, swagger_1.ApiQuery)({ name: 'attributes', required: false, type: String, description: 'JSON string of attributes filter' }),
     __param(0, (0, common_1.Query)()),
     __param(1, (0, common_1.Query)('typeId')),
     __param(2, (0, common_1.Query)('minPrice')),
     __param(3, (0, common_1.Query)('maxPrice')),
     __param(4, (0, common_1.Query)('sellerId')),
+    __param(5, (0, common_1.Query)('attributes')),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [pagination_dto_1.PaginationDto, Number, Number, Number, Number]),
+    __metadata("design:paramtypes", [pagination_dto_1.PaginationDto, Number, Number, Number, Number, String]),
     __metadata("design:returntype", void 0)
 ], ItemController.prototype, "findAll", null);
+__decorate([
+    (0, common_1.Get)('reserved'),
+    (0, swagger_1.ApiResponse)({ status: 200, description: 'Your reserved items has been successfully retrieved.' }),
+    (0, swagger_1.ApiResponse)({ status: 401, description: "You don't have permission to retrieve this!" }),
+    (0, swagger_1.ApiResponse)({ status: 403, description: "You don't have rights to retrieve this!" }),
+    (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard),
+    __param(0, (0, common_1.Req)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object]),
+    __metadata("design:returntype", Promise)
+], ItemController.prototype, "getReservedItems", null);
+__decorate([
+    (0, common_1.Get)('pending-approval'),
+    (0, swagger_1.ApiResponse)({ status: 200, description: 'Items that are pending approval has been successfully retrieved.' }),
+    (0, swagger_1.ApiResponse)({ status: 401, description: "You don't have permission to retrieve this!" }),
+    (0, swagger_1.ApiResponse)({ status: 403, description: "You don't have rights to retrieve this!" }),
+    (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard),
+    __param(0, (0, common_1.Req)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object]),
+    __metadata("design:returntype", Promise)
+], ItemController.prototype, "getItemsPendingApproval", null);
 __decorate([
     (0, common_1.Get)(':id'),
     (0, swagger_1.ApiResponse)({ status: 200, description: 'Item has been found.' }),
@@ -88,7 +162,61 @@ __decorate([
     __metadata("design:returntype", Promise)
 ], ItemController.prototype, "create", null);
 __decorate([
+    (0, common_1.Post)(':id/reserve'),
+    (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard),
+    (0, swagger_1.ApiResponse)({ status: 200, description: 'Item successfully reserved.' }),
+    (0, swagger_1.ApiResponse)({ status: 401, description: 'Unauthorized access.' }),
+    (0, swagger_1.ApiResponse)({ status: 403, description: 'You don\'t have rights to reserve items!' }),
+    (0, swagger_1.ApiResponse)({ status: 404, description: 'Item not found.' }),
+    __param(0, (0, common_1.Param)('id')),
+    __param(1, (0, common_1.Req)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Number, Object]),
+    __metadata("design:returntype", Promise)
+], ItemController.prototype, "reserve", null);
+__decorate([
+    (0, common_1.Delete)(':id/reserve'),
+    (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard),
+    (0, swagger_1.ApiResponse)({ status: 200, description: 'Item successfully removed from reserved list.' }),
+    (0, swagger_1.ApiResponse)({ status: 401, description: 'Unauthorized access.' }),
+    (0, swagger_1.ApiResponse)({ status: 403, description: 'You don\'t have rights to reserve items!' }),
+    (0, swagger_1.ApiResponse)({ status: 404, description: 'Item not found.' }),
+    __param(0, (0, common_1.Param)('id')),
+    __param(1, (0, common_1.Req)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Number, Object]),
+    __metadata("design:returntype", Promise)
+], ItemController.prototype, "deleteReservation", null);
+__decorate([
+    (0, common_1.Post)(':id/approve'),
+    (0, swagger_1.ApiResponse)({ status: 200, description: 'Reservation has been successfully approved.' }),
+    (0, swagger_1.ApiResponse)({ status: 401, description: "You don't have permission to approve this reservation!" }),
+    (0, swagger_1.ApiResponse)({ status: 403, description: "You don't have rights to approve this reservation!" }),
+    (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard),
+    __param(0, (0, common_1.Param)('id')),
+    __param(1, (0, common_1.Req)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Number, Object]),
+    __metadata("design:returntype", Promise)
+], ItemController.prototype, "approveReservation", null);
+__decorate([
+    (0, common_1.Post)(':id/reject'),
+    (0, swagger_1.ApiResponse)({ status: 200, description: 'Reservation has been successfully rejected.' }),
+    (0, swagger_1.ApiResponse)({ status: 401, description: "You don't have permission to reject this reservation!" }),
+    (0, swagger_1.ApiResponse)({ status: 403, description: "You don't have rights to reject this reservation!" }),
+    (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard),
+    __param(0, (0, common_1.Param)('id')),
+    __param(1, (0, common_1.Req)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Number, Object]),
+    __metadata("design:returntype", Promise)
+], ItemController.prototype, "rejectReservation", null);
+__decorate([
     (0, common_1.Put)(':id'),
+    (0, swagger_1.ApiResponse)({ status: 200, description: 'Item has been successfully updated.' }),
+    (0, swagger_1.ApiResponse)({ status: 401, description: "You don't have permission to edit this item!" }),
+    (0, swagger_1.ApiResponse)({ status: 403, description: "You don't have rights to edit this item!" }),
+    (0, swagger_1.ApiResponse)({ status: 404, description: 'Item not found.' }),
     (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard),
     (0, common_1.UseInterceptors)((0, platform_express_1.FilesInterceptor)('images')),
     __param(0, (0, common_1.Param)('id')),
@@ -104,6 +232,7 @@ __decorate([
     (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard),
     (0, swagger_1.ApiResponse)({ status: 200, description: 'Item has been successfully deleted.' }),
     (0, swagger_1.ApiResponse)({ status: 401, description: "You don't have permission to delete this item!" }),
+    (0, swagger_1.ApiResponse)({ status: 403, description: "You don't have rights to delete this item!" }),
     (0, swagger_1.ApiResponse)({ status: 404, description: 'Item not found.' }),
     __param(0, (0, common_1.Param)('id')),
     __param(1, (0, common_1.Req)()),

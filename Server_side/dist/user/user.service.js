@@ -28,13 +28,7 @@ let UserService = class UserService {
         const newUser = this.userRepository.create({
             ...userData,
         });
-        try {
-            return await this.userRepository.save(newUser);
-        }
-        catch (error) {
-            console.error(error);
-            throw new common_1.InternalServerErrorException();
-        }
+        return await this.userRepository.save(newUser);
     }
     async addFavouriteItem(itemId, userId) {
         const user = await this.userRepository.findOne({

@@ -17,14 +17,9 @@ class CreateCommentDto {
 exports.CreateCommentDto = CreateCommentDto;
 __decorate([
     (0, swagger_1.ApiProperty)({
-        description: "Id of the current user",
-    }),
-    __metadata("design:type", Number)
-], CreateCommentDto.prototype, "userId", void 0);
-__decorate([
-    (0, swagger_1.ApiProperty)({
         description: "Id of the seller",
     }),
+    (0, class_validator_1.IsInt)(),
     __metadata("design:type", Number)
 ], CreateCommentDto.prototype, "sellerId", void 0);
 __decorate([
@@ -32,14 +27,9 @@ __decorate([
         description: "Images",
         default: [],
     }),
+    (0, class_validator_1.IsString)({ each: true }),
     __metadata("design:type", Array)
 ], CreateCommentDto.prototype, "attachments", void 0);
-__decorate([
-    (0, swagger_1.ApiProperty)({
-        description: "Date of the comment",
-    }),
-    __metadata("design:type", String)
-], CreateCommentDto.prototype, "date", void 0);
 __decorate([
     (0, swagger_1.ApiProperty)({
         description: "Comment on seller",
@@ -53,6 +43,7 @@ __decorate([
         description: "Rate of the seller",
         default: 5,
     }),
+    (0, class_validator_1.IsInt)(),
     __metadata("design:type", Number)
 ], CreateCommentDto.prototype, "rate", void 0);
 //# sourceMappingURL=createCommentDto.js.map

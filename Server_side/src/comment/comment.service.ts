@@ -2,7 +2,6 @@ import {Injectable, NotFoundException, UnauthorizedException} from "@nestjs/comm
 import {Repository} from "typeorm";
 import {Comment} from "../entities/comment.entity";
 import {InjectRepository} from "@nestjs/typeorm";
-import {CreateCommentDto} from "./dto/createCommentDto";
 import {User} from "../entities/user.entity";
 
 @Injectable()
@@ -35,7 +34,7 @@ export class CommentService {
         };
     }
 
-    async create(body: CreateCommentDto, userRole: string, userId: number) {
+    async create(body: any, userRole: string, userId: number) {
         if (userRole === "seller") {
             throw new UnauthorizedException("Sellers can't leave comments!");
         }
@@ -61,7 +60,6 @@ export class CommentService {
         await this.userRepository.save(seller);
         seller.rate = await this.countRate(body.sellerId);
         await this.userRepository.save(seller);
-        body.date = new Date().toISOString();
         body.userId = userId;
         return await this.commentRepository.save(body);
     }
@@ -92,7 +90,7 @@ export class CommentService {
         seller.rate = await this.countRate(comment.sellerId);
         await this.userRepository.save(seller);
 
-        return await this.commentRepository.delete(id);
+        await this.commentRepository.delete(id);
     }
 
     private async countRate(userId: number) {

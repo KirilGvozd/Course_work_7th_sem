@@ -31,6 +31,23 @@ __decorate([
     __metadata("design:type", user_entity_1.User)
 ], Item.prototype, "user", void 0);
 __decorate([
+    (0, typeorm_1.Column)({ nullable: true }),
+    __metadata("design:type", Number)
+], Item.prototype, "reservedById", void 0);
+__decorate([
+    (0, typeorm_1.ManyToOne)(() => user_entity_1.User, { onDelete: "SET NULL" }),
+    (0, typeorm_1.JoinColumn)({ name: "reservedById" }),
+    __metadata("design:type", user_entity_1.User)
+], Item.prototype, "reservedBy", void 0);
+__decorate([
+    (0, typeorm_1.Column)({ nullable: true }),
+    __metadata("design:type", Date)
+], Item.prototype, "reservationExpiry", void 0);
+__decorate([
+    (0, typeorm_1.Column)(),
+    __metadata("design:type", Boolean)
+], Item.prototype, "isApprovedByModerator", void 0);
+__decorate([
     (0, typeorm_1.Column)("money", { array: true }),
     __metadata("design:type", Array)
 ], Item.prototype, "prices", void 0);

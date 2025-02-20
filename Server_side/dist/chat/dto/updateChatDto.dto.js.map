@@ -1,1 +1,0 @@
-{"version":3,"file":"updateChatDto.dto.js","sourceRoot":"","sources":["../../../src/chat/dto/updateChatDto.dto.ts"],"names":[],"mappings":";;;;;;;;;;;;AAAA,qDAAyC;AACzC,6CAA4C;AAE5C,MAAa,aAAa;CAOzB;AAPD,sCAOC;AADG;IALC,IAAA,qBAAW,EAAC;QACT,WAAW,EAAE,qBAAqB;QAClC,OAAO,EAAE,yBAAyB;KACrC,CAAC;IACD,IAAA,0BAAQ,GAAE;;kDACS"}

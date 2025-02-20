@@ -18,6 +18,7 @@ const comment_service_1 = require("./comment.service");
 const jwt_auth_guard_1 = require("../auth/jwt-auth.guard");
 const swagger_1 = require("@nestjs/swagger");
 const platform_express_1 = require("@nestjs/platform-express");
+const createCommentDto_1 = require("./dto/createCommentDto");
 let CommentController = class CommentController {
     constructor(commentService) {
         this.commentService = commentService;
@@ -26,12 +27,10 @@ let CommentController = class CommentController {
         return this.commentService.findAll(id);
     }
     async create(body, request, files) {
-        const rate = Number(body.rate);
-        const text = body.text;
-        if (!text || text.trim().length === 0) {
+        if (!body.text || body.text.trim().length === 0) {
             throw new common_1.BadRequestException('Text cannot be empty');
         }
-        if (isNaN(rate) || rate < 1 || rate > 5) {
+        if (body.rate < 1 || body.rate > 5) {
             throw new common_1.BadRequestException('Rate must be between 1 and 5');
         }
         const user = {
@@ -39,17 +38,17 @@ let CommentController = class CommentController {
             role: request.user.role,
         };
         const commentData = {
-            text,
-            rate,
+            text: body.text,
+            rate: body.rate,
             sellerId: body.sellerId,
-            userId: user.userId,
             date: new Date().toISOString(),
             attachments: files?.map((file) => file.path) || [],
         };
         return this.commentService.create(commentData, user.role, user.userId);
     }
-    async delete(request, id) {
-        return this.commentService.delete(id, request.user.userId);
+    async delete(request, res, id) {
+        await this.commentService.delete(id, request.user.userId);
+        return res.status(200).json({ message: "Comment removed successfully." });
     }
 };
 exports.CommentController = CommentController;
@@ -70,16 +69,17 @@ __decorate([
     __param(1, (0, common_1.Req)()),
     __param(2, (0, common_1.UploadedFiles)()),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [Object, Object, Array]),
+    __metadata("design:paramtypes", [createCommentDto_1.CreateCommentDto, Object, Array]),
     __metadata("design:returntype", Promise)
 ], CommentController.prototype, "create", null);
 __decorate([
     (0, common_1.Delete)(':id'),
     (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard),
     __param(0, (0, common_1.Req)()),
-    __param(1, (0, common_1.Param)('id')),
+    __param(1, (0, common_1.Res)()),
+    __param(2, (0, common_1.Param)('id')),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [Object, Number]),
+    __metadata("design:paramtypes", [Object, Object, Number]),
     __metadata("design:returntype", Promise)
 ], CommentController.prototype, "delete", null);
 exports.CommentController = CommentController = __decorate([

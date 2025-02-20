@@ -21,13 +21,15 @@ const constants_1 = require("../utils/constants");
 const mail_service_1 = require("../mail/mail.service");
 const user_entity_1 = require("../entities/user.entity");
 let ItemService = class ItemService {
-    constructor(itemRepo, mailService, userRepository) {
-        this.itemRepo = itemRepo;
+    constructor(itemRepository, mailService, userRepository) {
+        this.itemRepository = itemRepository;
         this.mailService = mailService;
         this.userRepository = userRepository;
     }
     async findAll(paginationDto, filters) {
-        const query = this.itemRepo.createQueryBuilder("item");
+        const query = this.itemRepository.createQueryBuilder("item")
+            .leftJoinAndSelect("item.attributes", "itemAttribute")
+            .leftJoinAndSelect("itemAttribute.attribute", "attribute");
         if (filters.sellerId) {
             query.andWhere("item.userId = :sellerId", { sellerId: filters.sellerId });
         }
@@ -40,12 +42,28 @@ let ItemService = class ItemService {
         if (filters.maxPrice) {
             query.andWhere("item.price <= :maxPrice", { maxPrice: filters.maxPrice });
         }
+        if (filters.attributes) {
+            Object.entries(filters.attributes).forEach(([key, value]) => {
+                query.andWhere("attribute.name = :attrName", { attrName: key });
+                if (typeof value === 'object' && value !== null) {
+                    if (value.min !== undefined) {
+                        query.andWhere("itemAttribute.numberValue >= :minValue", { minValue: value.min });
+                    }
+                    if (value.max !== undefined) {
+                        query.andWhere("itemAttribute.numberValue <= :maxValue", { maxValue: value.max });
+                    }
+                }
+                else {
+                    query.andWhere("itemAttribute.stringValue = :attrValue", { attrValue: value });
+                }
+            });
+        }
         query.skip(paginationDto.skip).take(paginationDto.limit ?? constants_1.DEFAULT_PAGE_SIZE);
         const [items, total] = await query.getManyAndCount();
         return { items, total };
     }
     async findOne(id) {
-        const result = await this.itemRepo.findOne({
+        const result = await this.itemRepository.findOne({
             where: {
                 id
             },
@@ -60,10 +78,105 @@ let ItemService = class ItemService {
         if (user.role === "buyer") {
             throw new common_1.UnauthorizedException("You dont have permission to create an item!");
         }
-        return await this.itemRepo.save(body);
+        body.isApprovedByModerator = true;
+        return await this.itemRepository.save(body);
+    }
+    async reserveItem(itemId, userId) {
+        const item = await this.itemRepository.findOne({
+            where: { id: itemId },
+            relations: ['user'],
+        });
+        const buyer = await this.userRepository.findOne({
+            where: {
+                id: userId,
+            }
+        });
+        if (!buyer) {
+            throw new common_1.NotFoundException("There's no such user!");
+        }
+        if (!item) {
+            throw new common_1.NotFoundException('Item not found');
+        }
+        if (item.reservedById) {
+            throw new common_1.ConflictException('Item already reserved');
+        }
+        item.reservedBy = buyer;
+        item.reservationExpiry = new Date(Date.now() + 24 * 60 * 60 * 1000);
+        await this.mailService.sendReservationOfItemNotification(item.user.email, item.name, buyer.name);
+        return this.itemRepository.save(item);
+    }
+    async removeReservation(itemId, userId) {
+        const item = await this.itemRepository.findOne({
+            where: {
+                id: itemId,
+            },
+            relations: ['user', 'reservedBy'],
+        });
+        if (!item) {
+            throw new common_1.NotFoundException('Item not found');
+        }
+        if (userId !== item.reservedById) {
+            throw new common_1.UnauthorizedException("You dont have permission to remove this reservation!");
+        }
+        await this.mailService.sendRemovalOfReservationNotification(item.user.email, item.name, item.user.name, item.reservedBy.name);
+        item.reservedBy = null;
+        item.reservationExpiry = null;
+        return await this.itemRepository.save(item);
+    }
+    async approveReservation(itemId, sellerId) {
+        const item = await this.itemRepository.findOne({
+            where: {
+                id: itemId,
+            },
+            relations: ['reservedBy'],
+        });
+        if (item.userId !== sellerId) {
+            throw new common_1.UnauthorizedException("You dont have permission to approve this reservation!");
+        }
+        if (!item.reservedById) {
+            throw new common_1.BadRequestException('Item is not reserved');
+        }
+        if (item.reservationExpiry < new Date()) {
+            throw new common_1.GoneException('Reservation expired');
+        }
+        await this.mailService.sendApprovedReservationNotification(item.reservedBy.email, item.name, item.reservedBy.name);
+        return await this.itemRepository.delete(itemId);
+    }
+    async rejectReservation(itemId, sellerId) {
+        const item = await this.itemRepository.findOne({
+            where: {
+                id: itemId,
+            },
+            relations: ['reservedBy'],
+        });
+        if (!item) {
+            throw new common_1.NotFoundException('Item not found');
+        }
+        if (item.userId !== sellerId) {
+            throw new common_1.UnauthorizedException("You dont have permission to reject this reservation!");
+        }
+        await this.mailService.sendRejectReservationNotification(item.reservedBy.email, item.name, item.reservedBy.name);
+        item.reservedBy = null;
+        item.reservationExpiry = null;
+        return this.itemRepository.save(item);
+    }
+    async getReservedItems(userId) {
+        return await this.itemRepository.findAndCount({
+            where: { reservedBy: { id: userId } },
+            relations: ['user', 'category'],
+        });
+    }
+    async getItemsPendingApproval(userId) {
+        return this.itemRepository.find({
+            where: {
+                user: { id: userId },
+                reservedById: (0, typeorm_1.Not)((0, typeorm_1.IsNull)()),
+            },
+            relations: ['reservedBy', 'category'],
+        });
     }
     async update(id, body, userId) {
-        const item = await this.itemRepo.findOne({
+        const item = await this.itemRepository.findOne({
             where: { id },
         });
         if (!item) {
@@ -81,7 +194,7 @@ let ItemService = class ItemService {
             ...body,
             prices: item.prices,
         };
-        await this.itemRepo.save(updatedItem);
+        await this.itemRepository.save(updatedItem);
         if (body.price !== item.price) {
             const priceChange = body.price > item.price ? 'повышена' : 'понижена';
             const users = await this.userRepository.find({
@@ -95,7 +208,7 @@ let ItemService = class ItemService {
         return updatedItem;
     }
     async delete(id, userId) {
-        const item = await this.itemRepo.findOne({
+        const item = await this.itemRepository.findOne({
             where: {
                 userId: userId,
             }
@@ -103,10 +216,10 @@ let ItemService = class ItemService {
         if (!item) {
             throw new common_1.UnauthorizedException("You don't have the permission to delete this item!");
         }
-        return await this.itemRepo.delete(id);
+        return await this.itemRepository.delete(id);
     }
     async retrieveExistingImages(id) {
-        const item = await this.itemRepo.findOne({
+        const item = await this.itemRepository.findOne({
             where: {
                 id
             }

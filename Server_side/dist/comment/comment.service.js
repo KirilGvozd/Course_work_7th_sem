@@ -63,7 +63,6 @@ let CommentService = class CommentService {
         await this.userRepository.save(seller);
         seller.rate = await this.countRate(body.sellerId);
         await this.userRepository.save(seller);
-        body.date = new Date().toISOString();
         body.userId = userId;
         return await this.commentRepository.save(body);
     }
@@ -88,7 +87,7 @@ let CommentService = class CommentService {
         await this.userRepository.save(seller);
         seller.rate = await this.countRate(comment.sellerId);
         await this.userRepository.save(seller);
-        return await this.commentRepository.delete(id);
+        await this.commentRepository.delete(id);
     }
     async countRate(userId) {
         const user = await this.userRepository.findOne({

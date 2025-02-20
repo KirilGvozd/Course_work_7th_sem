@@ -5,7 +5,7 @@ import {
     Get,
     Param,
     Post,
-    Req,
+    Req, Res,
     UploadedFiles,
     UseGuards,
     UseInterceptors,
@@ -14,6 +14,7 @@ import {CommentService} from "./comment.service";
 import {JwtAuthGuard} from "../auth/jwt-auth.guard";
 import {ApiResponse, ApiTags} from "@nestjs/swagger";
 import {FilesInterceptor} from "@nestjs/platform-express";
+import {CreateCommentDto} from "./dto/createCommentDto";
 
 @ApiTags('Comments')
 @Controller('comment')
@@ -31,18 +32,15 @@ export class CommentController {
     @UseGuards(JwtAuthGuard)
     @UseInterceptors(FilesInterceptor('images'))
     async create(
-        @Body() body: any,
+        @Body() body: CreateCommentDto,
         @Req() request,
         @UploadedFiles() files: Express.Multer.File[],
     ) {
-        const rate = Number(body.rate);
-        const text = body.text;
-
-        if (!text || text.trim().length === 0) {
+        if (!body.text || body.text.trim().length === 0) {
             throw new BadRequestException('Text cannot be empty');
         }
 
-        if (isNaN(rate) || rate < 1 || rate > 5) {
+        if (body.rate < 1 || body.rate > 5) {
             throw new BadRequestException('Rate must be between 1 and 5');
         }
 
@@ -52,10 +50,9 @@ export class CommentController {
         };
 
         const commentData = {
-            text,
-            rate,
+            text: body.text,
+            rate: body.rate,
             sellerId: body.sellerId,
-            userId: user.userId,
             date: new Date().toISOString(),
             attachments: files?.map((file) => file.path) || [],
         };
@@ -65,7 +62,8 @@ export class CommentController {
 
     @Delete(':id')
     @UseGuards(JwtAuthGuard)
-    async delete(@Req() request, @Param('id') id: number) {
-        return this.commentService.delete(id, request.user.userId);
+    async delete(@Req() request, @Res() res, @Param('id') id: number) {
+        await this.commentService.delete(id, request.user.userId);
+        return res.status(200).json({ message: "Comment removed successfully." });
     }
 }

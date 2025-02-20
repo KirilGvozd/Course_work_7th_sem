@@ -1,4 +1,5 @@
 import { CommentService } from "./comment.service";
+import { CreateCommentDto } from "./dto/createCommentDto";
 export declare class CommentController {
     private readonly commentService;
     constructor(commentService: CommentService);
@@ -7,6 +8,6 @@ export declare class CommentController {
         sellerName: string;
         sellerRate: number;
     }>;
-    create(body: any, request: any, files: Express.Multer.File[]): Promise<import("./dto/createCommentDto").CreateCommentDto & import("../entities/comment.entity").Comment>;
-    delete(request: any, id: number): Promise<import("typeorm").DeleteResult>;
+    create(body: CreateCommentDto, request: any, files: Express.Multer.File[]): Promise<any>;
+    delete(request: any, res: any, id: number): Promise<any>;
 }

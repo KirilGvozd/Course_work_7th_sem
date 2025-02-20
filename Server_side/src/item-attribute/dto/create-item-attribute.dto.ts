@@ -1,5 +1,5 @@
 import {ApiProperty} from "@nestjs/swagger";
-import {IsNotEmpty} from "class-validator";
+import {IsNotEmpty, IsOptional} from "class-validator";
 
 export class CreateItemAttributeDto {
     @ApiProperty({
@@ -23,7 +23,7 @@ export class CreateItemAttributeDto {
         example: "Some value",
         type: String,
     })
-    @IsNotEmpty()
+    @IsOptional()
     stringValue: string;
 
     @ApiProperty({
@@ -31,7 +31,7 @@ export class CreateItemAttributeDto {
         example: 100,
         type: Number,
     })
-    @IsNotEmpty()
+    @IsOptional()
     numberValue: number;
 
     @ApiProperty({
@@ -39,6 +39,6 @@ export class CreateItemAttributeDto {
         example: true,
         type: Boolean,
     })
-    @IsNotEmpty()
+    @IsOptional()
     booleanValue: boolean;
 }

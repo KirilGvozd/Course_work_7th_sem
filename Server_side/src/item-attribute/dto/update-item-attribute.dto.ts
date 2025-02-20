@@ -1,6 +1,6 @@
 import {ApiProperty, PartialType} from '@nestjs/swagger';
 import { CreateItemAttributeDto } from './create-item-attribute.dto';
-import {IsNotEmpty} from "class-validator";
+import {IsOptional} from "class-validator";
 
 export class UpdateItemAttributeDto extends PartialType(CreateItemAttributeDto) {
 
@@ -9,7 +9,7 @@ export class UpdateItemAttributeDto extends PartialType(CreateItemAttributeDto) 
         example: "New value",
         type: String,
     })
-    @IsNotEmpty()
+    @IsOptional()
     stringValue: string;
 
     @ApiProperty({
@@ -17,7 +17,7 @@ export class UpdateItemAttributeDto extends PartialType(CreateItemAttributeDto) 
         example: 52,
         type: Number,
     })
-    @IsNotEmpty()
+    @IsOptional()
     numberValue: number;
 
     @ApiProperty({
@@ -25,6 +25,6 @@ export class UpdateItemAttributeDto extends PartialType(CreateItemAttributeDto) 
         example: false,
         type: Boolean,
     })
-    @IsNotEmpty()
+    @IsOptional()
     booleanValue: boolean;
 }

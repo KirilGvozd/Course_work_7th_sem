@@ -1,5 +1,11 @@
-import {Injectable, NotFoundException, UnauthorizedException} from "@nestjs/common";
-import {Repository} from "typeorm";
+import {
+    BadRequestException,
+    ConflictException, GoneException,
+    Injectable,
+    NotFoundException,
+    UnauthorizedException
+} from "@nestjs/common";
+import {IsNull, Not, Repository} from "typeorm";
 import {Item} from "../entities/item.entity";
 import {InjectRepository} from "@nestjs/typeorm";
 import {PaginationDto} from "../pagination.dto";
@@ -12,14 +18,25 @@ import {UpdateItemDto} from "./dto/updateItem.dto";
 export class ItemService {
     constructor(
         @InjectRepository(Item)
-        private itemRepo: Repository<Item>,
+        private itemRepository: Repository<Item>,
         private readonly mailService: MailService,
         @InjectRepository(User)
         private userRepository: Repository<User>,
     ) {}
 
-    async findAll(paginationDto: PaginationDto, filters: { typeId?: number, minPrice?: number, maxPrice?: number, sellerId?: number }) {
-        const query = this.itemRepo.createQueryBuilder("item");
+    async findAll(
+        paginationDto: PaginationDto,
+        filters: {
+            typeId?: number,
+            minPrice?: number,
+            maxPrice?: number,
+            sellerId?: number,
+            attributes?: Record<string, any>
+        }
+    ) {
+        const query = this.itemRepository.createQueryBuilder("item")
+            .leftJoinAndSelect("item.attributes", "itemAttribute")
+            .leftJoinAndSelect("itemAttribute.attribute", "attribute");
 
         if (filters.sellerId) {
             query.andWhere("item.userId = :sellerId", { sellerId: filters.sellerId });
@@ -37,6 +54,23 @@ export class ItemService {
             query.andWhere("item.price <= :maxPrice", { maxPrice: filters.maxPrice });
         }
 
+        if (filters.attributes) {
+            Object.entries(filters.attributes).forEach(([key, value]) => {
+                query.andWhere("attribute.name = :attrName", { attrName: key });
+
+                if (typeof value === 'object' && value !== null) {
+                    if (value.min !== undefined) {
+                        query.andWhere("itemAttribute.numberValue >= :minValue", { minValue: value.min });
+                    }
+                    if (value.max !== undefined) {
+                        query.andWhere("itemAttribute.numberValue <= :maxValue", { maxValue: value.max });
+                    }
+                } else {
+                    query.andWhere("itemAttribute.stringValue = :attrValue", { attrValue: value });
+                }
+            });
+        }
+
         query.skip(paginationDto.skip).take(paginationDto.limit ?? DEFAULT_PAGE_SIZE);
 
         const [items, total] = await query.getManyAndCount();
@@ -45,7 +79,7 @@ export class ItemService {
 
 
     async findOne(id: number) {
-        const result = await this.itemRepo.findOne({
+        const result = await this.itemRepository.findOne({
             where: {
                 id
             },
@@ -64,11 +98,133 @@ export class ItemService {
             throw new UnauthorizedException("You dont have permission to create an item!");
         }
 
-        return await this.itemRepo.save(body);
+        body.isApprovedByModerator = true;
+        return await this.itemRepository.save(body);
+    }
+
+    async reserveItem(itemId: number, userId: number): Promise<Item> {
+        const item = await this.itemRepository.findOne({
+            where: { id: itemId },
+            relations: ['user'],
+        });
+
+        const buyer = await this.userRepository.findOne({
+            where: {
+                id: userId,
+            }
+        });
+
+        if (!buyer) {
+            throw new NotFoundException("There's no such user!");
+        }
+
+        if (!item) {
+            throw new NotFoundException('Item not found');
+        }
+
+        if (item.reservedById) {
+            throw new ConflictException('Item already reserved');
+        }
+
+        item.reservedBy = buyer;
+        item.reservationExpiry = new Date(Date.now() + 24 * 60 * 60 * 1000);
+        await this.mailService.sendReservationOfItemNotification(item.user.email, item.name, buyer.name);
+        return this.itemRepository.save(item);
+    }
+
+    async removeReservation(itemId: number, userId: number) {
+        const item = await this.itemRepository.findOne({
+            where: {
+                id: itemId,
+            },
+            relations: ['user', 'reservedBy'],
+        });
+
+        if (!item) {
+            throw new NotFoundException('Item not found');
+        }
+
+        if (userId !== item.reservedById) {
+            throw new UnauthorizedException("You dont have permission to remove this reservation!");
+        }
+
+        await this.mailService.sendRemovalOfReservationNotification(item.user.email,
+            item.name,
+            item.user.name,
+            item.reservedBy.name
+        )
+
+        item.reservedBy = null;
+        item.reservationExpiry = null;
+        return await this.itemRepository.save(item);
+    }
+
+    async approveReservation(itemId: number, sellerId: number) {
+        const item = await this.itemRepository.findOne({
+            where: {
+                id: itemId,
+            },
+            relations: ['reservedBy'],
+        });
+
+        if (item.userId !== sellerId) {
+            throw new UnauthorizedException("You dont have permission to approve this reservation!");
+        }
+
+        if (!item.reservedById) {
+            throw new BadRequestException('Item is not reserved');
+        }
+
+        if (item.reservationExpiry < new Date()) {
+            throw new GoneException('Reservation expired');
+        }
+
+        await this.mailService.sendApprovedReservationNotification(item.reservedBy.email, item.name, item.reservedBy.name)
+        return await this.itemRepository.delete(itemId);
+    }
+
+    async rejectReservation(itemId: number, sellerId: number) {
+        const item = await this.itemRepository.findOne({
+            where: {
+                id: itemId,
+            },
+            relations: ['reservedBy'],
+        });
+
+        if (!item) {
+            throw new NotFoundException('Item not found');
+        }
+
+        if (item.userId !== sellerId) {
+            throw new UnauthorizedException("You dont have permission to reject this reservation!");
+        }
+
+        await this.mailService.sendRejectReservationNotification(item.reservedBy.email, item.name, item.reservedBy.name)
+
+        item.reservedBy = null;
+        item.reservationExpiry = null;
+        return this.itemRepository.save(item);
+    }
+
+    async getReservedItems(userId: number) {
+        return await this.itemRepository.findAndCount({
+            where: { reservedBy: { id: userId } },
+            relations: ['user', 'category'],
+        });
+    }
+
+    async getItemsPendingApproval(userId: number) {
+        return this.itemRepository.find({
+            where: {
+                user: { id: userId },
+                reservedById: Not(IsNull()),
+            },
+            relations: ['reservedBy', 'category'],
+        });
     }
 
     async update(id: number, body: UpdateItemDto, userId: number) {
-        const item = await this.itemRepo.findOne({
+        const item = await this.itemRepository.findOne({
             where: { id },
         });
 
@@ -92,7 +248,7 @@ export class ItemService {
             prices: item.prices,
         };
 
-        await this.itemRepo.save(updatedItem);
+        await this.itemRepository.save(updatedItem);
 
         if (body.price !== item.price) {
             const priceChange = body.price > item.price ? 'повышена' : 'понижена';
@@ -120,7 +276,7 @@ export class ItemService {
     }
 
     async delete(id: number, userId: number){
-        const item = await this.itemRepo.findOne({
+        const item = await this.itemRepository.findOne({
             where: {
                 userId: userId,
             }
@@ -130,11 +286,11 @@ export class ItemService {
             throw new UnauthorizedException("You don't have the permission to delete this item!");
         }
 
-        return await this.itemRepo.delete(id);
+        return await this.itemRepository.delete(id);
     }
 
     async retrieveExistingImages(id: number) {
-        const item = await this.itemRepo.findOne({
+        const item = await this.itemRepository.findOne({
             where: {
                 id
             }

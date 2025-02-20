@@ -15,6 +15,19 @@ export class Item {
     @JoinColumn({name: 'userId'})
     user: User;
 
+    @Column({ nullable: true })
+    reservedById?: number;
+
+    @ManyToOne(() => User, { onDelete: "SET NULL" })
+    @JoinColumn({ name: "reservedById" })
+    reservedBy?: User;
+
+    @Column({ nullable: true })
+    reservationExpiry?: Date;
+
+    @Column()
+    isApprovedByModerator: boolean;
+
     @Column("money", { array: true} )
     prices: number[];
 
