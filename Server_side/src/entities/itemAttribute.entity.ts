@@ -1,4 +1,4 @@
-import { Entity, PrimaryGeneratedColumn, ManyToOne, Column } from "typeorm";
+import {Entity, PrimaryGeneratedColumn, ManyToOne, Column, JoinColumn} from "typeorm";
 import {Item} from "./item.entity";
 import {Attribute} from "./attribute.entity";
 
@@ -7,11 +7,19 @@ export class ItemAttribute {
     @PrimaryGeneratedColumn()
     id: number;
 
-    @ManyToOne(() => Item, item => item.attributes)
+    @ManyToOne(() => Item, item => item.attributes, { onDelete: "CASCADE" })
+    @JoinColumn({ name: 'itemId' })
     item: Item;
 
-    @ManyToOne(() => Attribute)
+    @Column({ nullable: false })
+    itemId: number;
+
+    @ManyToOne(() => Attribute, { onDelete: "CASCADE" })
+    @JoinColumn({ name: 'attributeId' })
     attribute: Attribute;
+
+    @Column({ nullable: false })
+    attributeId: number;
 
     @Column({ nullable: true })
     stringValue: string;

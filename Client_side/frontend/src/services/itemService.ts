@@ -9,6 +9,8 @@ export interface Item {
   name: string;
   description: string;
   price: number;
+  reservedById: number;
+  reservationExpiry: string;
 }
 
 export const fetchItems = async (params?: {
@@ -18,8 +20,16 @@ export const fetchItems = async (params?: {
   minPrice?: number;
   maxPrice?: number;
   sellerId?: number;
+  attributes?: Record<string, any>;
 }) => {
-  const response = await api.get("/item", { params });
+  const serializedParams = {
+    ...params,
+    attributes: params?.attributes
+      ? JSON.stringify(params.attributes)
+      : undefined,
+  };
+
+  const response = await api.get("/item", { params: serializedParams });
 
   return response.data;
 };

@@ -44,9 +44,6 @@ let AuthController = class AuthController {
         if (user) {
             throw new common_1.BadRequestException("User with this email already exists!");
         }
-        if (createUserDto.role === 'moderator') {
-            await this.mailService.sendCredentialsToNewModerator(createUserDto.email, createUserDto.name, createUserDto.password);
-        }
         createUserDto.password = await bcrypt.hash(createUserDto.password, 12);
         return res.status(201).json(await this.userService.create(createUserDto));
     }
@@ -59,6 +56,7 @@ let AuthController = class AuthController {
         response.cookie("jwt", token, { httpOnly: true });
         return response.status(200).json({
             message: "Login successful",
+            userRole: user.role,
             accessToken: token,
         });
     }

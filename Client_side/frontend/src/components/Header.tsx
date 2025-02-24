@@ -20,6 +20,7 @@ const Header = () => {
         </span>
       </NavbarBrand>
 
+      {/* Кнопка Home Page */}
       <NavbarContent justify="center">
         <NavbarItem>
           <Button as="a" href="/" variant="flat">
@@ -28,37 +29,76 @@ const Header = () => {
         </NavbarItem>
       </NavbarContent>
 
+      {/* Кнопки для авторизованных пользователей */}
       <NavbarContent justify="end">
         {isLoggedIn ? (
           <>
-            {user && (
+            {/* Для админа показываем только Logout */}
+            {user && user.role === "admin" ? (
               <NavbarItem>
-                {user.role === "seller" ? (
-                  <>
-                    <Button as="a" href="/add-item" variant="solid">
-                      Добавить товар
-                    </Button>
-                  </>
-                ) : (
-                  <Button as="a" href="/favourites" variant="solid">
-                    Избранные
-                  </Button>
-                )}
+                <Button as="a" href="/" variant="solid" onPress={logout}>
+                  Logout
+                </Button>
               </NavbarItem>
+            ) : (
+              <>
+                {/* Для продавцов и покупателей оставляем старые кнопки */}
+                {user && (
+                  <>
+                    {user.role === "seller" ? (
+                      <>
+                        <NavbarItem>
+                          <Button as="a" href="/add-item" variant="solid">
+                            Добавить товар
+                          </Button>
+                        </NavbarItem>
+                        {/* Кнопка для перехода на страницу товаров, ожидающих обработки */}
+                        <NavbarItem>
+                          <Button
+                            as="a"
+                            href="/seller/reserved-items"
+                            variant="solid"
+                          >
+                            Товары для обработки
+                          </Button>
+                        </NavbarItem>
+                      </>
+                    ) : (
+                      <>
+                        <NavbarItem>
+                          <Button as="a" href="/favourites" variant="solid">
+                            Избранные
+                          </Button>
+                        </NavbarItem>
+                        <NavbarItem>
+                          <Button
+                            as="a"
+                            href="/user/reserved-items"
+                            variant="solid"
+                          >
+                            Забронированные
+                          </Button>
+                        </NavbarItem>
+                      </>
+                    )}
+                  </>
+                )}
+                <NavbarItem>
+                  <Button as="a" href="/chat" variant="solid">
+                    Chats
+                  </Button>
+                </NavbarItem>
+                <NavbarItem>
+                  <Button as="a" href="/" variant="solid" onPress={logout}>
+                    Logout
+                  </Button>
+                </NavbarItem>
+              </>
             )}
-            <NavbarItem>
-              <Button as="a" href="/chat" variant="solid">
-                Chats
-              </Button>
-            </NavbarItem>
-            <NavbarItem>
-              <Button as="a" href="/" variant="solid" onPress={logout}>
-                Logout
-              </Button>
-            </NavbarItem>
           </>
         ) : (
           <>
+            {/* Для неавторизованных пользователей */}
             <NavbarItem>
               <Button as="a" color="primary" href="/login" variant="solid">
                 Login

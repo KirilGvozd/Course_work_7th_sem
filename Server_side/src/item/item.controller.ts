@@ -39,7 +39,7 @@ export class ItemController {
         @Query('attributes') attributes?: string
     ) {
         const attributeFilters = attributes ? JSON.parse(attributes) : {};
-        return this.itemService.findAll(paginationDto, { typeId, minPrice, maxPrice, sellerId, attributes: attributeFilters });
+        return this.itemService.findAll(paginationDto, { categoryId: typeId, minPrice, maxPrice, sellerId, attributes: attributeFilters });
     }
 
     @Get('reserved')
@@ -48,7 +48,7 @@ export class ItemController {
     @ApiResponse({ status: 403, description: "You don't have rights to retrieve this!"})
     @UseGuards(JwtAuthGuard)
     async getReservedItems(@Req() req) {
-        if (req.user.role !== 'buyer') {
+        if (req.user.role === 'buyer') {
             return await this.itemService.getReservedItems(req.user.userId);
         } else {
             throw new ForbiddenException("You dont have rights to make or store reservations!");
@@ -87,6 +87,8 @@ export class ItemController {
             role: request.user.role,
         };
 
+        body.categoryId = Number(body.categoryId);
+        body.price = Number(body.price);
         body.userId = user.userId;
 
         body.images = files?.map((file) => file.path) || []
@@ -94,7 +96,7 @@ export class ItemController {
         return this.itemService.create(body, user);
     }
 
-    @Post(':id/reserve')
+    @Post('reserve/:id')
     @UseGuards(JwtAuthGuard)
     @ApiResponse({ status: 200, description: 'Item successfully reserved.'})
     @ApiResponse({ status: 401, description: 'Unauthorized access.'})
@@ -108,7 +110,7 @@ export class ItemController {
         }
     }
 
-    @Delete(':id/reserve')
+    @Delete('reserve/:id')
     @UseGuards(JwtAuthGuard)
     @ApiResponse({ status: 200, description: 'Item successfully removed from reserved list.'})
     @ApiResponse({ status: 401, description: 'Unauthorized access.'})
@@ -122,7 +124,7 @@ export class ItemController {
         }
     }
 
-    @Post(':id/approve')
+    @Post('approve/:id')
     @ApiResponse({ status: 200, description: 'Reservation has been successfully approved.'})
     @ApiResponse({ status: 401, description: "You don't have permission to approve this reservation!"})
     @ApiResponse({ status: 403, description: "You don't have rights to approve this reservation!"})
@@ -134,7 +136,7 @@ export class ItemController {
         return await this.itemService.approveReservation(itemId, req.user.userId);
     }
 
-    @Post(':id/reject')
+    @Post('reject/:id')
     @ApiResponse({ status: 200, description: 'Reservation has been successfully rejected.'})
     @ApiResponse({ status: 401, description: "You don't have permission to reject this reservation!"})
     @ApiResponse({ status: 403, description: "You don't have rights to reject this reservation!"})

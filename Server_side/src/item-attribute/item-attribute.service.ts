@@ -1,4 +1,10 @@
-import {BadRequestException, Injectable, UnauthorizedException} from '@nestjs/common';
+import {
+  BadRequestException,
+  Injectable,
+  InternalServerErrorException,
+  NotFoundException,
+  UnauthorizedException
+} from '@nestjs/common';
 import { CreateItemAttributeDto } from './dto/create-item-attribute.dto';
 import { UpdateItemAttributeDto } from './dto/update-item-attribute.dto';
 import {InjectRepository} from "@nestjs/typeorm";
@@ -49,33 +55,41 @@ export class ItemAttributeService {
     return await this.itemAttributeRepository.findOne({ where: { id } });
   }
 
-  async update(id: number, updateItemAttributeDto: UpdateItemAttributeDto, userRole: string) {
+  async update(itemAttributeId: number, updateItemAttributeDto: UpdateItemAttributeDto, userRole: string): Promise<any> {
     if (!this.checkUserRole(userRole)) {
       throw new UnauthorizedException("You don't have seller's rights!");
     }
 
     const itemAttribute = await this.itemAttributeRepository.findOne({
-      where: {
-        id: id,
-      },
+      where: { id: itemAttributeId },
       relations: ['attribute'],
-    })
+    });
 
-    if (itemAttribute.attribute.type === 'STRING') {
-      if (updateItemAttributeDto.stringValue === null) {
-        throw new BadRequestException("Invalid attribute type");
+    if (!itemAttribute) {
+      throw new NotFoundException(`Item attribute with ID ${itemAttributeId} not found`);
+    }
+
+    if (!itemAttribute.attribute) {
+      throw new InternalServerErrorException('Attribute relation is missing');
+    }
+
+    const attributeType = itemAttribute.attribute.type;
+
+    if (attributeType === 'STRING') {
+      if (updateItemAttributeDto.stringValue === null || updateItemAttributeDto.stringValue === undefined) {
+        throw new BadRequestException("Invalid value for STRING attribute");
       }
-    } else if (itemAttribute.attribute.type === 'BOOLEAN') {
-      if (updateItemAttributeDto.booleanValue === null) {
-        throw new BadRequestException("Invalid attribute type");
+    } else if (attributeType === 'BOOLEAN') {
+      if (updateItemAttributeDto.booleanValue === null || updateItemAttributeDto.booleanValue === undefined) {
+        throw new BadRequestException("Invalid value for BOOLEAN attribute");
       }
-    } else if (itemAttribute.attribute.type === 'NUMBER') {
-      if (updateItemAttributeDto.numberValue === null) {
-        throw new BadRequestException("Invalid attribute type");
+    } else if (attributeType === 'NUMBER') {
+      if (updateItemAttributeDto.numberValue === null || updateItemAttributeDto.numberValue === undefined) {
+        throw new BadRequestException("Invalid value for NUMBER attribute");
       }
     }
 
-    return await this.itemAttributeRepository.update(id, updateItemAttributeDto);
+    return await this.itemAttributeRepository.update(itemAttributeId, updateItemAttributeDto);
   }
 
   async remove(id: number, userRole: string) {

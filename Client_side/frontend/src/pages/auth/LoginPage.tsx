@@ -12,13 +12,19 @@ const LoginPage = () => {
 
   const handleLogin = async () => {
     try {
-      await api.post(
+      const response = await api.post(
         "/auth/login",
         { email, password },
         { withCredentials: true },
       );
 
-      navigate("/");
+      const userRole = response.data?.userRole;
+
+      if (userRole === "admin") {
+        navigate("/admin");
+      } else {
+        navigate("/");
+      }
     } catch (err: any) {
       setError(err.response?.data?.message || "Не удалось выполнить вход");
     }

@@ -7,7 +7,6 @@ export class UpdateItemDto {
         minimum: 0,
         example: 29.99
     })
-    @IsPositive()
     @IsOptional()
     categoryId: number;
 
@@ -54,7 +53,6 @@ export class UpdateItemDto {
         minimum: 0,
         example: 29.99
     })
-    @IsPositive()
     @IsOptional()
     price: number;
 }

@@ -18,12 +18,15 @@ export class CategoryService {
   }
 
   async findAll() {
-    return await this.categoryRepository.findAndCount();
+    return await this.categoryRepository.findAndCount({
+      relations: ['attributes'],
+    });
   }
 
   async findOne(id: number) {
     return await this.categoryRepository.findOne({
-      where: { id }
+      where: { id },
+      relations: ['attributes'],
     });
   }
 

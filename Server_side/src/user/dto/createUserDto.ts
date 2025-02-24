@@ -1,6 +1,7 @@
 import {IsArray, IsEmail, IsNumber, IsString} from "class-validator";
 import {ApiProperty} from "@nestjs/swagger";
 import {Type} from "class-transformer";
+import {Item} from "../../entities/item.entity";
 
 export class CreateUserDto {
     @ApiProperty({
@@ -35,8 +36,8 @@ export class CreateUserDto {
     rate: number = 0;
 
     @IsArray()
-    @Type(() => Number)
-    favourites: number[] = [];
+    @Type(() => Item)
+    favourites: Item[] = [];
 
     @IsArray()
     @Type(() => Number)

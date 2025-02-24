@@ -10,6 +10,7 @@ export class AttributeService {
   constructor( @InjectRepository(Attribute) private attributeRepository: Repository<Attribute>) {}
 
   async create(createAttributeDto: CreateAttributeDto, userRole: string) {
+    console.log(createAttributeDto);
     if (this.checkUserRole(userRole)) {
       return await this.attributeRepository.save(createAttributeDto);
     } else {

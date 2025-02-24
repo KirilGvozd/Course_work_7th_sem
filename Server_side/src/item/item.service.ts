@@ -27,7 +27,7 @@ export class ItemService {
     async findAll(
         paginationDto: PaginationDto,
         filters: {
-            typeId?: number,
+            categoryId?: number,
             minPrice?: number,
             maxPrice?: number,
             sellerId?: number,
@@ -42,8 +42,8 @@ export class ItemService {
             query.andWhere("item.userId = :sellerId", { sellerId: filters.sellerId });
         }
 
-        if (filters.typeId) {
-            query.andWhere("item.typeId = :typeId", { typeId: filters.typeId });
+        if (filters.categoryId) {
+            query.andWhere("item.categoryId = :categoryId", { categoryId: filters.categoryId });
         }
 
         if (filters.minPrice) {
@@ -83,7 +83,7 @@ export class ItemService {
             where: {
                 id
             },
-            relations: ['user'],
+            relations: ['user', 'attributes', 'category', 'attributes.attribute'],
         });
 
         if (!result) {

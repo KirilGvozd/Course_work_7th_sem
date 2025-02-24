@@ -1,4 +1,4 @@
-import {Column, Entity, ManyToOne, PrimaryGeneratedColumn} from "typeorm";
+import {Column, Entity, JoinColumn, ManyToOne, PrimaryGeneratedColumn} from "typeorm";
 import {User} from "./user.entity";
 import {Item} from "./item.entity";
 
@@ -23,14 +23,18 @@ export class Report {
     message: string;
 
     @ManyToOne(() => User, (user) => user.id)
+    @JoinColumn({ name: 'moderatorId' })
     moderator: User;
 
     @ManyToOne(() => User, (user) => user.id)
+    @JoinColumn({ name: 'reporterId' })
     reporter: User;
 
     @ManyToOne(() => User, (user) => user.id)
+    @JoinColumn({ name: 'suspectId' })
     suspect: User;
 
     @ManyToOne(() => Item, (item) => item.id)
+    @JoinColumn({ name: "itemId" })
     item: Item;
 }

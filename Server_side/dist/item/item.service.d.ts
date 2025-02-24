@@ -10,7 +10,7 @@ export declare class ItemService {
     private userRepository;
     constructor(itemRepository: Repository<Item>, mailService: MailService, userRepository: Repository<User>);
     findAll(paginationDto: PaginationDto, filters: {
-        typeId?: number;
+        categoryId?: number;
         minPrice?: number;
         maxPrice?: number;
         sellerId?: number;

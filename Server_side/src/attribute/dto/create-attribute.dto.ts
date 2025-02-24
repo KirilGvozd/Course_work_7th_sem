@@ -1,4 +1,4 @@
-import { IsNotEmpty, IsEnum } from 'class-validator';
+import {IsNotEmpty, IsEnum, IsInt} from 'class-validator';
 import { ApiProperty } from '@nestjs/swagger';
 
 export class CreateAttributeDto {
@@ -16,6 +16,7 @@ export class CreateAttributeDto {
         type: Number,
     })
     @IsNotEmpty()
+    @IsInt()
     categoryId: number;
 
     @ApiProperty({

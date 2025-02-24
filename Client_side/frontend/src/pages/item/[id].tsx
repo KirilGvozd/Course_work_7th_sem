@@ -148,6 +148,32 @@ const ItemPage = () => {
               {item.user.name}
             </a>
           </h4>
+
+          {/* Отображение категории и её атрибутов */}
+          {item.category && (
+            <>
+              <Spacer y={1} />
+              <h4>Категория: {item.category.name}</h4>
+              {item.attributes && item.attributes.length > 0 ? (
+                <div>
+                  <h5>Атрибуты:</h5>
+                  {item.attributes.map((attr: any) => (
+                    <div key={attr.id} style={{ marginBottom: "0.5rem" }}>
+                      <h5>
+                        {attr.attribute.name}:{" "}
+                        {attr.stringValue ||
+                          attr.numberValue ||
+                          attr.booleanValue ||
+                          "Не указано"}
+                      </h5>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <h5>Атрибуты не указаны</h5>
+              )}
+            </>
+          )}
         </div>
 
         <div

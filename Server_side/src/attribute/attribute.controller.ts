@@ -11,6 +11,7 @@ export class AttributeController {
 
   @Post()
   create(@Body() createAttributeDto: CreateAttributeDto, @Req() req) {
+    console.log(createAttributeDto);
     return this.attributeService.create(createAttributeDto, req.user.role);
   }
 

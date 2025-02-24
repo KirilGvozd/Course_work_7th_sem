@@ -25,7 +25,7 @@ __decorate([
         type: Number,
         example: 1
     }),
-    (0, class_validator_1.IsPositive)(),
+    (0, class_validator_1.IsNotEmpty)(),
     __metadata("design:type", Number)
 ], CreateItemDto.prototype, "categoryId", void 0);
 __decorate([
@@ -81,7 +81,7 @@ __decorate([
         minimum: 0,
         example: 299.99
     }),
-    (0, class_validator_1.IsPositive)(),
+    (0, class_validator_1.IsNotEmpty)(),
     __metadata("design:type", Number)
 ], CreateItemDto.prototype, "price", void 0);
 //# sourceMappingURL=createItemDto.js.map

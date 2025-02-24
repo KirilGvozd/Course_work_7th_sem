@@ -39,7 +39,6 @@ export class MailService {
 
     async sendCredentialsToNewModerator(
         email: string,
-        userName: string,
         password: string,
     ) {
         const message = {
@@ -110,6 +109,50 @@ export class MailService {
             to: email,
             subject: `Бронирование товара ${itemName} было отменено`,
             text: `Здравствуйте, ${userName}. К сожалению, бронь товара ${itemName} была отклонена покупателем ${buyerName}.`,
+        }
+
+        await this.transporter.sendMail(message);
+    }
+
+    async sendRemovalOfItemMessage(
+        email: string,
+        itemName: string,
+        userName: string,
+    ) {
+        const message = {
+            from: 'no-reply@example.com',
+            to: email,
+            subject: `Удаление товара ${itemName} с площадки`,
+            text: `Здравствуйте, ${userName}. Ваш товар ${itemName} был удалён с площадки Flea Market из-за нарушения
+            правил площадки.`,
+        }
+
+        await this.transporter.sendMail(message);
+    }
+
+    async sendRemovalOfUserMessage(
+        email: string,
+        userName: string,
+    ) {
+        const message = {
+            from: 'no-reply@example.com',
+            to: email,
+            subject: `Удаление вашего аккаунта с площадки`,
+            text: `Здравствуйте, ${userName}. Ваш аккаунт был удалён с площадки Flea Market из-за нарушения правил площадки.`,
+        }
+
+        await this.transporter.sendMail(message);
+    }
+
+    async sendReportNotification(
+        email: string,
+        reportId: number,
+    ) {
+        const message = {
+            from: 'no-reply@example.com',
+            to: email,
+            subject: `Новая жалоба`,
+            text: `Здравствуйте. Вы были выбраны для проверки данной жалобы: http:localhost:4000/report/${reportId}`,
         }
 
         await this.transporter.sendMail(message);

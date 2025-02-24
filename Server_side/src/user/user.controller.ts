@@ -21,9 +21,13 @@ export class UserController {
     constructor(private readonly userService: UserService) {}
 
     @Post()
-    @ApiExcludeEndpoint()
-    async create(@Body() createUserDto: CreateUserDto) {
-        await this.userService.create(createUserDto);
+    @UseGuards(JwtAuthGuard)
+    async create(@Body() createUserDto: CreateUserDto, @Req() req) {
+        if (req.user.role === 'admin') {
+            return await this.userService.createModerator(createUserDto);
+        } else {
+            return await this.userService.create(createUserDto);
+        }
     }
 
     @Post('add-favourite')
@@ -49,6 +53,18 @@ export class UserController {
     findOne(@Req() request) {
         const id = request.user.userId;
         return this.userService.findOne(id);
+    }
+
+    @Get('moderators')
+    @UseGuards(JwtAuthGuard)
+    @ApiResponse({ status: 200, description: 'Moderators retrieved.'})
+    @ApiResponse({ status: 401, description: 'Unauthorized access.'})
+    @ApiResponse({ status: 403, description: 'Only for admins!'})
+    async findModerators(@Req() request) {
+        if (request.user.role !== 'admin') {
+            throw new ForbiddenException("User does not have permission to perform this action");
+        }
+        return await this.userService.findModerators();
     }
 
     @Get('favourites')

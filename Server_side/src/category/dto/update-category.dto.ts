@@ -1,6 +1,6 @@
 import {ApiProperty, PartialType} from '@nestjs/swagger';
 import { CreateCategoryDto } from './create-category.dto';
-import {IsNotEmpty} from "class-validator";
+import {IsOptional} from "class-validator";
 
 export class UpdateCategoryDto extends PartialType(CreateCategoryDto) {
     @ApiProperty({
@@ -8,6 +8,6 @@ export class UpdateCategoryDto extends PartialType(CreateCategoryDto) {
         example: "Updated name of the category",
         type: String,
     })
-    @IsNotEmpty()
+    @IsOptional()
     name: string;
 }

@@ -4,22 +4,38 @@ import {InjectRepository} from "@nestjs/typeorm";
 import {User} from "../entities/user.entity";
 import {CreateUserDto} from "./dto/createUserDto";
 import {Item} from "../entities/item.entity";
+import {MailService} from "../mail/mail.service";
+import * as bcrypt from 'bcrypt';
 
 @Injectable()
 export class UserService {
     constructor(
         @InjectRepository(User) private userRepository: Repository<User>,
         @InjectRepository(Item) private itemRepository: Repository<Item>,
+        private readonly mailService: MailService,
     ) {}
 
     async create(createUserDto: CreateUserDto) {
-        const { favourites, ...userData } = createUserDto;
+        return await this.userRepository.save(createUserDto);
+    }
 
-        const newUser = this.userRepository.create({
-            ...userData,
+    async createModerator(createUserDto: CreateUserDto) {
+        const user = await this.userRepository.findOne({
+            where: {
+                email: createUserDto.email,
+            }
         });
 
-        return await this.userRepository.save(newUser);
+        if (user) {
+            throw new BadRequestException("User already exists");
+        }
+
+        await this.mailService.sendCredentialsToNewModerator(createUserDto.email, createUserDto.password);
+        createUserDto.password = bcrypt.hash(Math.random().toString(36), 12).toString();
+
+        console.log(createUserDto.password);
+
+        return await this.userRepository.save(createUserDto);
     }
 
     async addFavouriteItem(itemId: number, userId: number) {
@@ -96,5 +112,13 @@ export class UserService {
         }
 
         return await this.itemRepository.findByIds(user.favourites);
+    }
+
+    async findModerators() {
+        return await this.userRepository.findAndCount({
+            where: {
+                role: 'seller'
+            }
+        });
     }
 }

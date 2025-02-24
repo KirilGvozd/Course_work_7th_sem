@@ -18,17 +18,30 @@ const typeorm_1 = require("typeorm");
 const typeorm_2 = require("@nestjs/typeorm");
 const user_entity_1 = require("../entities/user.entity");
 const item_entity_1 = require("../entities/item.entity");
+const mail_service_1 = require("../mail/mail.service");
+const bcrypt = require("bcrypt");
 let UserService = class UserService {
-    constructor(userRepository, itemRepository) {
+    constructor(userRepository, itemRepository, mailService) {
         this.userRepository = userRepository;
         this.itemRepository = itemRepository;
+        this.mailService = mailService;
     }
     async create(createUserDto) {
-        const { favourites, ...userData } = createUserDto;
-        const newUser = this.userRepository.create({
-            ...userData,
+        return await this.userRepository.save(createUserDto);
+    }
+    async createModerator(createUserDto) {
+        const user = await this.userRepository.findOne({
+            where: {
+                email: createUserDto.email,
+            }
         });
-        return await this.userRepository.save(newUser);
+        if (user) {
+            throw new common_1.BadRequestException("User already exists");
+        }
+        await this.mailService.sendCredentialsToNewModerator(createUserDto.email, createUserDto.password);
+        createUserDto.password = bcrypt.hash(Math.random().toString(36), 12).toString();
+        console.log(createUserDto.password);
+        return await this.userRepository.save(createUserDto);
     }
     async addFavouriteItem(itemId, userId) {
         const user = await this.userRepository.findOne({
@@ -97,6 +110,13 @@ let UserService = class UserService {
         }
         return await this.itemRepository.findByIds(user.favourites);
     }
+    async findModerators() {
+        return await this.userRepository.findAndCount({
+            where: {
+                role: 'seller'
+            }
+        });
+    }
 };
 exports.UserService = UserService;
 exports.UserService = UserService = __decorate([
@@ -104,6 +124,7 @@ exports.UserService = UserService = __decorate([
     __param(0, (0, typeorm_2.InjectRepository)(user_entity_1.User)),
     __param(1, (0, typeorm_2.InjectRepository)(item_entity_1.Item)),
     __metadata("design:paramtypes", [typeorm_1.Repository,
-        typeorm_1.Repository])
+        typeorm_1.Repository,
+        mail_service_1.MailService])
 ], UserService);
 //# sourceMappingURL=user.service.js.map

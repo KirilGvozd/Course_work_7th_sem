@@ -33,8 +33,8 @@ let ItemService = class ItemService {
         if (filters.sellerId) {
             query.andWhere("item.userId = :sellerId", { sellerId: filters.sellerId });
         }
-        if (filters.typeId) {
-            query.andWhere("item.typeId = :typeId", { typeId: filters.typeId });
+        if (filters.categoryId) {
+            query.andWhere("item.categoryId = :categoryId", { categoryId: filters.categoryId });
         }
         if (filters.minPrice) {
             query.andWhere("item.price >= :minPrice", { minPrice: filters.minPrice });
@@ -67,7 +67,7 @@ let ItemService = class ItemService {
             where: {
                 id
             },
-            relations: ['user'],
+            relations: ['user', 'attributes', 'category', 'attributes.attribute'],
         });
         if (!result) {
             throw new common_1.NotFoundException("Not Found");

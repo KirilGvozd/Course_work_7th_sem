@@ -23,8 +23,13 @@ let UserController = class UserController {
     constructor(userService) {
         this.userService = userService;
     }
-    async create(createUserDto) {
-        await this.userService.create(createUserDto);
+    async create(createUserDto, req) {
+        if (req.user.role === 'admin') {
+            return await this.userService.createModerator(createUserDto);
+        }
+        else {
+            return await this.userService.create(createUserDto);
+        }
     }
     async addToFavourites(body, request, response) {
         const itemId = body.itemId;
@@ -38,6 +43,12 @@ let UserController = class UserController {
         const id = request.user.userId;
         return this.userService.findOne(id);
     }
+    async findModerators(request) {
+        if (request.user.role !== 'admin') {
+            throw new common_1.ForbiddenException("User does not have permission to perform this action");
+        }
+        return await this.userService.findModerators();
+    }
     async findFavourites(request) {
         const userId = request.user.userId;
         const favourites = await this.userService.findFavourites(userId);
@@ -48,16 +59,18 @@ let UserController = class UserController {
     }
     async removeFromFavourites(itemId, request, response) {
         const userId = request.user.userId;
+        await this.userService.removeFromFavourites(userId, itemId);
         return response.status(200).json("Item removed from your favourites");
     }
 };
 exports.UserController = UserController;
 __decorate([
     (0, common_1.Post)(),
-    (0, swagger_1.ApiExcludeEndpoint)(),
+    (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard),
     __param(0, (0, common_1.Body)()),
+    __param(1, (0, common_1.Req)()),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [createUserDto_1.CreateUserDto]),
+    __metadata("design:paramtypes", [createUserDto_1.CreateUserDto, Object]),
     __metadata("design:returntype", Promise)
 ], UserController.prototype, "create", null);
 __decorate([
@@ -83,6 +96,17 @@ __decorate([
     __metadata("design:paramtypes", [Object]),
     __metadata("design:returntype", void 0)
 ], UserController.prototype, "findOne", null);
+__decorate([
+    (0, common_1.Get)('moderators'),
+    (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard),
+    (0, swagger_1.ApiResponse)({ status: 200, description: 'Moderators retrieved.' }),
+    (0, swagger_1.ApiResponse)({ status: 401, description: 'Unauthorized access.' }),
+    (0, swagger_1.ApiResponse)({ status: 403, description: 'Only for admins!' }),
+    __param(0, (0, common_1.Req)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object]),
+    __metadata("design:returntype", Promise)
+], UserController.prototype, "findModerators", null);
 __decorate([
     (0, common_1.Get)('favourites'),
     (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard),

@@ -27,10 +27,10 @@ let ItemController = class ItemController {
     }
     findAll(paginationDto, typeId, minPrice, maxPrice, sellerId, attributes) {
         const attributeFilters = attributes ? JSON.parse(attributes) : {};
-        return this.itemService.findAll(paginationDto, { typeId, minPrice, maxPrice, sellerId, attributes: attributeFilters });
+        return this.itemService.findAll(paginationDto, { categoryId: typeId, minPrice, maxPrice, sellerId, attributes: attributeFilters });
     }
     async getReservedItems(req) {
-        if (req.user.role !== 'buyer') {
+        if (req.user.role === 'buyer') {
             return await this.itemService.getReservedItems(req.user.userId);
         }
         else {
@@ -51,6 +51,8 @@ let ItemController = class ItemController {
             userId: request.user.userId,
             role: request.user.role,
         };
+        body.categoryId = Number(body.categoryId);
+        body.price = Number(body.price);
         body.userId = user.userId;
         body.images = files?.map((file) => file.path) || [];
         return this.itemService.create(body, user);
@@ -162,7 +164,7 @@ __decorate([
     __metadata("design:returntype", Promise)
 ], ItemController.prototype, "create", null);
 __decorate([
-    (0, common_1.Post)(':id/reserve'),
+    (0, common_1.Post)('reserve/:id'),
     (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard),
     (0, swagger_1.ApiResponse)({ status: 200, description: 'Item successfully reserved.' }),
     (0, swagger_1.ApiResponse)({ status: 401, description: 'Unauthorized access.' }),
@@ -175,7 +177,7 @@ __decorate([
     __metadata("design:returntype", Promise)
 ], ItemController.prototype, "reserve", null);
 __decorate([
-    (0, common_1.Delete)(':id/reserve'),
+    (0, common_1.Delete)('reserve/:id'),
     (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard),
     (0, swagger_1.ApiResponse)({ status: 200, description: 'Item successfully removed from reserved list.' }),
     (0, swagger_1.ApiResponse)({ status: 401, description: 'Unauthorized access.' }),
@@ -188,7 +190,7 @@ __decorate([
     __metadata("design:returntype", Promise)
 ], ItemController.prototype, "deleteReservation", null);
 __decorate([
-    (0, common_1.Post)(':id/approve'),
+    (0, common_1.Post)('approve/:id'),
     (0, swagger_1.ApiResponse)({ status: 200, description: 'Reservation has been successfully approved.' }),
     (0, swagger_1.ApiResponse)({ status: 401, description: "You don't have permission to approve this reservation!" }),
     (0, swagger_1.ApiResponse)({ status: 403, description: "You don't have rights to approve this reservation!" }),
@@ -200,7 +202,7 @@ __decorate([
     __metadata("design:returntype", Promise)
 ], ItemController.prototype, "approveReservation", null);
 __decorate([
-    (0, common_1.Post)(':id/reject'),
+    (0, common_1.Post)('reject/:id'),
     (0, swagger_1.ApiResponse)({ status: 200, description: 'Reservation has been successfully rejected.' }),
     (0, swagger_1.ApiResponse)({ status: 401, description: "You don't have permission to reject this reservation!" }),
     (0, swagger_1.ApiResponse)({ status: 403, description: "You don't have rights to reject this reservation!" }),

@@ -24,7 +24,6 @@ __decorate([
         minimum: 0,
         example: 29.99
     }),
-    (0, class_validator_1.IsPositive)(),
     (0, class_validator_1.IsOptional)(),
     __metadata("design:type", Number)
 ], UpdateItemDto.prototype, "categoryId", void 0);
@@ -76,7 +75,6 @@ __decorate([
         minimum: 0,
         example: 29.99
     }),
-    (0, class_validator_1.IsPositive)(),
     (0, class_validator_1.IsOptional)(),
     __metadata("design:type", Number)
 ], UpdateItemDto.prototype, "price", void 0);

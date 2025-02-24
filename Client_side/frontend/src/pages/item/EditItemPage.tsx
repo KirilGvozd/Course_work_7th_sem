@@ -19,8 +19,10 @@ const EditItemPage = () => {
   const [price, setPrice] = useState<string>("");
   const [existingImages, setExistingImages] = useState<string[]>([]);
   const [newImages, setNewImages] = useState<File[]>([]);
+  const [attributes, setAttributes] = useState<any[]>([]); // Добавляем состояние для атрибутов
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string>("");
+  const [changedAttributes, setChangedAttributes] = useState<number[]>([]);
 
   useEffect(() => {
     if (id) {
@@ -30,6 +32,7 @@ const EditItemPage = () => {
           setDescription(item.description);
           setPrice(item.price);
           setExistingImages(item.images);
+          setAttributes(item.attributes || []); // Загружаем атрибуты
         })
         .catch(() => {
           setError("Failed to load item data.");
@@ -49,16 +52,53 @@ const EditItemPage = () => {
       return;
     }
 
+    const updatedAttributesPromises = attributes
+      .filter((attr) => attr.stringValue !== null)
+      .map(async (attribute) => {
+        try {
+          const response = await fetch(
+            `http://localhost:4000/item-attribute/${attribute.id}`,
+            {
+              method: "PATCH",
+              headers: {
+                "Content-Type": "application/json",
+              },
+              body: JSON.stringify({ stringValue: attribute.stringValue }),
+              credentials: "include",
+            },
+          );
+
+          if (!response.ok) {
+            const errorData = await response.json();
+
+            throw new Error(errorData.message || "Failed to update attribute");
+          }
+        } catch (error) {
+          console.error("Ошибка при обновлении атрибута:", error);
+          setError(
+            `Ошибка при обновлении атрибута "${attribute.attribute.name}": ${error}`,
+          );
+          setLoading(false);
+          throw error; // Прерываем процесс, если произошла ошибка
+        }
+      });
+
+    // Ждем завершения всех запросов по обновлению атрибутов
+    try {
+      await Promise.all(updatedAttributesPromises);
+    } catch (error) {
+      return; // Если произошла ошибка при обновлении атрибутов, прекращаем выполнение
+    }
+
+    // Шаг 2: Обновляем основные данные товара
     const formData = new FormData();
 
     formData.append("name", name);
     formData.append("description", description);
     formData.append("price", price.toString());
-
     existingImages.forEach((image) =>
       formData.append("existingImages[]", image),
     );
-
     newImages.forEach((image) => formData.append("images", image));
 
     try {
@@ -69,7 +109,7 @@ const EditItemPage = () => {
       });
 
       if (response.ok) {
-        alert("Информация была изменена");
+        alert("Информация была успешно изменена");
         navigate(`/item/${id}`);
       } else {
         const errorData = await response.json();
@@ -97,13 +137,59 @@ const EditItemPage = () => {
     setNewImages(newImages.filter((_, i) => i !== index));
   };
 
+  const handleAttributeChange = (
+    attributeId: number,
+    value: string | boolean | number | null,
+  ) => {
+    setAttributes((prevAttributes) =>
+      prevAttributes.map((attr) =>
+        attr.id === attributeId ? { ...attr, stringValue: value } : attr,
+      ),
+    );
+    if (!changedAttributes.includes(attributeId)) {
+      setChangedAttributes((prev) => [...prev, attributeId]);
+    }
+  };
+
+  const updateAttribute = async (
+    attributeId: number,
+    value: string | boolean | number | null,
+  ) => {
+    try {
+      const response = await fetch(
+        `http://localhost:4000/item-attribute/${attributeId}`,
+        {
+          method: "PATCH",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ stringValue: value }),
+          credentials: "include",
+        },
+      );
+
+      if (response.ok) {
+        alert("Атрибут успешно обновлен");
+        setAttributes((prevAttributes) =>
+          prevAttributes.map((attr) =>
+            attr.id === attributeId ? { ...attr, stringValue: value } : attr,
+          ),
+        );
+      } else {
+        const errorData = await response.json();
+
+        alert(`Ошибка при обновлении атрибута: ${errorData.message}`);
+      }
+    } catch (error) {
+      console.error("Ошибка при обновлении атрибута:", error);
+    }
+  };
+
   return (
     <Card style={{ maxWidth: 600, margin: "auto", padding: "2rem" }}>
       <form onSubmit={handleSubmit}>
         <h2>Изменить информацию</h2>
-
         {error && <div style={{ color: "red" }}>{error}</div>}
-
         <Input
           required
           label="Имя товара"
@@ -127,6 +213,64 @@ const EditItemPage = () => {
         />
         <Spacer y={1} />
 
+        {/* Атрибуты */}
+        <div>
+          <h4>Атрибуты</h4>
+          {attributes.length > 0 ? (
+            attributes.map((attribute) => (
+              <div key={attribute.id} style={{ marginBottom: "1rem" }}>
+                <strong>{attribute.attribute.name}: </strong>
+                {attribute.attribute.type === "STRING" && (
+                  <Input
+                    value={attribute.stringValue || ""}
+                    onBlur={() =>
+                      updateAttribute(attribute.id, attribute.stringValue)
+                    }
+                    onChange={(e) =>
+                      handleAttributeChange(attribute.id, e.target.value)
+                    }
+                  />
+                )}
+                {attribute.attribute.type === "BOOLEAN" && (
+                  <select
+                    value={attribute.booleanValue || false}
+                    onBlur={() =>
+                      updateAttribute(attribute.id, attribute.booleanValue)
+                    }
+                    onChange={(e) =>
+                      handleAttributeChange(
+                        attribute.id,
+                        e.target.value === "true",
+                      )
+                    }
+                  >
+                    <option value="true">Да</option>
+                    <option value="false">Нет</option>
+                  </select>
+                )}
+                {attribute.attribute.type === "NUMBER" && (
+                  <Input
+                    type="number"
+                    value={attribute.numberValue || ""}
+                    onBlur={() =>
+                      updateAttribute(attribute.id, attribute.numberValue)
+                    }
+                    onChange={(e) =>
+                      handleAttributeChange(
+                        attribute.id,
+                        parseFloat(e.target.value),
+                      )
+                    }
+                  />
+                )}
+              </div>
+            ))
+          ) : (
+            <p>У данного товара нет атрибутов</p>
+          )}
+        </div>
+
+        <Spacer y={1} />
         <div>
           <h4>Текущие фотографии</h4>
           <div style={{ display: "flex", flexWrap: "wrap", gap: "1rem" }}>
@@ -156,7 +300,6 @@ const EditItemPage = () => {
           </div>
         </div>
         <Spacer y={1} />
-
         <Input
           multiple
           label="Добавить новые фотографии"
@@ -164,7 +307,6 @@ const EditItemPage = () => {
           onChange={handleImageUpload}
         />
         <Spacer y={1} />
-
         {newImages.length > 0 && (
           <div>
             <h4>Новые фотографии</h4>
@@ -199,7 +341,6 @@ const EditItemPage = () => {
           </div>
         )}
         <Spacer y={1} />
-
         <Button disabled={loading} type="submit">
           {loading ? "Обновляем..." : "Обновить информацию"}
         </Button>

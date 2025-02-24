@@ -1,4 +1,4 @@
-import { IsPositive, IsString, Length } from "class-validator";
+import {IsNotEmpty, IsPositive, IsString, Length} from "class-validator";
 import { ApiProperty } from "@nestjs/swagger";
 
 export class CreateItemDto {
@@ -7,7 +7,7 @@ export class CreateItemDto {
         type: Number,
         example: 1
     })
-    @IsPositive()
+    @IsNotEmpty()
     categoryId: number;
 
     @ApiProperty({
@@ -57,6 +57,6 @@ export class CreateItemDto {
         minimum: 0,
         example: 299.99
     })
-    @IsPositive()
+    @IsNotEmpty()
     price: number;
 }

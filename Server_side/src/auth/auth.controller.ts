@@ -49,10 +49,6 @@ export class AuthController {
       throw new BadRequestException("User with this email already exists!");
     }
 
-    if (createUserDto.role === 'moderator') {
-      await this.mailService.sendCredentialsToNewModerator(createUserDto.email, createUserDto.name, createUserDto.password);
-    }
-
     createUserDto.password = await bcrypt.hash(createUserDto.password, 12);
     return res.status(201).json(await this.userService.create(createUserDto));
   }
@@ -76,6 +72,7 @@ export class AuthController {
 
     return response.status(200).json({
       message: "Login successful",
+      userRole: user.role,
       accessToken: token,
     });
   }

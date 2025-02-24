@@ -13,6 +13,7 @@ exports.CreateUserDto = void 0;
 const class_validator_1 = require("class-validator");
 const swagger_1 = require("@nestjs/swagger");
 const class_transformer_1 = require("class-transformer");
+const item_entity_1 = require("../../entities/item.entity");
 class CreateUserDto {
     constructor() {
         this.rate = 0;
@@ -60,7 +61,7 @@ __decorate([
 ], CreateUserDto.prototype, "rate", void 0);
 __decorate([
     (0, class_validator_1.IsArray)(),
-    (0, class_transformer_1.Type)(() => Number),
+    (0, class_transformer_1.Type)(() => item_entity_1.Item),
     __metadata("design:type", Array)
 ], CreateUserDto.prototype, "favourites", void 0);
 __decorate([
