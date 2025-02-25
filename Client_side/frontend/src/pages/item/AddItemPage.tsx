@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import {
   Input,
   Textarea,
@@ -17,6 +18,7 @@ const AddItemPage = () => {
   const [images, setImages] = useState<File[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string>("");
+  const navigate = useNavigate();
 
   const [categories, setCategories] = useState<any[]>([]);
   const [attributes, setAttributes] = useState<any[]>([]);
@@ -148,6 +150,7 @@ const AddItemPage = () => {
       }
 
       alert("Товар добавлен!");
+      navigate("/");
       setName("");
       setDescription("");
       setPrice(0); // Сбрасываем цену
@@ -183,8 +186,10 @@ const AddItemPage = () => {
 
         <Input
           required
+          isClearable={true}
           label="Имя товара"
           value={name}
+          variant="bordered"
           onChange={(e) => setName(e.target.value)}
         />
         <Spacer y={1} />
@@ -192,22 +197,49 @@ const AddItemPage = () => {
           required
           label="Описание"
           value={description}
+          variant="bordered"
           onChange={(e) => setDescription(e.target.value)}
         />
         <Spacer y={1} />
         <Input
           required
           label="Цена"
-          type="number"
-          value={price.toString()}
-          onChange={(e) => setPrice(Number(e.target.value))}
+          type="text" // Используем тип text для ручного ввода
+          value={price === 0 ? "" : price.toString()} // Отображаем пустую строку, если price = 0
+          variant="bordered"
+          onBlur={(e) => {
+            // При потере фокуса форматируем значение
+            const value = e.target.value;
+
+            if (value === "." || value === "") {
+              setPrice(0); // Если введена только точка или поле пустое, устанавливаем 0
+            } else {
+              setPrice(parseFloat(value)); // Преобразуем в число
+            }
+          }}
+          onChange={(e) => {
+            const value = e.target.value;
+
+            // Разрешаем ввод цифр, одной точки и пустой строки
+            if (/^\d*\.?\d*$/.test(value) || value === "") {
+              // Если введена только точка, устанавливаем значение в "0."
+              if (value === ".") {
+                setPrice("0."); // Сохраняем точку для дальнейшего ввода
+              } else {
+                // Если значение пустое, устанавливаем price в 0, иначе сохраняем как строку
+                setPrice(value === "" ? 0 : value);
+              }
+            }
+          }}
         />
         <Spacer y={1} />
 
         {/* Выбор категории */}
         <Select
+          required
           label="Категория"
           value={categoryId}
+          variant="faded"
           onChange={(e) => setCategoryId(Number(e.target.value))}
         >
           {categories.map((category) => (
@@ -225,26 +257,79 @@ const AddItemPage = () => {
               label={attr.name}
               type={
                 attr.type === "NUMBER"
-                  ? "number"
+                  ? "text" // Используем тип text для ручного ввода чисел
                   : attr.type === "BOOLEAN"
-                    ? "checkbox"
+                    ? "checkbox" // Используем тип checkbox для булевых значений
                     : "text"
               }
-              value={attributeValues[attr.id] || ""}
-              onChange={(e) => handleAttributeChange(attr.id, e.target.value)}
+              value={
+                attr.type === "NUMBER"
+                  ? attributeValues[attr.id] === undefined ||
+                    attributeValues[attr.id] === null
+                    ? ""
+                    : attributeValues[attr.id].toString() // Преобразуем число в строку
+                  : attr.type === "BOOLEAN"
+                    ? "" // Для чекбокса value не используется
+                    : attributeValues[attr.id] || ""
+              }
+              checked={
+                attr.type === "BOOLEAN"
+                  ? attributeValues[attr.id] || false
+                  : undefined
+              } // Управляем состоянием чекбокса
+              variant="bordered"
+              onBlur={(e) => {
+                if (attr.type === "NUMBER") {
+                  const value = e.target.value;
+
+                  // При потере фокуса форматируем значение
+                  if (value === "." || value === "") {
+                    handleAttributeChange(attr.id, null); // Если введена только точка или поле пустое, устанавливаем null
+                  } else {
+                    handleAttributeChange(attr.id, parseFloat(value)); // Преобразуем в число
+                  }
+                }
+              }}
+              onChange={(e) => {
+                const value = e.target.value;
+                const isChecked = e.target.checked;
+
+                if (attr.type === "NUMBER") {
+                  // Разрешаем ввод цифр, одной точки и пустой строки
+                  if (/^\d*\.?\d*$/.test(value) || value === "") {
+                    // Если введена только точка, устанавливаем значение в "0."
+                    if (value === ".") {
+                      handleAttributeChange(attr.id, "0.");
+                    } else {
+                      // Если значение пустое, устанавливаем в null, иначе сохраняем как строку
+                      handleAttributeChange(
+                        attr.id,
+                        value === "" ? null : value,
+                      );
+                    }
+                  }
+                } else if (attr.type === "BOOLEAN") {
+                  // Для чекбокса используем свойство checked
+                  handleAttributeChange(attr.id, isChecked); // Передаём булево значение
+                } else {
+                  // Для других типов (текст) передаём значение как есть
+                  handleAttributeChange(attr.id, value);
+                }
+              }}
             />
           </div>
         ))}
-
+        <Spacer y={1} />
         <Input
           multiple
           label="Загрузите фотографии"
           type="file"
+          variant="faded"
           onChange={handleImageUpload}
         />
         <Spacer y={1} />
-
-        <Button disabled={loading} type="submit">
+        <Spacer y={1} />
+        <Button disabled={loading} type="submit" variant="shadow">
           {loading ? "Добавляем..." : "Добавить товар"}
         </Button>
       </form>

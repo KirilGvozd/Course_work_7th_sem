@@ -45,16 +45,16 @@ let ItemService = class ItemService {
         if (filters.attributes) {
             Object.entries(filters.attributes).forEach(([key, value]) => {
                 query.andWhere("attribute.name = :attrName", { attrName: key });
-                if (typeof value === 'object' && value !== null) {
+                if (typeof value === "number") {
+                    query.andWhere("itemAttribute.numberValue = :exactValue", { exactValue: value });
+                }
+                else if (typeof value === "object" && value !== null) {
                     if (value.min !== undefined) {
                         query.andWhere("itemAttribute.numberValue >= :minValue", { minValue: value.min });
                     }
                     if (value.max !== undefined) {
                         query.andWhere("itemAttribute.numberValue <= :maxValue", { maxValue: value.max });
                     }
-                }
-                else {
-                    query.andWhere("itemAttribute.stringValue = :attrValue", { attrValue: value });
                 }
             });
         }

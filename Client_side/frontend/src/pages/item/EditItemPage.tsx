@@ -16,7 +16,7 @@ const EditItemPage = () => {
   const navigate = useNavigate();
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
-  const [price, setPrice] = useState<string>("");
+  const [price, setPrice] = useState<number | string>("");
   const [existingImages, setExistingImages] = useState<string[]>([]);
   const [newImages, setNewImages] = useState<File[]>([]);
   const [attributes, setAttributes] = useState<any[]>([]); // Добавляем состояние для атрибутов
@@ -196,22 +196,46 @@ const EditItemPage = () => {
           value={name}
           onChange={(e) => setName(e.target.value)}
         />
-        <Spacer y={1} />
+        <Spacer y={2} />
         <Textarea
           required
           label="Описание"
           value={description}
           onChange={(e) => setDescription(e.target.value)}
         />
-        <Spacer y={1} />
+        <Spacer y={2} />
         <Input
           required
           label="Цена"
-          type="number"
-          value={price}
-          onChange={(e) => setPrice(e.target.value)}
+          type="text" // Используем тип text для ручного ввода
+          value={price === 0 ? "" : price.toString()} // Отображаем пустую строку, если price = 0
+          variant="bordered"
+          onBlur={(e) => {
+            // При потере фокуса форматируем значение
+            const value = e.target.value;
+
+            if (value === "." || value === "") {
+              setPrice(0); // Если введена только точка или поле пустое, устанавливаем 0
+            } else {
+              setPrice(parseFloat(value)); // Преобразуем в число
+            }
+          }}
+          onChange={(e) => {
+            const value = e.target.value;
+
+            // Разрешаем ввод цифр, одной точки и пустой строки
+            if (/^\d*\.?\d*$/.test(value) || value === "") {
+              // Если введена только точка, устанавливаем значение в "0."
+              if (value === ".") {
+                setPrice("0."); // Сохраняем точку для дальнейшего ввода
+              } else {
+                // Если значение пустое, устанавливаем price в 0, иначе сохраняем как строку
+                setPrice(value === "" ? 0 : value);
+              }
+            }
+          }}
         />
-        <Spacer y={1} />
+        <Spacer y={2} />
 
         {/* Атрибуты */}
         <div>
@@ -270,7 +294,7 @@ const EditItemPage = () => {
           )}
         </div>
 
-        <Spacer y={1} />
+        <Spacer y={2} />
         <div>
           <h4>Текущие фотографии</h4>
           <div style={{ display: "flex", flexWrap: "wrap", gap: "1rem" }}>
@@ -299,14 +323,14 @@ const EditItemPage = () => {
             ))}
           </div>
         </div>
-        <Spacer y={1} />
+        <Spacer y={2} />
         <Input
           multiple
           label="Добавить новые фотографии"
           type="file"
           onChange={handleImageUpload}
         />
-        <Spacer y={1} />
+        <Spacer y={2} />
         {newImages.length > 0 && (
           <div>
             <h4>Новые фотографии</h4>
@@ -340,7 +364,7 @@ const EditItemPage = () => {
             </div>
           </div>
         )}
-        <Spacer y={1} />
+        <Spacer y={2} />
         <Button disabled={loading} type="submit">
           {loading ? "Обновляем..." : "Обновить информацию"}
         </Button>

@@ -1,6 +1,13 @@
 import React, { useState, useEffect, useRef, useContext } from "react";
 import { io, Socket } from "socket.io-client";
-import { Input, Button, Card, CardBody, CardHeader } from "@nextui-org/react";
+import {
+  Input,
+  Button,
+  Card,
+  CardBody,
+  CardHeader,
+  Spacer,
+} from "@nextui-org/react";
 import { toast, ToastContainer } from "react-toastify";
 
 import { AuthContext } from "../context/AuthContext";
@@ -214,10 +221,22 @@ const Chat: React.FC<ChatProps> = ({ itemId }) => {
       <Card>
         <CardHeader>
           <h4>
-            <a href={`/item/${item.id}`}>{item.name}</a>
+            <a
+              href={`/item/${item.id}`}
+              style={{ textDecoration: "underline" }}
+            >
+              {item.name}
+            </a>
           </h4>
+          <Spacer y={2} />
           <h4 color="gray">
-            Продавец: <a href={`/user/${item.user.id}`}>{item.user.name}</a>
+            Продавец:{" "}
+            <a
+              href={`/user/${item.user.id}`}
+              style={{ textDecoration: "underline" }}
+            >
+              {item.user.name}
+            </a>
           </h4>
         </CardHeader>
         <CardBody
@@ -245,6 +264,7 @@ const Chat: React.FC<ChatProps> = ({ itemId }) => {
                     <Button
                       color="danger"
                       size="sm"
+                      variant="shadow"
                       onClick={() => deleteMessage(message.id)}
                     >
                       Удалить

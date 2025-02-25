@@ -18,9 +18,11 @@ const FavouritesPage: React.FC = () => {
         setFavourites(data);
       } catch (error: any) {
         if (error.response?.status === 401) {
-          setError("You must be logged in to view your favourites.");
+          setError(
+            "Вы должны зайти в свой аккаунт, чтобы посмотреть избранные товары.",
+          );
         } else if (error.response?.status === 404) {
-          setError("No favourites found for your account.");
+          setError("У вас нет избранных товаров!");
         } else {
           setError("Failed to load favourites. Please try again later.");
         }
@@ -39,12 +41,10 @@ const FavouritesPage: React.FC = () => {
   return (
     <>
       <main style={{ padding: "20px" }}>
-        <h1>My Favourites</h1>
-
         {loading ? (
           <p>Loading...</p>
         ) : error ? (
-          <p style={{ color: "red" }}>{error}</p>
+          <p style={{ margin: "20px" }}>{error}</p>
         ) : (
           <div
             style={{
@@ -70,7 +70,7 @@ const FavouritesPage: React.FC = () => {
                 </div>
               ))
             ) : (
-              <p>No favourites yet!</p>
+              <p>У вас нет избранных товаров!</p>
             )}
           </div>
         )}

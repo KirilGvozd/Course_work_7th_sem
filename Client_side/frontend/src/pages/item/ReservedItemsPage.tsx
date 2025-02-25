@@ -45,12 +45,11 @@ const ReservedItemsPage: React.FC = () => {
     );
   };
 
-  const totalPages = Math.ceil(totalItems / ITEMS_PER_PAGE);
+  const totalPages =
+    totalItems > 0 ? Math.ceil(totalItems / ITEMS_PER_PAGE) : 0;
 
   return (
     <div style={{ padding: "20px" }}>
-      <h1>Забронированные товары</h1>
-
       {loading ? (
         <p>Загрузка...</p>
       ) : reservedItems.length > 0 ? (
@@ -81,33 +80,43 @@ const ReservedItemsPage: React.FC = () => {
           ))}
         </div>
       ) : (
-        <p>Нет забронированных товаров</p>
+        <p>У вас нет забронированных товаров</p>
       )}
 
-      <div
-        style={{
-          display: "flex",
-          justifyContent: "center",
-          marginTop: "20px",
-        }}
-      >
-        <button
-          disabled={currentPage === 1}
-          onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
-        >
-          Назад
-        </button>
-        <p style={{ margin: "0 10px" }}>
-          Страница {currentPage} из {totalPages}
-        </p>
-        <button
-          disabled={currentPage === totalPages}
-          onClick={() =>
-            setCurrentPage((prev) => Math.min(prev + 1, totalPages))
-          }
-        >
-          Вперед
-        </button>
+      <div>
+        {/* Ваш код с отображением товаров */}
+
+        {totalPages > 0 ? (
+          <div
+            style={{
+              display: "flex",
+              justifyContent: "center",
+              marginTop: "20px",
+            }}
+          >
+            <button
+              disabled={currentPage === 1}
+              onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
+            >
+              Предыдущая
+            </button>
+            <p style={{ margin: "0 10px" }}>
+              Страница {currentPage} из {totalPages}
+            </p>
+            <button
+              disabled={currentPage === totalPages}
+              onClick={() =>
+                setCurrentPage((prev) => Math.min(prev + 1, totalPages))
+              }
+            >
+              Следующая
+            </button>
+          </div>
+        ) : (
+          <p style={{ textAlign: "center", marginTop: "20px", color: "#888" }}>
+            Товары отсутствуют
+          </p>
+        )}
       </div>
     </div>
   );

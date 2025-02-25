@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useContext } from "react";
 import {
   Card,
   CardHeader,
@@ -7,6 +7,8 @@ import {
   Image,
   Button,
 } from "@nextui-org/react";
+
+import { AuthContext } from "../context/AuthContext";
 
 interface ProductCardProps {
   id: number;
@@ -24,13 +26,13 @@ const ProductCard: React.FC<ProductCardProps> = ({
   name,
   price,
   image,
-  description,
   reservedById,
   reservationExpiry,
   onRemove,
 }) => {
   const [isReserved, setIsReserved] = useState(!!reservedById); // Проверяем, есть ли reservedById
   const [timeLeft, setTimeLeft] = useState<string>("");
+  const { user } = useContext(AuthContext);
 
   // Эффект для обновления таймера
   useEffect(() => {
@@ -121,26 +123,35 @@ const ProductCard: React.FC<ProductCardProps> = ({
 
         <CardBody>
           <h4>{name}</h4>
-          <p>{description}</p>
         </CardBody>
       </div>
 
       {/* Футер не блюрится */}
       <CardFooter>
-        <span style={{ marginRight: "10px" }}>${price}</span>
+        <span style={{ marginRight: "10px" }}>{price}</span>
         {isReserved ? (
           <div>
             <p>Товар забронирован</p>
             {reservationExpiry && <p>До конца бронирования: {timeLeft}</p>}
-            <Button color="danger" onPress={handleRemoveReservation}>
-              Удалить из забронированных
-            </Button>
+            {/* Показываем кнопку "Удалить из забронированных" только для пользователя, который забронировал товар */}
+            {user?.id === reservedById && (
+              <Button
+                color="danger"
+                variant="solid"
+                onPress={handleRemoveReservation}
+              >
+                Удалить из забронированных
+              </Button>
+            )}
           </div>
         ) : (
           <>
-            <Button color="primary" variant="solid" onPress={handleReserve}>
-              Забронировать
-            </Button>
+            {/* Показываем кнопку "Забронировать" только для пользователей с ролью buyer */}
+            {user?.role === "buyer" && (
+              <Button color="primary" variant="solid" onPress={handleReserve}>
+                Забронировать
+              </Button>
+            )}
             <Button
               as="a"
               color="secondary"

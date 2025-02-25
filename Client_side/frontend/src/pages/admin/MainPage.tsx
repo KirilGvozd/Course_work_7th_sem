@@ -17,7 +17,7 @@ import { useNavigate } from "react-router-dom";
 const AdminPage: React.FC = () => {
   const navigate = useNavigate();
   const [categories, setCategories] = useState<any[]>([]);
-  const [moderators, setModerators] = useState<any[]>([]);
+  // const [moderators, setModerators] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -44,26 +44,26 @@ const AdminPage: React.FC = () => {
   };
 
   // Загрузка модераторов
-  const fetchModerators = async () => {
-    try {
-      const response = await fetch("http://localhost:4000/user/moderators", {
-        headers: {
-          accept: "*/*",
-        },
-        credentials: "include",
-      });
-
-      if (!response.ok) {
-        throw new Error("Не удалось загрузить модераторов");
-      }
-
-      const data = await response.json();
-
-      setModerators(data[0]); // Извлекаем массив модераторов из ответа
-    } catch (err) {
-      setError("Не удалось загрузить модераторов");
-    }
-  };
+  // const fetchModerators = async () => {
+  //   try {
+  //     const response = await fetch("http://localhost:4000/user/moderators", {
+  //       headers: {
+  //         accept: "*/*",
+  //       },
+  //       credentials: "include",
+  //     });
+  //
+  //     if (!response.ok) {
+  //       throw new Error("Не удалось загрузить модераторов");
+  //     }
+  //
+  //     const data = await response.json();
+  //
+  //     setModerators(data[0]); // Извлекаем массив модераторов из ответа
+  //   } catch (err) {
+  //     setError("Не удалось загрузить модераторов");
+  //   }
+  // };
 
   // Удаление категории
   const handleDeleteCategory = async (categoryId: number) => {
@@ -95,7 +95,7 @@ const AdminPage: React.FC = () => {
     const loadData = async () => {
       setLoading(true);
       await fetchCategories();
-      await fetchModerators();
+      // await fetchModerators();
       setLoading(false);
     };
 
@@ -155,6 +155,7 @@ const AdminPage: React.FC = () => {
                     <Button
                       color="primary"
                       size="sm"
+                      variant={"shadow"}
                       onPress={() =>
                         navigate(`/admin/edit-category/${category.id}`)
                       }
@@ -165,6 +166,7 @@ const AdminPage: React.FC = () => {
                       color="danger"
                       size="sm"
                       style={{ marginLeft: "10px" }}
+                      variant={"shadow"}
                       onPress={() => handleDeleteCategory(category.id)}
                     >
                       Удалить
@@ -178,6 +180,7 @@ const AdminPage: React.FC = () => {
         <CardFooter>
           <Button
             color="primary"
+            variant="solid"
             onPress={() => navigate("/admin/create-category")}
           >
             Создать новую категорию
@@ -185,40 +188,40 @@ const AdminPage: React.FC = () => {
         </CardFooter>
       </Card>
 
-      {/* Секция модераторов */}
-      <Card>
-        <CardBody>
-          <h2 style={{ fontSize: "1.5rem", marginBottom: "10px" }}>
-            Модераторы
-          </h2>
-          <Table aria-label="Модераторы">
-            <TableHeader>
-              <TableColumn>ID</TableColumn>
-              <TableColumn>Имя</TableColumn>
-              <TableColumn>Email</TableColumn>
-              <TableColumn>Рейтинг</TableColumn>
-            </TableHeader>
-            <TableBody>
-              {moderators.map((moderator) => (
-                <TableRow key={moderator.id}>
-                  <TableCell>{moderator.id}</TableCell>
-                  <TableCell>{moderator.name}</TableCell>
-                  <TableCell>{moderator.email}</TableCell>
-                  <TableCell>{moderator.rate}</TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-        </CardBody>
-        <CardFooter>
-          <Button
-            color="primary"
-            onPress={() => navigate("/admin/add-moderator")}
-          >
-            Добавить нового модератора
-          </Button>
-        </CardFooter>
-      </Card>
+      {/*/!* Секция модераторов *!/*/}
+      {/*<Card>*/}
+      {/*  <CardBody>*/}
+      {/*    <h2 style={{ fontSize: "1.5rem", marginBottom: "10px" }}>*/}
+      {/*      Модераторы*/}
+      {/*    </h2>*/}
+      {/*    <Table aria-label="Модераторы">*/}
+      {/*      <TableHeader>*/}
+      {/*        <TableColumn>ID</TableColumn>*/}
+      {/*        <TableColumn>Имя</TableColumn>*/}
+      {/*        <TableColumn>Email</TableColumn>*/}
+      {/*        <TableColumn>Рейтинг</TableColumn>*/}
+      {/*      </TableHeader>*/}
+      {/*      <TableBody>*/}
+      {/*        {moderators.map((moderator) => (*/}
+      {/*          <TableRow key={moderator.id}>*/}
+      {/*            <TableCell>{moderator.id}</TableCell>*/}
+      {/*            <TableCell>{moderator.name}</TableCell>*/}
+      {/*            <TableCell>{moderator.email}</TableCell>*/}
+      {/*            <TableCell>{moderator.rate}</TableCell>*/}
+      {/*          </TableRow>*/}
+      {/*        ))}*/}
+      {/*      </TableBody>*/}
+      {/*    </Table>*/}
+      {/*  </CardBody>*/}
+      {/*  <CardFooter>*/}
+      {/*    <Button*/}
+      {/*      color="primary"*/}
+      {/*      onPress={() => navigate("/admin/add-moderator")}*/}
+      {/*    >*/}
+      {/*      Добавить нового модератора*/}
+      {/*    </Button>*/}
+      {/*  </CardFooter>*/}
+      {/*</Card>*/}
     </div>
   );
 };

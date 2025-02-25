@@ -21,8 +21,8 @@ export class Comment {
     @JoinColumn({name: 'sellerId'})
     seller: User;
 
-    @Column("text", { array: true} )
-    attachments: string[];
+    @Column("text", { array: true, nullable: true } )
+    attachments?: string[];
 
     @Column()
     date: string = new Date().toISOString();

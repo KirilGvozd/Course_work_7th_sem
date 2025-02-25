@@ -19,7 +19,7 @@ interface Review {
   name?: string;
   text: string;
   rate: number;
-  attachments: string[];
+  attachments?: string[];
   user?: User;
 }
 
@@ -31,7 +31,6 @@ const SellerPage: React.FC = () => {
     id: 0,
     text: "",
     rate: 3,
-    attachments: [],
   });
   const [imageFiles, setImageFiles] = useState<File[]>([]);
   const [imagePreview, setImagePreview] = useState<string[]>([]);
@@ -78,11 +77,25 @@ const SellerPage: React.FC = () => {
 
   const handleSubmitReview = async () => {
     if (newReview.text && newReview.rate) {
+      const sellerId = parseInt(id!, 10);
+
+      if (isNaN(sellerId)) {
+        alert("Некорректный sellerId");
+
+        return;
+      }
+
+      if (isNaN(newReview.rate)) {
+        alert("Некорректный рейтинг");
+
+        return;
+      }
+
       const formData = new FormData();
 
       formData.append("text", newReview.text);
       formData.append("rate", newReview.rate.toString());
-      formData.append("sellerId", `${id}`);
+      formData.append("sellerId", sellerId.toString());
 
       imageFiles.forEach((file) => {
         formData.append("images", file);
@@ -105,7 +118,6 @@ const SellerPage: React.FC = () => {
         setNewReview({ id: 0, text: "", rate: 3, attachments: [] });
         setImagePreview([]);
         setImageFiles([]);
-
         await fetchReviews();
       }
     } else {

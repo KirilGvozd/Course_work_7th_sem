@@ -91,7 +91,8 @@ const HomePage: React.FC = () => {
     loadItems();
   }, [currentPage, minPrice, maxPrice, selectedCategory, attributes, user?.id]);
 
-  const totalPages = Math.ceil(totalItems / ITEMS_PER_PAGE);
+  const totalPages =
+    totalItems > 0 ? Math.ceil(totalItems / ITEMS_PER_PAGE) : 0;
 
   // Handle category selection
   const handleCategoryChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
@@ -105,7 +106,7 @@ const HomePage: React.FC = () => {
   const handleAttributeChange = (key: string, value: any) => {
     setAttributes((prev) => ({
       ...prev,
-      [key]: value,
+      [key]: typeof value === "number" ? value : { ...prev[key], ...value },
     }));
   };
 
@@ -117,18 +118,29 @@ const HomePage: React.FC = () => {
   return (
     <>
       <main style={{ padding: "20px" }}>
-        <h1>Available Products</h1>
-
         {/* Category Dropdown */}
-        <div style={{ marginBottom: "20px" }}>
-          <label>
-            Category:
+        <div
+          style={{
+            marginBottom: "20px",
+            padding: "10px",
+            borderRadius: "8px",
+          }}
+        >
+          <label style={{ fontWeight: "500", fontSize: "16px" }}>
+            Категория:
             <select
-              style={{ marginLeft: "10px" }}
+              style={{
+                marginLeft: "10px",
+                padding: "8px",
+                borderRadius: "4px",
+                border: "1px solid #ccc",
+                backgroundColor: "#fff",
+                fontSize: "14px",
+              }}
               value={selectedCategory || ""}
               onChange={handleCategoryChange}
             >
-              <option value="">Select a category</option>
+              <option value="">Выберите категорию</option>
               {categories.map((category) => (
                 <option key={category.id} value={category.id}>
                   {category.name}
@@ -139,21 +151,45 @@ const HomePage: React.FC = () => {
         </div>
 
         {/* Price Filters */}
-        <div style={{ marginBottom: "20px" }}>
-          <label style={{ marginLeft: "20px" }}>
-            Min Price:
+        <div
+          style={{
+            marginBottom: "20px",
+            padding: "10px",
+            borderRadius: "8px",
+          }}
+        >
+          <label
+            style={{ marginLeft: "20px", fontWeight: "500", fontSize: "16px" }}
+          >
+            Минимальная цена:
             <input
-              style={{ marginLeft: "10px" }}
+              style={{
+                marginLeft: "10px",
+                padding: "8px",
+                borderRadius: "4px",
+                border: "1px solid #ccc",
+                backgroundColor: "#fff",
+                fontSize: "14px",
+              }}
               type="number"
               value={minPrice || ""}
               onChange={(e) => setMinPrice(Number(e.target.value) || undefined)}
             />
           </label>
 
-          <label style={{ marginLeft: "20px" }}>
-            Max Price:
+          <label
+            style={{ marginLeft: "20px", fontWeight: "500", fontSize: "16px" }}
+          >
+            Максимальная цена:
             <input
-              style={{ marginLeft: "10px" }}
+              style={{
+                marginLeft: "10px",
+                padding: "8px",
+                borderRadius: "4px",
+                border: "1px solid #ccc",
+                backgroundColor: "#fff",
+                fontSize: "14px",
+              }}
               type="number"
               value={maxPrice || ""}
               onChange={(e) => setMaxPrice(Number(e.target.value) || undefined)}
@@ -164,14 +200,37 @@ const HomePage: React.FC = () => {
         {/* Attribute Filters */}
         {selectedCategoryAttributes &&
           selectedCategoryAttributes.length > 0 && (
-            <div style={{ marginBottom: "20px" }}>
-              <h3>Filter by Attributes</h3>
+            <div
+              style={{
+                marginBottom: "20px",
+                padding: "10px",
+                backgroundColor: "#f9f9f9",
+                borderRadius: "8px",
+              }}
+            >
+              <h3
+                style={{
+                  fontSize: "18px",
+                  fontWeight: "600",
+                  marginBottom: "10px",
+                }}
+              >
+                Атрибуты
+              </h3>
               {selectedCategoryAttributes.map((attr: any) => (
                 <div key={attr.id} style={{ marginBottom: "10px" }}>
-                  <label>
+                  <label style={{ fontWeight: "500", fontSize: "16px" }}>
                     {attr.name}:
                     {attr.type === "STRING" && (
                       <input
+                        style={{
+                          marginLeft: "10px",
+                          padding: "8px",
+                          borderRadius: "4px",
+                          border: "1px solid #ccc",
+                          backgroundColor: "#fff",
+                          fontSize: "14px",
+                        }}
                         type="text"
                         onChange={(e) =>
                           handleAttributeChange(attr.name, e.target.value)
@@ -181,29 +240,35 @@ const HomePage: React.FC = () => {
                     {attr.type === "NUMBER" && (
                       <>
                         <input
-                          placeholder="Min"
+                          style={{
+                            marginLeft: "10px",
+                            padding: "8px",
+                            borderRadius: "4px",
+                            border: "1px solid #ccc",
+                            backgroundColor: "#fff",
+                            fontSize: "14px",
+                            width: "80px",
+                          }}
                           type="number"
                           onChange={(e) =>
-                            handleAttributeChange(attr.name, {
-                              ...attributes[attr.name],
-                              min: Number(e.target.value),
-                            })
-                          }
-                        />
-                        <input
-                          placeholder="Max"
-                          type="number"
-                          onChange={(e) =>
-                            handleAttributeChange(attr.name, {
-                              ...attributes[attr.name],
-                              max: Number(e.target.value),
-                            })
+                            handleAttributeChange(
+                              attr.name,
+                              Number(e.target.value),
+                            )
                           }
                         />
                       </>
                     )}
                     {attr.type === "BOOLEAN" && (
                       <select
+                        style={{
+                          marginLeft: "10px",
+                          padding: "8px",
+                          borderRadius: "4px",
+                          border: "1px solid #ccc",
+                          backgroundColor: "#fff",
+                          fontSize: "14px",
+                        }}
                         onChange={(e) =>
                           handleAttributeChange(
                             attr.name,
@@ -211,9 +276,9 @@ const HomePage: React.FC = () => {
                           )
                         }
                       >
-                        <option value="">Select</option>
-                        <option value="true">Yes</option>
-                        <option value="false">No</option>
+                        <option value="">Выберите</option>
+                        <option value="true">Да</option>
+                        <option value="false">Нет</option>
                       </select>
                     )}
                   </label>
@@ -253,30 +318,42 @@ const HomePage: React.FC = () => {
         )}
 
         {/* Pagination */}
-        <div
-          style={{
-            display: "flex",
-            justifyContent: "center",
-            marginTop: "20px",
-          }}
-        >
-          <button
-            disabled={currentPage === 1}
-            onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
-          >
-            Previous
-          </button>
-          <p style={{ margin: "0 10px" }}>
-            Page {currentPage} of {totalPages}
-          </p>
-          <button
-            disabled={currentPage === totalPages}
-            onClick={() =>
-              setCurrentPage((prev) => Math.min(prev + 1, totalPages))
-            }
-          >
-            Next
-          </button>
+        <div>
+          {/* Ваш код с отображением товаров */}
+
+          {totalPages > 0 ? (
+            <div
+              style={{
+                display: "flex",
+                justifyContent: "center",
+                marginTop: "20px",
+              }}
+            >
+              <button
+                disabled={currentPage === 1}
+                onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
+              >
+                Предыдущая
+              </button>
+              <p style={{ margin: "0 10px" }}>
+                Страница {currentPage} из {totalPages}
+              </p>
+              <button
+                disabled={currentPage === totalPages}
+                onClick={() =>
+                  setCurrentPage((prev) => Math.min(prev + 1, totalPages))
+                }
+              >
+                Следующая
+              </button>
+            </div>
+          ) : (
+            <p
+              style={{ textAlign: "center", marginTop: "20px", color: "#888" }}
+            >
+              Товары отсутствуют
+            </p>
+          )}
         </div>
       </main>
     </>

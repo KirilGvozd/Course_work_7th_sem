@@ -47,17 +47,17 @@ const FavouriteProductCard: React.FC<FavouriteProductCardProps> = ({
       </CardBody>
 
       <CardFooter>
-        <span style={{ marginRight: "10px" }}>${price.toFixed(2)}</span>
+        <span style={{ marginRight: "10px" }}>{price}</span>
         <Button
           as="a"
           color="primary"
           href={`/item/${id}`}
           style={{ margin: "10px" }}
-          variant="solid"
+          variant="shadow"
         >
           Подробнее
         </Button>
-        <Button color="danger" onPress={handleRemove}>
+        <Button color="danger" variant="shadow" onPress={handleRemove}>
           Удалить
         </Button>
       </CardFooter>

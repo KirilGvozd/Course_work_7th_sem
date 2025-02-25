@@ -41,7 +41,7 @@ __decorate([
     __metadata("design:type", user_entity_1.User)
 ], Comment.prototype, "seller", void 0);
 __decorate([
-    (0, typeorm_1.Column)("text", { array: true }),
+    (0, typeorm_1.Column)("text", { array: true, nullable: true }),
     __metadata("design:type", Array)
 ], Comment.prototype, "attachments", void 0);
 __decorate([

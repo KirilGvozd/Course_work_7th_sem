@@ -12,6 +12,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.CreateCommentDto = void 0;
 const class_validator_1 = require("class-validator");
 const swagger_1 = require("@nestjs/swagger");
+const class_transformer_1 = require("class-transformer");
 class CreateCommentDto {
 }
 exports.CreateCommentDto = CreateCommentDto;
@@ -20,6 +21,7 @@ __decorate([
         description: "Id of the seller",
     }),
     (0, class_validator_1.IsInt)(),
+    (0, class_transformer_1.Transform)(({ value }) => parseInt(value, 10)),
     __metadata("design:type", Number)
 ], CreateCommentDto.prototype, "sellerId", void 0);
 __decorate([
@@ -27,6 +29,7 @@ __decorate([
         description: "Images",
         default: [],
     }),
+    (0, class_validator_1.IsOptional)(),
     (0, class_validator_1.IsString)({ each: true }),
     __metadata("design:type", Array)
 ], CreateCommentDto.prototype, "attachments", void 0);
@@ -43,6 +46,7 @@ __decorate([
         description: "Rate of the seller",
         default: 5,
     }),
+    (0, class_transformer_1.Transform)(({ value }) => parseInt(value, 10)),
     (0, class_validator_1.IsInt)(),
     __metadata("design:type", Number)
 ], CreateCommentDto.prototype, "rate", void 0);

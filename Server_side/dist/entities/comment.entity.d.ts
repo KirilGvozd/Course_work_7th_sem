@@ -5,7 +5,7 @@ export declare class Comment {
     user: User;
     sellerId: number;
     seller: User;
-    attachments: string[];
+    attachments?: string[];
     date: string;
     text: string;
     rate: number;

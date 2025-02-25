@@ -23,9 +23,15 @@ const Header = () => {
       {/* Кнопка Home Page */}
       <NavbarContent justify="center">
         <NavbarItem>
-          <Button as="a" href="/" variant="flat">
-            Home Page
-          </Button>
+          {user?.role === "admin" ? (
+            <Button as="a" color="primary" href="/admin" variant="bordered">
+              Главная
+            </Button>
+          ) : (
+            <Button as="a" color="default" href="/" variant="shadow">
+              Главная
+            </Button>
+          )}
         </NavbarItem>
       </NavbarContent>
 
@@ -36,8 +42,8 @@ const Header = () => {
             {/* Для админа показываем только Logout */}
             {user && user.role === "admin" ? (
               <NavbarItem>
-                <Button as="a" href="/" variant="solid" onPress={logout}>
-                  Logout
+                <Button as="a" href="/" variant="shadow" onPress={logout}>
+                  Выйти
                 </Button>
               </NavbarItem>
             ) : (
@@ -48,7 +54,7 @@ const Header = () => {
                     {user.role === "seller" ? (
                       <>
                         <NavbarItem>
-                          <Button as="a" href="/add-item" variant="solid">
+                          <Button as="a" href="/add-item" variant="shadow">
                             Добавить товар
                           </Button>
                         </NavbarItem>
@@ -57,7 +63,7 @@ const Header = () => {
                           <Button
                             as="a"
                             href="/seller/reserved-items"
-                            variant="solid"
+                            variant="shadow"
                           >
                             Товары для обработки
                           </Button>
@@ -66,7 +72,7 @@ const Header = () => {
                     ) : (
                       <>
                         <NavbarItem>
-                          <Button as="a" href="/favourites" variant="solid">
+                          <Button as="a" href="/favourites" variant="shadow">
                             Избранные
                           </Button>
                         </NavbarItem>
@@ -74,7 +80,7 @@ const Header = () => {
                           <Button
                             as="a"
                             href="/user/reserved-items"
-                            variant="solid"
+                            variant="shadow"
                           >
                             Забронированные
                           </Button>
@@ -84,13 +90,13 @@ const Header = () => {
                   </>
                 )}
                 <NavbarItem>
-                  <Button as="a" href="/chat" variant="solid">
-                    Chats
+                  <Button as="a" href="/chat" variant="shadow">
+                    Чаты
                   </Button>
                 </NavbarItem>
                 <NavbarItem>
-                  <Button as="a" href="/" variant="solid" onPress={logout}>
-                    Logout
+                  <Button as="a" href="/" variant="shadow" onPress={logout}>
+                    Выйти
                   </Button>
                 </NavbarItem>
               </>
@@ -100,12 +106,12 @@ const Header = () => {
           <>
             {/* Для неавторизованных пользователей */}
             <NavbarItem>
-              <Button as="a" color="primary" href="/login" variant="solid">
-                Login
+              <Button as="a" color="primary" href="/login" variant="shadow">
+                Войти
               </Button>
             </NavbarItem>
             <NavbarItem>
-              <Button as="a" href="/register" variant="flat">
+              <Button as="a" href="/register" variant="shadow">
                 Регистрация
               </Button>
             </NavbarItem>

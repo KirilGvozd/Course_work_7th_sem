@@ -128,20 +128,18 @@ const CreateCategoryPage: React.FC = () => {
           {/* Поле для названия категории */}
           <Input
             label="Название категории"
-            style={{ marginBottom: "10px" }}
             value={name}
             onChange={(e) => setName(e.target.value)}
           />
-
+          <Spacer y={2} />
           <div style={{ marginBottom: "10px" }}>
             <Spacer y={1} />
             <Input
               label="Название атрибута"
-              style={{ marginBottom: "10px" }}
               value={newAttributeName}
               onChange={(e) => setNewAttributeName(e.target.value)}
             />
-            <Spacer y={1} />
+            <Spacer y={2} />
             <Select
               label="Тип атрибута"
               selectedKeys={[newAttributeType]}
@@ -183,6 +181,7 @@ const CreateCategoryPage: React.FC = () => {
                     {attr.name} ({attr.type})
                   </span>
                   <Button
+                    color={"danger"}
                     size="sm"
                     onPress={() => handleRemoveAttribute(index)}
                   >

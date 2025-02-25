@@ -61,7 +61,7 @@ const ChatList: React.FC = () => {
   }
 
   if (chats.length === 0) {
-    return <p>У вас пока нет чатов.</p>;
+    return <p style={{ margin: "20px" }}>У вас пока нет чатов.</p>;
   }
 
   return (

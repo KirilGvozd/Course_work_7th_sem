@@ -1,17 +1,20 @@
-import {IsInt, IsString} from "class-validator";
+import {IsInt, IsOptional, IsString} from "class-validator";
 import {ApiProperty} from "@nestjs/swagger";
+import {Transform} from "class-transformer";
 
 export class CreateCommentDto {
     @ApiProperty({
         description: "Id of the seller",
     })
     @IsInt()
+    @Transform(({ value }) => parseInt(value, 10))
     sellerId: number;
 
     @ApiProperty({
         description: "Images",
         default: [],
     })
+    @IsOptional()
     @IsString({ each: true })
     attachments: string[]
 
@@ -26,6 +29,7 @@ export class CreateCommentDto {
         description: "Rate of the seller",
         default: 5,
     })
+    @Transform(({ value }) => parseInt(value, 10))
     @IsInt()
     rate: number;
 }

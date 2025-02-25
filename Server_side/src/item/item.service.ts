@@ -58,15 +58,15 @@ export class ItemService {
             Object.entries(filters.attributes).forEach(([key, value]) => {
                 query.andWhere("attribute.name = :attrName", { attrName: key });
 
-                if (typeof value === 'object' && value !== null) {
-                    if (value.min !== undefined) {
-                        query.andWhere("itemAttribute.numberValue >= :minValue", { minValue: value.min });
-                    }
-                    if (value.max !== undefined) {
-                        query.andWhere("itemAttribute.numberValue <= :maxValue", { maxValue: value.max });
-                    }
-                } else {
-                    query.andWhere("itemAttribute.stringValue = :attrValue", { attrValue: value });
+                if (typeof value === "number") {
+                    // Точное совпадение для числовых атрибутов
+                    query.andWhere("itemAttribute.numberValue = :exactValue", { exactValue: value });
+                } else if (typeof value === "string") {
+                    // Совпадение для строковых атрибутов
+                    query.andWhere("itemAttribute.stringValue = :stringValue", { stringValue: value });
+                } else if (typeof value === "boolean") {
+                    // Совпадение для булевых атрибутов
+                    query.andWhere("itemAttribute.booleanValue = :booleanValue", { booleanValue: value });
                 }
             });
         }

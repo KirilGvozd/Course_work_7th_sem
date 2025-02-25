@@ -7,6 +7,7 @@ import {
   CardFooter,
   Select,
   SelectItem,
+  Spacer,
 } from "@nextui-org/react";
 import { useNavigate, useParams } from "react-router-dom";
 
@@ -222,19 +223,18 @@ const EditCategoryPage: React.FC = () => {
           {/* Поле для названия категории */}
           <Input
             label="Название категории"
-            style={{ marginBottom: "10px" }}
             value={name}
             onChange={(e) => setName(e.target.value)}
           />
-
+          <Spacer y={2} />
           {/* Поля для добавления атрибута */}
           <div style={{ marginBottom: "10px" }}>
             <Input
               label="Название атрибута"
-              style={{ marginBottom: "10px" }}
               value={newAttributeName}
               onChange={(e) => setNewAttributeName(e.target.value)}
             />
+            <Spacer y={2} />
             <Select
               label="Тип атрибута"
               selectedKeys={[newAttributeType]}
@@ -288,6 +288,7 @@ const EditCategoryPage: React.FC = () => {
                     }}
                   />
                   <Button
+                    color={"danger"}
                     size="sm"
                     onPress={() => handleRemoveAttribute(attr.id)}
                   >

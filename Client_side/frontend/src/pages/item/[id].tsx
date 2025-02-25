@@ -136,9 +136,11 @@ const ItemPage = () => {
         </div>
 
         <div style={{ padding: "1rem" }}>
+          <Spacer y={2} />
           <p>{item.description}</p>
-          <Spacer y={0.5} />
-          <h4>Цена: {item.price}$</h4>
+          <Spacer y={2} />
+          <h4>Цена: {item.price}</h4>
+          <Spacer y={1} />
           <h4>
             Продавец:{" "}
             <a
@@ -154,17 +156,20 @@ const ItemPage = () => {
             <>
               <Spacer y={1} />
               <h4>Категория: {item.category.name}</h4>
+              <Spacer y={1} />
               {item.attributes && item.attributes.length > 0 ? (
                 <div>
-                  <h5>Атрибуты:</h5>
                   {item.attributes.map((attr: any) => (
                     <div key={attr.id} style={{ marginBottom: "0.5rem" }}>
                       <h5>
                         {attr.attribute.name}:{" "}
-                        {attr.stringValue ||
-                          attr.numberValue ||
-                          attr.booleanValue ||
-                          "Не указано"}
+                        {attr.attribute.type === "BOOLEAN" // Проверяем тип атрибута
+                          ? attr.booleanValue === true
+                            ? "Да" // Если true, отображаем "Да"
+                            : "Нет" // Если false, отображаем "Нет"
+                          : attr.stringValue ||
+                            attr.numberValue ||
+                            "Не указано"}
                       </h5>
                     </div>
                   ))}

@@ -17,7 +17,7 @@ interface Item {
   name: string;
   description: string;
   price: number;
-  image: string;
+  images: string[];
   reservedById?: number | null;
   reservationExpiry?: string;
   isApprovedByModerator?: boolean;
@@ -71,7 +71,10 @@ const SellerReservedItemsPage: React.FC = () => {
   const currentItems = pendingItems.slice(startIndex, endIndex); // Товары для текущей страницы
 
   // Общее количество страниц
-  const totalPages = Math.ceil(pendingItems.length / ITEMS_PER_PAGE);
+  const totalPages =
+    pendingItems.length > 0
+      ? Math.ceil(pendingItems.length / ITEMS_PER_PAGE)
+      : 0;
 
   // Обработчик подтверждения бронирования
   const handleApproveReservation = async (itemId: number) => {
@@ -117,8 +120,6 @@ const SellerReservedItemsPage: React.FC = () => {
 
   return (
     <div style={{ padding: "20px" }}>
-      <h1>Товары, ожидающие подтверждения бронирования</h1>
-
       {/* Список товаров */}
       {loading ? (
         <p>Загрузка...</p>
@@ -135,7 +136,7 @@ const SellerReservedItemsPage: React.FC = () => {
               <CardHeader>
                 <Image
                   height="300px"
-                  src={item.image}
+                  src={`http://localhost:4000/${item.images[0]}`}
                   style={{ objectFit: "cover", borderRadius: "8px" }}
                   width="100%"
                 />
@@ -160,14 +161,16 @@ const SellerReservedItemsPage: React.FC = () => {
               <CardFooter>
                 <Button
                   color="success"
-                  onClick={() => handleApproveReservation(item.id)}
+                  variant={"shadow"}
+                  onPress={() => handleApproveReservation(item.id)}
                 >
                   Подтвердить
                 </Button>
                 <Button
                   color="danger"
                   style={{ marginLeft: "10px" }}
-                  onClick={() => handleRejectReservation(item.id)}
+                  variant={"shadow"}
+                  onPress={() => handleRejectReservation(item.id)}
                 >
                   Отклонить
                 </Button>
@@ -180,30 +183,40 @@ const SellerReservedItemsPage: React.FC = () => {
       )}
 
       {/* Пагинация */}
-      <div
-        style={{
-          display: "flex",
-          justifyContent: "center",
-          marginTop: "20px",
-        }}
-      >
-        <button
-          disabled={currentPage === 1}
-          onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
-        >
-          Назад
-        </button>
-        <p style={{ margin: "0 10px" }}>
-          Страница {currentPage} из {totalPages}
-        </p>
-        <button
-          disabled={currentPage === totalPages}
-          onClick={() =>
-            setCurrentPage((prev) => Math.min(prev + 1, totalPages))
-          }
-        >
-          Вперед
-        </button>
+      <div>
+        {/* Ваш код с отображением товаров */}
+
+        {totalPages > 0 ? (
+          <div
+            style={{
+              display: "flex",
+              justifyContent: "center",
+              marginTop: "20px",
+            }}
+          >
+            <button
+              disabled={currentPage === 1}
+              onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
+            >
+              Предыдущая
+            </button>
+            <p style={{ margin: "0 10px" }}>
+              Страница {currentPage} из {totalPages}
+            </p>
+            <button
+              disabled={currentPage === totalPages}
+              onClick={() =>
+                setCurrentPage((prev) => Math.min(prev + 1, totalPages))
+              }
+            >
+              Следующая
+            </button>
+          </div>
+        ) : (
+          <p style={{ textAlign: "center", marginTop: "20px", color: "#888" }}>
+            Товары отсутствуют
+          </p>
+        )}
       </div>
     </div>
   );
