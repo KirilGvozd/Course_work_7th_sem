@@ -13,6 +13,10 @@ export declare class ChatGatewayGateway implements OnGatewayInit, OnGatewayConne
     handleLeaveRoom(client: Socket, { itemId }: {
         itemId: number;
     }): void;
+    handleDeleteMessage(client: Socket, payload: {
+        messageId: number;
+        itemId: number;
+    }): Promise<void>;
     afterInit(server: Server): void;
     handleDisconnect(client: Socket): void;
     handleConnection(client: Socket, ...args: any[]): void;

@@ -9,6 +9,7 @@ import {
 import { Socket, Server } from 'socket.io';
 import { ChatService } from '../chat/chat.service';
 import { Chat } from '../entities/chat.entity';
+import {NotFoundException} from "@nestjs/common";
 
 @WebSocketGateway({
   cors: {
@@ -35,6 +36,25 @@ export class ChatGatewayGateway implements OnGatewayInit, OnGatewayConnection, O
   @SubscribeMessage('leaveRoom')
   handleLeaveRoom(client: Socket, { itemId }: { itemId: number }): void {
     client.leave(`item-${itemId}`);
+  }
+
+  @SubscribeMessage('deleteMessage')
+  async handleDeleteMessage(client: Socket, payload: { messageId: number; itemId: number }) {
+    try {
+      // Удаляем сообщение из базы данных
+      await this.chatService.delete(payload.messageId);
+
+      // Рассылаем событие удаления сообщения всем участникам комнаты
+      this.server.to(`item-${payload.itemId}`).emit('messageDeleted', { messageId: payload.messageId });
+    } catch (error) {
+      console.error("Ошибка при удалении сообщения:", error);
+      // Не отправляем ошибку на клиент, если сообщение не найдено
+      if (error instanceof NotFoundException) {
+        console.warn(`Сообщение с ID ${payload.messageId} не найдено.`);
+      } else {
+        client.emit('error', { message: "Не удалось удалить сообщение." });
+      }
+    }
   }
 
   afterInit(server: Server) {

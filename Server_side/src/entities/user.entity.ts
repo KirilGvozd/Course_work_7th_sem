@@ -1,5 +1,6 @@
-import {Column, Entity, JoinTable, ManyToMany, PrimaryGeneratedColumn} from "typeorm";
+import {Column, Entity, JoinTable, ManyToMany, OneToMany, PrimaryGeneratedColumn} from "typeorm";
 import {Item} from "./item.entity";
+import {Wishlist} from "./wishlist.entity";
 
 @Entity()
 export class User {
@@ -30,4 +31,16 @@ export class User {
     @ManyToMany(() => Item, (item) => item.users, { onDelete: "CASCADE" })
     @JoinTable()
     favourites: Item[];
+
+    @OneToMany(() => Wishlist, wishlist => wishlist.user, {onDelete: "CASCADE"})
+    wishlists: Wishlist[];
+
+    @Column({ nullable: true })
+    twoFactorSecret: string;
+
+    @Column({ default: false })
+    isTwoFactorEnabled: boolean;
+
+    @Column({ nullable: true })
+    twoFactorRecoveryCodes: string;
 }

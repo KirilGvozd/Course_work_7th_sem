@@ -79,14 +79,14 @@ const AdminPage: React.FC = () => {
         },
       );
 
-      if (!response.ok) {
-        throw new Error("Не удалось удалить категорию");
+      if (response.status === 409) {
+        throw new Error("Нельзя удалять категории, к которым привязаны товары");
       }
 
       // Обновляем список категорий после удаления
       fetchCategories();
     } catch (err) {
-      setError("Не удалось удалить категорию");
+      setError("Нельзя удалять категории, к которым привязаны товары");
     }
   };
 
@@ -112,21 +112,26 @@ const AdminPage: React.FC = () => {
     );
   }
 
-  if (error) {
-    return (
-      <div
-        style={{ display: "flex", justifyContent: "center", padding: "20px" }}
-      >
-        <p style={{ color: "red" }}>{error}</p>
-      </div>
-    );
-  }
-
   return (
     <div style={{ padding: "20px" }}>
       <h1 style={{ fontSize: "2rem", marginBottom: "20px" }}>
         Admin Dashboard
       </h1>
+
+      {error && (
+        <div
+          style={{
+            backgroundColor: "#ff4444",
+            color: "white",
+            padding: "10px",
+            borderRadius: "5px",
+            marginBottom: "20px",
+            textAlign: "center",
+          }}
+        >
+          {error}
+        </div>
+      )}
 
       {/* Секция категорий */}
       <Card style={{ marginBottom: "20px" }}>

@@ -20,13 +20,16 @@ const typeorm_2 = require("@nestjs/typeorm");
 const constants_1 = require("../utils/constants");
 const mail_service_1 = require("../mail/mail.service");
 const user_entity_1 = require("../entities/user.entity");
+const wishlist_entity_1 = require("../entities/wishlist.entity");
 let ItemService = class ItemService {
-    constructor(itemRepository, mailService, userRepository) {
+    constructor(itemRepository, mailService, userRepository, wishlistRepository) {
         this.itemRepository = itemRepository;
         this.mailService = mailService;
         this.userRepository = userRepository;
+        this.wishlistRepository = wishlistRepository;
     }
     async findAll(paginationDto, filters) {
+        console.log(filters.attributes);
         const query = this.itemRepository.createQueryBuilder("item")
             .leftJoinAndSelect("item.attributes", "itemAttribute")
             .leftJoinAndSelect("itemAttribute.attribute", "attribute");
@@ -43,18 +46,22 @@ let ItemService = class ItemService {
             query.andWhere("item.price <= :maxPrice", { maxPrice: filters.maxPrice });
         }
         if (filters.attributes) {
-            Object.entries(filters.attributes).forEach(([key, value]) => {
-                query.andWhere("attribute.name = :attrName", { attrName: key });
+            Object.entries(filters.attributes).forEach(([key, value], index) => {
+                const attrAlias = `attr${index}`;
+                const itemAttrAlias = `itemAttr${index}`;
+                query.leftJoinAndSelect("item.attributes", itemAttrAlias, `${itemAttrAlias}.itemId = item.id`);
+                query.leftJoinAndSelect(`${itemAttrAlias}.attribute`, attrAlias, `${attrAlias}.id = ${itemAttrAlias}.attributeId`);
                 if (typeof value === "number") {
-                    query.andWhere("itemAttribute.numberValue = :exactValue", { exactValue: value });
+                    query.andWhere(`${attrAlias}.name = :attrName${index}`, { [`attrName${index}`]: key });
+                    query.andWhere(`${itemAttrAlias}.numberValue = :exactValue${index}`, { [`exactValue${index}`]: value });
                 }
-                else if (typeof value === "object" && value !== null) {
-                    if (value.min !== undefined) {
-                        query.andWhere("itemAttribute.numberValue >= :minValue", { minValue: value.min });
-                    }
-                    if (value.max !== undefined) {
-                        query.andWhere("itemAttribute.numberValue <= :maxValue", { maxValue: value.max });
-                    }
+                else if (typeof value === "string") {
+                    query.andWhere(`${attrAlias}.name = :attrName${index}`, { [`attrName${index}`]: key });
+                    query.andWhere(`${itemAttrAlias}.stringValue = :stringValue${index}`, { [`stringValue${index}`]: value });
+                }
+                else if (typeof value === "boolean") {
+                    query.andWhere(`${attrAlias}.name = :attrName${index}`, { [`attrName${index}`]: key });
+                    query.andWhere(`${itemAttrAlias}.booleanValue = :booleanValue${index}`, { [`booleanValue${index}`]: value });
                 }
             });
         }
@@ -75,13 +82,30 @@ let ItemService = class ItemService {
         return result;
     }
     async create(body, user) {
-        if (user.role === "buyer") {
-            throw new common_1.UnauthorizedException("You dont have permission to create an item!");
+        if (user.role === 'buyer') {
+            throw new common_1.UnauthorizedException('You dont have permission to create an item!');
         }
         body.isApprovedByModerator = true;
-        return await this.itemRepository.save(body);
+        const newItem = await this.itemRepository.save(body);
+        const wishlistUsers = await this.wishlistRepository.find({
+            where: { itemName: body.name },
+            relations: ['user'],
+        });
+        for (const wishlistEntry of wishlistUsers) {
+            if (wishlistEntry.user) {
+                try {
+                    await this.mailService.sendAddedToWishlistNotification(wishlistEntry.user.email, body.name, newItem.id);
+                    await this.wishlistRepository.delete({ id: wishlistEntry.id });
+                }
+                catch (error) {
+                    console.error(`Failed to send notification or remove wishlist entry for user ${wishlistEntry.user.id}:`, error);
+                }
+            }
+        }
+        return newItem;
     }
     async reserveItem(itemId, userId) {
+        const currentDate = new Date();
         const item = await this.itemRepository.findOne({
             where: { id: itemId },
             relations: ['user'],
@@ -97,8 +121,8 @@ let ItemService = class ItemService {
         if (!item) {
             throw new common_1.NotFoundException('Item not found');
         }
-        if (item.reservedById) {
-            throw new common_1.ConflictException('Item already reserved');
+        if (item.reservedById && item.reservationExpiry && item.reservationExpiry > currentDate) {
+            throw new common_1.ConflictException('Item is already reserved and the reservation has not expired yet');
         }
         item.reservedBy = buyer;
         item.reservationExpiry = new Date(Date.now() + 24 * 60 * 60 * 1000);
@@ -161,16 +185,23 @@ let ItemService = class ItemService {
         return this.itemRepository.save(item);
     }
     async getReservedItems(userId) {
+        const currentDate = new Date();
         return await this.itemRepository.findAndCount({
-            where: { reservedBy: { id: userId } },
+            where: { reservedBy: {
+                    id: userId,
+                },
+                reservationExpiry: (0, typeorm_1.MoreThan)(currentDate),
+            },
             relations: ['user', 'category'],
         });
     }
     async getItemsPendingApproval(userId) {
+        const currentDate = new Date();
         return this.itemRepository.find({
             where: {
                 user: { id: userId },
                 reservedById: (0, typeorm_1.Not)((0, typeorm_1.IsNull)()),
+                reservationExpiry: (0, typeorm_1.MoreThan)(currentDate),
             },
             relations: ['reservedBy', 'category'],
         });
@@ -185,7 +216,13 @@ let ItemService = class ItemService {
         if (item.userId !== userId) {
             throw new common_1.UnauthorizedException("You don't have the permission to update this item!");
         }
-        const previousPrice = item.prices.length > 0 ? item.prices[0] : item.price;
+        const previousPrice = item.price;
+        console.log(body.deletedImages);
+        if (body.deletedImages && body.deletedImages.length > 0) {
+            for (const image of body.deletedImages) {
+                body.images = body.images.filter((img) => img !== image);
+            }
+        }
         if (body.price !== item.price) {
             item.prices.push(item.price);
         }
@@ -193,7 +230,9 @@ let ItemService = class ItemService {
             ...item,
             ...body,
             prices: item.prices,
+            images: body.images,
         };
+        console.log(body.images);
         await this.itemRepository.save(updatedItem);
         if (body.price !== item.price) {
             const priceChange = body.price > item.price ? 'повышена' : 'понижена';
@@ -226,14 +265,38 @@ let ItemService = class ItemService {
         });
         return item.images;
     }
+    async addItemToWishlist(itemName, userId) {
+        return await this.wishlistRepository.save({ itemName: itemName, userId: userId });
+    }
+    async retrieveWishlist(id) {
+        return await this.wishlistRepository.findAndCount({
+            where: {
+                userId: id
+            }
+        });
+    }
+    async deleteFromWishlist(id, userId) {
+        const item = await this.wishlistRepository.findOne({
+            where: {
+                id: id,
+                userId: userId,
+            }
+        });
+        if (!item) {
+            throw new common_1.UnauthorizedException("You don't have permission to delete this item!");
+        }
+        return await this.wishlistRepository.delete(id);
+    }
 };
 exports.ItemService = ItemService;
 exports.ItemService = ItemService = __decorate([
     (0, common_1.Injectable)(),
     __param(0, (0, typeorm_2.InjectRepository)(item_entity_1.Item)),
     __param(2, (0, typeorm_2.InjectRepository)(user_entity_1.User)),
+    __param(3, (0, typeorm_2.InjectRepository)(wishlist_entity_1.Wishlist)),
     __metadata("design:paramtypes", [typeorm_1.Repository,
         mail_service_1.MailService,
+        typeorm_1.Repository,
         typeorm_1.Repository])
 ], ItemService);
 //# sourceMappingURL=item.service.js.map

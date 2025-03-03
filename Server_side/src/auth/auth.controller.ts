@@ -1,4 +1,14 @@
-import {BadRequestException, Body, Controller, Get, Post, Req, Res, UnauthorizedException,} from '@nestjs/common';
+import {
+  BadRequestException,
+  Body,
+  Controller,
+  Get,
+  Post,
+  Req,
+  Res,
+  UnauthorizedException,
+  UseGuards,
+} from '@nestjs/common';
 import {AuthService} from './auth.service';
 import {CreateUserDto} from "../user/dto/createUserDto";
 import * as bcrypt from 'bcrypt';
@@ -7,7 +17,7 @@ import {Request, Response} from "express";
 import {UserService} from "../user/user.service";
 import {AuthDto} from "./dto/auth.dto";
 import {ApiResponse, ApiTags} from "@nestjs/swagger";
-import {MailService} from "../mail/mail.service";
+import {JwtAuthGuard} from "./jwt-auth.guard";
 
 @ApiTags('Authentication')
 @Controller('auth')
@@ -16,10 +26,10 @@ export class AuthController {
       private readonly authService: AuthService,
       private readonly jwtService: JwtService,
       private readonly userService: UserService,
-      private readonly mailService: MailService
   ) {}
 
   @Get('user')
+  @UseGuards(JwtAuthGuard)
   @ApiResponse({ status: 200, description: 'User data retrieved successfully.'})
   @ApiResponse({ status: 401, description: 'Not authenticated.'})
   async user(@Req() req: Request) {
@@ -54,24 +64,30 @@ export class AuthController {
   }
 
   @Post('login')
-  @ApiResponse({ status: 200, description: 'Successfully logged in.'})
-  @ApiResponse({ status: 401, description: 'Invalid credentials.'})
+  @ApiResponse({ status: 200, description: 'Successfully logged in.' })
+  @ApiResponse({ status: 401, description: 'Invalid credentials.' })
   async login(
-    @Body() authDto: AuthDto,
-    @Res({passthrough: true}) response: Response
+      @Body() authDto: AuthDto,
+      @Res({ passthrough: true }) response: Response,
   ) {
-    const user = await this.userService.findByEmail(authDto.email);
+    const user = await this.authService.validateUser(authDto.email, authDto.password);
 
-    if (!user || !await bcrypt.compare(authDto.password, user.password)) {
+    if (!user) {
       throw new BadRequestException('Invalid credentials!');
     }
 
-    const token = await this.authService.generateToken(user);
+    if (user.isTwoFactorEnabled) {
+      return response.status(200).json({
+        message: '2FA required',
+        userId: user.id,
+      });
+    }
 
-    response.cookie("jwt", token, { httpOnly: true },);
+    const token = await this.authService.generateToken(user);
+    response.cookie('jwt', token, { httpOnly: true });
 
     return response.status(200).json({
-      message: "Login successful",
+      message: 'Login successful',
       userRole: user.role,
       accessToken: token,
     });
@@ -86,5 +102,90 @@ export class AuthController {
     }
     response.clearCookie("jwt");
     return response.status(200).json({ message: "Cookie has been cleared" });
+  }
+
+  @Post('verify-login-2fa')
+  @ApiResponse({ status: 200, description: '2FA code verified successfully.' })
+  @ApiResponse({ status: 400, description: 'Invalid 2FA code.' })
+  async verifyLogin2FA(
+      @Body() body: { userId: number; code: string },
+      @Res({ passthrough: true }) response: Response,
+  ) {
+    const user = await this.authService.findOne({ id: body.userId });
+
+    if (!user) {
+      throw new UnauthorizedException('User not found');
+    }
+
+    const isValid = await this.authService.verify2FACode(user, body.code);
+    if (!isValid) {
+      throw new BadRequestException('Invalid 2FA code');
+    }
+
+    const token = await this.authService.generateToken(user);
+    response.cookie('jwt', token, { httpOnly: true });
+
+    return response.status(200).json({
+      message: 'Login successful',
+      userRole: user.role,
+      accessToken: token,
+    });
+  }
+
+  @Post('enable-2fa')
+  @UseGuards(JwtAuthGuard)
+  @ApiResponse({ status: 200, description: '2FA has been successfully enabled.' })
+  @ApiResponse({ status: 401, description: 'Not authenticated.' })
+  async enable2FA(@Req() req: Request) {
+    const cookie = req.cookies['jwt'];
+    const data = await this.jwtService.verifyAsync(cookie, { secret: process.env.JWT_SECRET });
+    const user = await this.userService.findOne(data.id);
+
+    if (!user) {
+      throw new UnauthorizedException('User not found');
+    }
+
+    const { secret, qrCodeUrl } = await this.authService.generate2FASecret(user);
+    return { secret, qrCodeUrl };
+  }
+
+  @Post('verify-2fa')
+  @UseGuards(JwtAuthGuard)
+  @ApiResponse({ status: 200, description: '2FA code verified successfully.' })
+  @ApiResponse({ status: 400, description: 'Invalid 2FA code.' })
+  async verify2FA(@Body() body: { code: string }, @Req() req: Request) {
+    const cookie = req.cookies['jwt'];
+    const data = await this.jwtService.verifyAsync(cookie, { secret: process.env.JWT_SECRET });
+    const user = await this.userService.findOne(data.id);
+
+    if (!user) {
+      throw new UnauthorizedException('User not found');
+    }
+
+    const isValid = await this.authService.verify2FACode(user, body.code);
+    if (!isValid) {
+      throw new BadRequestException('Invalid 2FA code');
+    }
+
+    await this.userService.update(user.id, { isTwoFactorEnabled: true, twoFactorSecret: user.twoFactorSecret });
+
+    return { message: '2FA has been successfully enabled' };
+  }
+
+  @Post('disable-2fa')
+  @UseGuards(JwtAuthGuard)
+  @ApiResponse({ status: 200, description: '2FA has been successfully disabled.' })
+  @ApiResponse({ status: 401, description: 'Not authenticated.' })
+  async disable2FA(@Req() req: Request) {
+    const cookie = req.cookies['jwt'];
+    const data = await this.jwtService.verifyAsync(cookie, { secret: process.env.JWT_SECRET });
+    const user = await this.userService.findOne(data.id);
+
+    if (!user) {
+      throw new UnauthorizedException('User not found');
+    }
+
+    await this.userService.update(user.id, { isTwoFactorEnabled: false, twoFactorSecret: null });
+    return { message: '2FA has been successfully disabled' };
   }
 }

@@ -20,6 +20,15 @@ export class UpdateItemDto {
     images: string[];
 
     @ApiProperty({
+        description: 'Array of deleted images URLs for the item',
+        type: [String],
+        example: ['http://example.com/image1.jpg', 'http://example.com/image2.jpg']
+    })
+    @IsString({ each: true })
+    @IsOptional()
+    deletedImages?: string[];
+
+    @ApiProperty({
         description: 'Historical prices of the item',
         type: [Number],
         example: [10.99, 9.99, 8.99],

@@ -39,6 +39,16 @@ __decorate([
 ], UpdateItemDto.prototype, "images", void 0);
 __decorate([
     (0, swagger_1.ApiProperty)({
+        description: 'Array of deleted images URLs for the item',
+        type: [String],
+        example: ['http://example.com/image1.jpg', 'http://example.com/image2.jpg']
+    }),
+    (0, class_validator_1.IsString)({ each: true }),
+    (0, class_validator_1.IsOptional)(),
+    __metadata("design:type", Array)
+], UpdateItemDto.prototype, "deletedImages", void 0);
+__decorate([
+    (0, swagger_1.ApiProperty)({
         description: 'Historical prices of the item',
         type: [Number],
         example: [10.99, 9.99, 8.99],

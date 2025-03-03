@@ -19,10 +19,11 @@ const EditItemPage = () => {
   const [price, setPrice] = useState<number | string>("");
   const [existingImages, setExistingImages] = useState<string[]>([]);
   const [newImages, setNewImages] = useState<File[]>([]);
-  const [attributes, setAttributes] = useState<any[]>([]); // Добавляем состояние для атрибутов
+  const [attributes, setAttributes] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string>("");
   const [changedAttributes, setChangedAttributes] = useState<number[]>([]);
+  const [deletedImages, setDeletedImages] = useState<string[]>([]);
 
   useEffect(() => {
     if (id) {
@@ -30,9 +31,9 @@ const EditItemPage = () => {
         .then((item) => {
           setName(item.name);
           setDescription(item.description);
-          setPrice(item.price);
+          setPrice(item.price.replace(/[$,]/g, ""));
           setExistingImages(item.images);
-          setAttributes(item.attributes || []); // Загружаем атрибуты
+          setAttributes(item.attributes || []);
         })
         .catch(() => {
           setError("Failed to load item data.");
@@ -46,51 +47,57 @@ const EditItemPage = () => {
     setError("");
 
     if (!price || isNaN(Number(price)) || Number(price) <= 0) {
-      setError("Price must be a positive number.");
+      setError("Цена должна быть положительным числом.");
       setLoading(false);
 
       return;
     }
 
-    const updatedAttributesPromises = attributes
-      .filter((attr) => attr.stringValue !== null)
-      .map(async (attribute) => {
-        try {
-          const response = await fetch(
-            `http://localhost:4000/item-attribute/${attribute.id}`,
-            {
-              method: "PATCH",
-              headers: {
-                "Content-Type": "application/json",
-              },
-              body: JSON.stringify({ stringValue: attribute.stringValue }),
-              credentials: "include",
-            },
-          );
+    // Обновляем измененные атрибуты
+    const updatedAttributesPromises = changedAttributes
+      .map((attributeId) => {
+        const attribute = attributes.find((attr) => attr.id === attributeId);
 
-          if (!response.ok) {
-            const errorData = await response.json();
+        if (!attribute) return;
 
-            throw new Error(errorData.message || "Failed to update attribute");
-          }
-        } catch (error) {
-          console.error("Ошибка при обновлении атрибута:", error);
-          setError(
-            `Ошибка при обновлении атрибута "${attribute.attribute.name}": ${error}`,
-          );
-          setLoading(false);
-          throw error; // Прерываем процесс, если произошла ошибка
+        let bodyKey, bodyValue;
+
+        if (attribute.attribute.type === "BOOLEAN") {
+          bodyKey = "booleanValue";
+          bodyValue = attribute.booleanValue;
+        } else if (attribute.attribute.type === "NUMBER") {
+          bodyKey = "numberValue";
+          bodyValue = attribute.numberValue;
+        } else {
+          bodyKey = "stringValue";
+          bodyValue = attribute.stringValue;
         }
-      });
 
-    // Ждем завершения всех запросов по обновлению атрибутов
+        return fetch(`http://localhost:4000/item-attribute/${attributeId}`, {
+          method: "PATCH",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ [bodyKey]: bodyValue }),
+          credentials: "include",
+        }).then((response) => {
+          if (!response.ok) {
+            throw new Error("Failed to update attribute");
+          }
+        });
+      })
+      .filter(Boolean); // Удаляем пустые промисы
+
     try {
       await Promise.all(updatedAttributesPromises);
     } catch (error) {
-      return; // Если произошла ошибка при обновлении атрибутов, прекращаем выполнение
+      setError("Ошибка при обновлении атрибутов.");
+      setLoading(false);
+
+      return;
     }
 
-    // Шаг 2: Обновляем основные данные товара
+    // Отправляем остальные данные
     const formData = new FormData();
 
     formData.append("name", name);
@@ -100,6 +107,7 @@ const EditItemPage = () => {
       formData.append("existingImages[]", image),
     );
     newImages.forEach((image) => formData.append("images", image));
+    deletedImages.forEach((image) => formData.append("deletedImages[]", image));
 
     try {
       const response = await fetch(`http://localhost:4000/item/${id}`, {
@@ -125,11 +133,23 @@ const EditItemPage = () => {
 
   const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files) {
-      setNewImages([...newImages, ...Array.from(e.target.files)]);
+      const selectedFiles = Array.from(e.target.files).filter((file) =>
+        file.type.startsWith("image/"),
+      );
+
+      if (selectedFiles.length !== e.target.files.length) {
+        setError("Можно загружать только изображения.");
+
+        return;
+      }
+      setNewImages((prevImages) => [...prevImages, ...selectedFiles]);
     }
   };
 
   const handleRemoveExistingImage = (index: number) => {
+    const imageToDelete = existingImages[index];
+
+    setDeletedImages((prev) => [...prev, imageToDelete]);
     setExistingImages(existingImages.filter((_, i) => i !== index));
   };
 
@@ -142,46 +162,40 @@ const EditItemPage = () => {
     value: string | boolean | number | null,
   ) => {
     setAttributes((prevAttributes) =>
-      prevAttributes.map((attr) =>
-        attr.id === attributeId ? { ...attr, stringValue: value } : attr,
-      ),
+      prevAttributes.map((attr) => {
+        if (attr.id === attributeId) {
+          if (attr.attribute.type === "BOOLEAN") {
+            return {
+              ...attr,
+              booleanValue:
+                value === "true" ? true : value === "false" ? false : null,
+            };
+          }
+
+          if (attr.attribute.type === "NUMBER") {
+            // Если значение передано как строка, сохраняем его как строку
+            if (typeof value === "string") {
+              return { ...attr, numberValue: value };
+            }
+
+            // Если значение передано как число, сохраняем его как число
+            if (typeof value === "number") {
+              return { ...attr, numberValue: value };
+            }
+
+            // Если значение null, сохраняем как null
+            return { ...attr, numberValue: null };
+          }
+
+          return { ...attr, stringValue: value };
+        }
+
+        return attr;
+      }),
     );
+
     if (!changedAttributes.includes(attributeId)) {
       setChangedAttributes((prev) => [...prev, attributeId]);
-    }
-  };
-
-  const updateAttribute = async (
-    attributeId: number,
-    value: string | boolean | number | null,
-  ) => {
-    try {
-      const response = await fetch(
-        `http://localhost:4000/item-attribute/${attributeId}`,
-        {
-          method: "PATCH",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({ stringValue: value }),
-          credentials: "include",
-        },
-      );
-
-      if (response.ok) {
-        alert("Атрибут успешно обновлен");
-        setAttributes((prevAttributes) =>
-          prevAttributes.map((attr) =>
-            attr.id === attributeId ? { ...attr, stringValue: value } : attr,
-          ),
-        );
-      } else {
-        const errorData = await response.json();
-
-        alert(`Ошибка при обновлении атрибута: ${errorData.message}`);
-      }
-    } catch (error) {
-      console.error("Ошибка при обновлении атрибута:", error);
     }
   };
 
@@ -207,31 +221,23 @@ const EditItemPage = () => {
         <Input
           required
           label="Цена"
-          type="text" // Используем тип text для ручного ввода
-          value={price === 0 ? "" : price.toString()} // Отображаем пустую строку, если price = 0
+          type="text"
+          value={price === 0 ? "" : price.toString()}
           variant="bordered"
           onBlur={(e) => {
-            // При потере фокуса форматируем значение
             const value = e.target.value;
 
             if (value === "." || value === "") {
-              setPrice(0); // Если введена только точка или поле пустое, устанавливаем 0
+              setPrice(0);
             } else {
-              setPrice(parseFloat(value)); // Преобразуем в число
+              setPrice(parseFloat(value));
             }
           }}
           onChange={(e) => {
             const value = e.target.value;
 
-            // Разрешаем ввод цифр, одной точки и пустой строки
             if (/^\d*\.?\d*$/.test(value) || value === "") {
-              // Если введена только точка, устанавливаем значение в "0."
-              if (value === ".") {
-                setPrice("0."); // Сохраняем точку для дальнейшего ввода
-              } else {
-                // Если значение пустое, устанавливаем price в 0, иначе сохраняем как строку
-                setPrice(value === "" ? 0 : value);
-              }
+              setPrice(value === "" ? 0 : value);
             }
           }}
         />
@@ -247,9 +253,6 @@ const EditItemPage = () => {
                 {attribute.attribute.type === "STRING" && (
                   <Input
                     value={attribute.stringValue || ""}
-                    onBlur={() =>
-                      updateAttribute(attribute.id, attribute.stringValue)
-                    }
                     onChange={(e) =>
                       handleAttributeChange(attribute.id, e.target.value)
                     }
@@ -257,15 +260,9 @@ const EditItemPage = () => {
                 )}
                 {attribute.attribute.type === "BOOLEAN" && (
                   <select
-                    value={attribute.booleanValue || false}
-                    onBlur={() =>
-                      updateAttribute(attribute.id, attribute.booleanValue)
-                    }
+                    value={attribute.booleanValue === true ? "true" : "false"}
                     onChange={(e) =>
-                      handleAttributeChange(
-                        attribute.id,
-                        e.target.value === "true",
-                      )
+                      handleAttributeChange(attribute.id, e.target.value)
                     }
                   >
                     <option value="true">Да</option>
@@ -274,17 +271,31 @@ const EditItemPage = () => {
                 )}
                 {attribute.attribute.type === "NUMBER" && (
                   <Input
-                    type="number"
-                    value={attribute.numberValue || ""}
-                    onBlur={() =>
-                      updateAttribute(attribute.id, attribute.numberValue)
+                    label={attribute.attribute.name}
+                    type="text"
+                    value={
+                      attribute.numberValue === null
+                        ? ""
+                        : attribute.numberValue.toString() // Всегда отображаем как строку
                     }
-                    onChange={(e) =>
-                      handleAttributeChange(
-                        attribute.id,
-                        parseFloat(e.target.value),
-                      )
-                    }
+                    variant="bordered"
+                    onBlur={(e) => {
+                      const value = e.target.value;
+
+                      if (value === "." || value === "") {
+                        handleAttributeChange(attribute.id, null); // Если точка или пустое значение, устанавливаем null
+                      } else {
+                        handleAttributeChange(attribute.id, parseFloat(value)); // Преобразуем в число
+                      }
+                    }}
+                    onChange={(e) => {
+                      const value = e.target.value;
+
+                      // Разрешаем ввод цифр и одной точки
+                      if (/^\d*\.?\d*$/.test(value)) {
+                        handleAttributeChange(attribute.id, value); // Сохраняем как строку
+                      }
+                    }}
                   />
                 )}
               </div>
@@ -365,9 +376,18 @@ const EditItemPage = () => {
           </div>
         )}
         <Spacer y={2} />
-        <Button disabled={loading} type="submit">
-          {loading ? "Обновляем..." : "Обновить информацию"}
-        </Button>
+        <div style={{ display: "flex", gap: "10px", alignItems: "center" }}>
+          <Button color="primary" disabled={loading} onClick={handleSubmit}>
+            {loading ? "Обновляем..." : "Обновить информацию"}
+          </Button>
+
+          <Button
+            color="secondary"
+            onClick={() => navigate(`/item/${id}`)} // Возврат к карточке товара
+          >
+            Назад
+          </Button>
+        </div>
       </form>
     </Card>
   );

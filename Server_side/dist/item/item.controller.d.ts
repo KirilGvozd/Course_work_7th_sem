@@ -11,16 +11,25 @@ export declare class ItemController {
     }>;
     getReservedItems(req: any): Promise<[import("../entities/item.entity").Item[], number]>;
     getItemsPendingApproval(req: any): Promise<import("../entities/item.entity").Item[]>;
+    retrieveWishlist(req: any): Promise<[import("../entities/wishlist.entity").Wishlist[], number]>;
     findOne(id: number): Promise<import("../entities/item.entity").Item>;
-    create(body: CreateItemDto, request: any, files: Express.Multer.File[]): Promise<any>;
+    create(body: CreateItemDto, request: any, files: Express.Multer.File[]): Promise<CreateItemDto & import("../entities/item.entity").Item>;
+    addToWishlist(req: any, body: {
+        itemName: string;
+        userId: number;
+    }): Promise<{
+        itemName: string;
+        userId: number;
+    } & import("../entities/wishlist.entity").Wishlist>;
     reserve(itemId: number, req: any): Promise<import("../entities/item.entity").Item>;
     deleteReservation(itemId: number, req: any): Promise<import("../entities/item.entity").Item>;
     approveReservation(itemId: number, req: any): Promise<import("typeorm").DeleteResult>;
     rejectReservation(itemId: number, req: any): Promise<import("../entities/item.entity").Item>;
     update(id: number, body: UpdateItemDto, files: Express.Multer.File[], request: any): Promise<{
         prices: number[];
-        categoryId: number;
         images: string[];
+        categoryId: number;
+        deletedImages?: string[];
         name: string;
         description: string;
         price: number;
@@ -35,5 +44,6 @@ export declare class ItemController {
         category: import("../entities/category.entity").Category;
         attributes: import("../entities/itemAttribute.entity").ItemAttribute[];
     }>;
+    removeFromWishlist(id: number, req: any): Promise<import("typeorm").DeleteResult>;
     delete(id: number, request: any): Promise<import("typeorm").DeleteResult>;
 }

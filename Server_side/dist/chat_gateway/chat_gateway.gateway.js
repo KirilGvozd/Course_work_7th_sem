@@ -14,6 +14,7 @@ const websockets_1 = require("@nestjs/websockets");
 const socket_io_1 = require("socket.io");
 const chat_service_1 = require("../chat/chat.service");
 const chat_entity_1 = require("../entities/chat.entity");
+const common_1 = require("@nestjs/common");
 let ChatGatewayGateway = class ChatGatewayGateway {
     constructor(chatService) {
         this.chatService = chatService;
@@ -27,6 +28,21 @@ let ChatGatewayGateway = class ChatGatewayGateway {
     }
     handleLeaveRoom(client, { itemId }) {
         client.leave(`item-${itemId}`);
+    }
+    async handleDeleteMessage(client, payload) {
+        try {
+            await this.chatService.delete(payload.messageId);
+            this.server.to(`item-${payload.itemId}`).emit('messageDeleted', { messageId: payload.messageId });
+        }
+        catch (error) {
+            console.error("Ошибка при удалении сообщения:", error);
+            if (error instanceof common_1.NotFoundException) {
+                console.warn(`Сообщение с ID ${payload.messageId} не найдено.`);
+            }
+            else {
+                client.emit('error', { message: "Не удалось удалить сообщение." });
+            }
+        }
     }
     afterInit(server) {
         console.log(server);
@@ -61,6 +77,12 @@ __decorate([
     __metadata("design:paramtypes", [socket_io_1.Socket, Object]),
     __metadata("design:returntype", void 0)
 ], ChatGatewayGateway.prototype, "handleLeaveRoom", null);
+__decorate([
+    (0, websockets_1.SubscribeMessage)('deleteMessage'),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [socket_io_1.Socket, Object]),
+    __metadata("design:returntype", Promise)
+], ChatGatewayGateway.prototype, "handleDeleteMessage", null);
 exports.ChatGatewayGateway = ChatGatewayGateway = __decorate([
     (0, websockets_1.WebSocketGateway)({
         cors: {

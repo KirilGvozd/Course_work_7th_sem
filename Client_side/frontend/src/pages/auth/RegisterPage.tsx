@@ -28,14 +28,12 @@ const RegisterPage = () => {
 
       return;
     }
-
     try {
       await api.post(
         "/auth/register",
         { email, password, name, role: selectedRole },
         { withCredentials: true },
       );
-
       navigate("/login");
     } catch (err: any) {
       setError(err.response?.data?.message || "Ошибка регистрации");
@@ -43,60 +41,55 @@ const RegisterPage = () => {
   };
 
   return (
-    <div style={{ display: "flex", justifyContent: "center", padding: "2rem" }}>
-      <Card style={{ maxWidth: "400px", width: "100%", padding: "2rem" }}>
-        <h3 style={{ textAlign: "center" }}>Регистрация</h3>
-        {error && (
-          <div
-            style={{ color: "red", marginBottom: "1rem", textAlign: "center" }}
-          >
-            {error}
-          </div>
-        )}
-        <Spacer y={1} />
+    <div className="flex justify-center items-center h-screen bg-gray-100">
+      <Card className="w-[400px] max-w-full p-8 rounded-lg shadow-lg animate-fade-in-up">
+        <h3 className="text-2xl font-semibold text-center mb-6">Регистрация</h3>
+        {error && <p className="text-red-500 text-center mb-4">{error}</p>}
         <Input
           fullWidth
+          className="mb-4"
           placeholder="Email"
           type="email"
           value={email}
           onChange={(e) => setEmail(e.target.value)}
         />
-        <Spacer y={1} />
-        <Spacer y={1} />
         <Input
           fullWidth
-          placeholder="Name"
+          className="mb-4"
+          placeholder="Имя"
           type="text"
           value={name}
           onChange={(e) => setName(e.target.value)}
         />
-        <Spacer y={1} />
         <Input
           fullWidth
+          className="mb-4"
           placeholder="Пароль"
           type="password"
           value={password}
           onChange={(e) => setPassword(e.target.value)}
         />
-        <Spacer y={1} />
         <Input
           fullWidth
+          className="mb-4"
           placeholder="Подтвердите пароль"
           type="password"
           value={confirmPassword}
           onChange={(e) => setConfirmPassword(e.target.value)}
         />
-        <Spacer y={1} />
         <Dropdown>
           <DropdownTrigger>
-            <Button className="capitalize" variant="bordered">
+            <Button
+              className="capitalize w-full bg-white border border-gray-300 text-gray-700 hover:text-gray-900 hover:border-gray-400 rounded-md transition duration-300"
+              variant="bordered"
+            >
               {selectedRole === "buyer" ? "Покупатель" : "Продавец"}
             </Button>
           </DropdownTrigger>
           <DropdownMenu
             disallowEmptySelection
             aria-label="Роли"
-            selectedKeys={new Set([selectedRole])} // Convert to Set for compatibility
+            selectedKeys={new Set([selectedRole])}
             selectionMode="single"
             onSelectionChange={(keys) =>
               setSelectedRole(Array.from(keys as Set<string>)[0])
@@ -107,11 +100,20 @@ const RegisterPage = () => {
           </DropdownMenu>
         </Dropdown>
         <Spacer y={1.5} />
-        <Button fullWidth onPress={handleRegister}>
+        <Button
+          fullWidth
+          className="bg-green-500 hover:bg-green-600 text-white font-semibold py-2 rounded-md transition duration-300"
+          onPress={handleRegister}
+        >
           Зарегистрироваться
         </Button>
-        <Spacer y={0.5} />
-        <Button fullWidth variant="flat" onPress={() => navigate("/login")}>
+        <Spacer y={1} />
+        <Button
+          fullWidth
+          className="border border-gray-300 text-gray-700 hover:text-gray-900 hover:border-gray-400 py-2 rounded-md transition duration-300"
+          variant="flat"
+          onPress={() => navigate("/login")}
+        >
           Уже есть аккаунт? Войти
         </Button>
       </Card>

@@ -16,13 +16,14 @@ const jwt_strategy_1 = require("../auth/jwt.strategy");
 const platform_express_1 = require("@nestjs/platform-express");
 const mail_module_1 = require("../mail/mail.module");
 const user_entity_1 = require("../entities/user.entity");
+const wishlist_entity_1 = require("../entities/wishlist.entity");
 let ItemModule = class ItemModule {
 };
 exports.ItemModule = ItemModule;
 exports.ItemModule = ItemModule = __decorate([
     (0, common_1.Module)({
         imports: [
-            typeorm_1.TypeOrmModule.forFeature([item_entity_1.Item, user_entity_1.User]),
+            typeorm_1.TypeOrmModule.forFeature([item_entity_1.Item, user_entity_1.User, wishlist_entity_1.Wishlist]),
             platform_express_1.MulterModule.register({
                 dest: './uploads',
             }),

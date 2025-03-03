@@ -1,5 +1,6 @@
+//@ts-nocheck
 import React, { useContext, useEffect, useState } from "react";
-import { Card } from "@nextui-org/react";
+import { FiUser, FiMessageSquare, FiArrowRightCircle } from "react-icons/fi";
 
 import { AuthContext } from "../../context/AuthContext";
 
@@ -49,50 +50,58 @@ const ChatList: React.FC = () => {
   }, [isLoggedIn, user]);
 
   if (!isLoggedIn) {
-    return <p>Пожалуйста, войдите, чтобы увидеть свои чаты.</p>;
+    return (
+      <p className="text-center text-gray-600">
+        Пожалуйста, войдите, чтобы увидеть свои чаты.
+      </p>
+    );
   }
 
   if (loading) {
-    return <p>Загрузка чатов...</p>;
+    return <p className="text-center text-gray-600">Загрузка чатов...</p>;
   }
 
   if (error) {
-    return <p>Ошибка загрузки чатов: {error}</p>;
+    return (
+      <p className="text-center text-red-500">Ошибка загрузки чатов: {error}</p>
+    );
   }
 
   if (chats.length === 0) {
-    return <p style={{ margin: "20px" }}>У вас пока нет чатов.</p>;
+    return <p className="text-center text-gray-600">У вас пока нет чатов.</p>;
   }
 
   return (
-    <>
-      <div>
-        <div
-          style={{
-            display: "flex",
-            flexWrap: "wrap",
-            gap: "20px",
-            marginTop: "20px",
-            marginLeft: "20px",
-          }}
-        >
-          {chats.map((chat) => (
-            <Card
-              key={chat.itemid}
-              isHoverable
-              isPressable
-              style={{ width: "300px", padding: "1rem", cursor: "pointer" }}
-              onPress={() =>
-                (window.location.href = `/chat/item/${chat.itemid}`)
-              }
-            >
-              <h3>{chat.itemname}</h3>
-              <p>Пользователь: {chat.username}</p>
-            </Card>
-          ))}
-        </div>
+    <div className="container mx-auto px-4 py-8 bg-gray-100 min-h-screen">
+      <h2 className="text-2xl font-bold text-gray-800 mb-4 flex items-center justify-center">
+        <FiMessageSquare className="mr-2 text-blue-500" /> Ваши чаты
+      </h2>
+      <div className="flex flex-wrap gap-6 justify-center">
+        {chats.map((chat) => (
+          <div
+            key={chat.itemid}
+            className="max-w-xs w-full bg-white rounded-lg shadow-lg hover:shadow-xl transition-shadow duration-300 cursor-pointer"
+            onClick={() => (window.location.href = `/chat/item/${chat.itemid}`)}
+          >
+            <div className="p-4 flex items-center">
+              <FiUser className="text-blue-500 text-2xl mr-3" />
+              <div>
+                <h3 className="text-xl font-semibold text-gray-900">
+                  {chat.itemname}
+                </h3>
+                <p className="text-sm text-gray-500">
+                  Пользователь: {chat.username}
+                </p>
+              </div>
+            </div>
+            <div className="border-t border-gray-200 p-4 flex items-center justify-between">
+              <p className="text-sm text-gray-600">Открыть чат</p>
+              <FiArrowRightCircle className="text-gray-400 text-xl hover:text-blue-500 transition-colors" />
+            </div>
+          </div>
+        ))}
       </div>
-    </>
+    </div>
   );
 };
 

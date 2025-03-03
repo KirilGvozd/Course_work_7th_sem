@@ -157,4 +157,19 @@ export class MailService {
 
         await this.transporter.sendMail(message);
     }
+
+    async sendAddedToWishlistNotification(
+        email: string,
+        itemName: string,
+        itemId: number,
+    ) {
+        const message = {
+            from: 'no-reply@example.com',
+            to: email,
+            subject: 'Товар из вашего списка желаний появился на площадке',
+            text: `Здравствуйте, товар ${itemName} из вашего списка желаний появился на площадке: http:localhost:4000/item/${itemId}`,
+        }
+
+        await this.transporter.sendMail(message);
+    }
 }

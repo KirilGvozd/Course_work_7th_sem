@@ -4,6 +4,7 @@ export declare class ChatService {
     private chatRepository;
     constructor(chatRepository: Repository<Chat>);
     findByItem(itemId: number, userId: number): Promise<Chat[]>;
+    findOne(id: number): Promise<Chat | undefined>;
     findChatsByBuyer(buyerId: number): Promise<any[]>;
     create(body: Partial<Chat>): Promise<Partial<Chat> & Chat>;
     delete(id: number): Promise<void>;

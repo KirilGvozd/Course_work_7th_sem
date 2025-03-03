@@ -1,4 +1,5 @@
 import { useContext } from "react";
+import { motion } from "framer-motion";
 import {
   Navbar,
   NavbarBrand,
@@ -6,6 +7,17 @@ import {
   NavbarItem,
   Button,
 } from "@nextui-org/react";
+import {
+  FaHome,
+  FaPlus,
+  FaList,
+  FaHeart,
+  FaShoppingCart,
+  FaComments,
+  FaSignInAlt,
+  FaUserPlus,
+  FaSignOutAlt,
+} from "react-icons/fa";
 
 import { AuthContext } from "../context/AuthContext";
 
@@ -13,91 +25,170 @@ const Header = () => {
   const { isLoggedIn, logout, user } = useContext(AuthContext);
 
   return (
-    <Navbar isBordered>
+    <Navbar isBordered className="shadow-sm bg-white">
+      {/* Логотип и бренд */}
       <NavbarBrand>
-        <span style={{ fontWeight: "bold", fontSize: "18px" }}>
-          Flea market
-        </span>
+        <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
+          <span className="font-bold text-xl text-gray-800">Flea market</span>
+        </motion.div>
       </NavbarBrand>
 
-      {/* Кнопка Home Page */}
+      {/* Центральная часть: кнопка "Главная" */}
       <NavbarContent justify="center">
         <NavbarItem>
-          {user?.role === "admin" ? (
-            <Button as="a" color="primary" href="/admin" variant="bordered">
-              Главная
-            </Button>
-          ) : (
-            <Button as="a" color="default" href="/" variant="shadow">
-              Главная
-            </Button>
-          )}
+          <motion.div whileHover="hover" whileTap="tap">
+            {user?.role === "admin" ? (
+              <Button
+                as="a"
+                className="font-medium flex items-center gap-2"
+                color="primary"
+                href="/admin"
+                startContent={<FaHome />}
+                variant="bordered"
+              >
+                Главная
+              </Button>
+            ) : (
+              <Button
+                as="a"
+                className="font-medium flex items-center gap-2"
+                color="default"
+                href="/"
+                startContent={<FaHome />}
+                variant="bordered"
+              >
+                Главная
+              </Button>
+            )}
+          </motion.div>
         </NavbarItem>
       </NavbarContent>
 
-      {/* Кнопки для авторизованных пользователей */}
+      {/* Правая часть: кнопки для авторизованных и неавторизованных пользователей */}
       <NavbarContent justify="end">
         {isLoggedIn ? (
           <>
-            {/* Для админа показываем только Logout */}
+            {/* Для админа показываем только кнопку "Выйти" */}
             {user && user.role === "admin" ? (
               <NavbarItem>
-                <Button as="a" href="/" variant="shadow" onPress={logout}>
-                  Выйти
-                </Button>
+                <motion.div whileHover="hover" whileTap="tap">
+                  <Button
+                    as="a"
+                    className="font-medium flex items-center gap-2"
+                    href="/"
+                    startContent={<FaSignOutAlt />}
+                    variant="bordered"
+                    onPress={logout}
+                  >
+                    Выйти
+                  </Button>
+                </motion.div>
               </NavbarItem>
             ) : (
               <>
-                {/* Для продавцов и покупателей оставляем старые кнопки */}
+                {/* Для продавцов и покупателей */}
                 {user && (
                   <>
                     {user.role === "seller" ? (
                       <>
                         <NavbarItem>
-                          <Button as="a" href="/add-item" variant="shadow">
-                            Добавить товар
-                          </Button>
+                          <motion.div whileHover="hover" whileTap="tap">
+                            <Button
+                              as="a"
+                              className="font-medium flex items-center gap-2"
+                              href="/add-item"
+                              startContent={<FaPlus />}
+                              variant="bordered"
+                            >
+                              Добавить товар
+                            </Button>
+                          </motion.div>
                         </NavbarItem>
-                        {/* Кнопка для перехода на страницу товаров, ожидающих обработки */}
                         <NavbarItem>
-                          <Button
-                            as="a"
-                            href="/seller/reserved-items"
-                            variant="shadow"
-                          >
-                            Товары для обработки
-                          </Button>
+                          <motion.div whileHover="hover" whileTap="tap">
+                            <Button
+                              as="a"
+                              className="font-medium flex items-center gap-2"
+                              href="/seller/reserved-items"
+                              startContent={<FaList />}
+                              variant="bordered"
+                            >
+                              Товары для обработки
+                            </Button>
+                          </motion.div>
                         </NavbarItem>
                       </>
                     ) : (
                       <>
+                        {/*<NavbarItem>*/}
+                        {/*  <motion.div whileHover="hover" whileTap="tap">*/}
+                        {/*    <Button*/}
+                        {/*      as="a"*/}
+                        {/*      className="font-medium flex items-center gap-2"*/}
+                        {/*      href="/user/wishlist"*/}
+                        {/*      startContent={<FaClipboardList />}*/}
+                        {/*      variant="bordered"*/}
+                        {/*    >*/}
+                        {/*      Желаемые*/}
+                        {/*    </Button>*/}
+                        {/*  </motion.div>*/}
+                        {/*</NavbarItem>*/}
                         <NavbarItem>
-                          <Button as="a" href="/favourites" variant="shadow">
-                            Избранные
-                          </Button>
+                          <motion.div whileHover="hover" whileTap="tap">
+                            <Button
+                              as="a"
+                              className="font-medium flex items-center gap-2"
+                              href="/favourites"
+                              startContent={<FaHeart />}
+                              variant="bordered"
+                            >
+                              Избранные
+                            </Button>
+                          </motion.div>
                         </NavbarItem>
                         <NavbarItem>
-                          <Button
-                            as="a"
-                            href="/user/reserved-items"
-                            variant="shadow"
-                          >
-                            Забронированные
-                          </Button>
+                          <motion.div whileHover="hover" whileTap="tap">
+                            <Button
+                              as="a"
+                              className="font-medium flex items-center gap-2"
+                              href="/user/reserved-items"
+                              startContent={<FaShoppingCart />}
+                              variant="bordered"
+                            >
+                              Забронированные
+                            </Button>
+                          </motion.div>
                         </NavbarItem>
                       </>
                     )}
                   </>
                 )}
                 <NavbarItem>
-                  <Button as="a" href="/chat" variant="shadow">
-                    Чаты
-                  </Button>
+                  <motion.div whileHover="hover" whileTap="tap">
+                    <Button
+                      as="a"
+                      className="font-medium flex items-center gap-2"
+                      href="/chat"
+                      startContent={<FaComments />}
+                      variant="bordered"
+                    >
+                      Чаты
+                    </Button>
+                  </motion.div>
                 </NavbarItem>
                 <NavbarItem>
-                  <Button as="a" href="/" variant="shadow" onPress={logout}>
-                    Выйти
-                  </Button>
+                  <motion.div whileHover="hover" whileTap="tap">
+                    <Button
+                      as="a"
+                      className="font-medium flex items-center gap-2"
+                      href="/"
+                      startContent={<FaSignOutAlt />}
+                      variant="bordered"
+                      onPress={logout}
+                    >
+                      Выйти
+                    </Button>
+                  </motion.div>
                 </NavbarItem>
               </>
             )}
@@ -106,14 +197,31 @@ const Header = () => {
           <>
             {/* Для неавторизованных пользователей */}
             <NavbarItem>
-              <Button as="a" color="primary" href="/login" variant="shadow">
-                Войти
-              </Button>
+              <motion.div whileHover="hover" whileTap="tap">
+                <Button
+                  as="a"
+                  className="font-medium flex items-center gap-2"
+                  color="primary"
+                  href="/login"
+                  startContent={<FaSignInAlt />}
+                  variant="bordered"
+                >
+                  Войти
+                </Button>
+              </motion.div>
             </NavbarItem>
             <NavbarItem>
-              <Button as="a" href="/register" variant="shadow">
-                Регистрация
-              </Button>
+              <motion.div whileHover="hover" whileTap="tap">
+                <Button
+                  as="a"
+                  className="font-medium flex items-center gap-2"
+                  href="/register"
+                  startContent={<FaUserPlus />}
+                  variant="bordered"
+                >
+                  Регистрация
+                </Button>
+              </motion.div>
             </NavbarItem>
           </>
         )}

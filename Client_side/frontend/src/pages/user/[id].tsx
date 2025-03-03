@@ -9,7 +9,7 @@ import {
   Slider,
   Progress,
 } from "@nextui-org/react";
-import { useParams } from "react-router-dom";
+import { useParams, useNavigate } from "react-router-dom";
 
 import api from "@/utils/api.ts";
 import { AuthContext, User } from "@/context/AuthContext.tsx";
@@ -39,6 +39,7 @@ const SellerPage: React.FC = () => {
   const { user, isLoggedIn } = useContext(AuthContext);
   const isAdmin = user?.role === "seller";
   const { id } = useParams();
+  const navigate = useNavigate();
 
   const fetchReviews = async () => {
     const response = await api.get(`/comment/${id}`);
@@ -150,10 +151,24 @@ const SellerPage: React.FC = () => {
     setSelectedImage(null);
   };
 
+  const handleGoBack = () => {
+    navigate(-1); // Возвращаем пользователя на предыдущую страницу
+  };
+
   return (
     <div style={{ maxWidth: "500px", margin: "0 auto", padding: "20px" }}>
+      <Button
+        color="primary"
+        style={{ marginBottom: "20px" }}
+        onPress={handleGoBack} // Добавляем обработчик для кнопки "Назад"
+      >
+        Назад
+      </Button>
       <Card style={{ padding: "1rem" }}>
-        <h2 style={{ marginBottom: "1rem" }}>{sellerName}</h2>
+        <h2 style={{ marginBottom: "1rem" }}>Продавец: {sellerName}</h2>
+        <Spacer y={2} />
+        <span style={{ fontSize: "1rem" }}>Рейтинг: {sellerRate}</span>
+        <Spacer y={2} />
         <Progress
           aria-label="Рейтинг продавца"
           classNames={{
@@ -166,7 +181,7 @@ const SellerPage: React.FC = () => {
           }}
           formatOptions={{ style: "decimal" }}
           maxValue={5}
-          showValueLabel={true}
+          showValueLabel={false}
           size="md"
           value={sellerRate}
         />
@@ -178,6 +193,8 @@ const SellerPage: React.FC = () => {
       {reviews.map((review) => (
         <Card key={review.id} style={{ marginBottom: "20px", padding: "1rem" }}>
           <h4 style={{ marginBottom: "1rem" }}>{review.user?.name}</h4>
+          <span style={{ fontSize: "1rem" }}>Оценка: {review.rate}</span>
+          <Spacer y={2} />
           <Progress
             aria-label={`Рейтинг отзыва ${review.rate}`}
             classNames={{
@@ -190,11 +207,13 @@ const SellerPage: React.FC = () => {
             }}
             formatOptions={{ style: "decimal" }}
             maxValue={5}
-            showValueLabel={true}
+            showValueLabel={false}
             size="md"
             value={review.rate}
           />
+          <Spacer y={2} />
           <p>{review.text}</p>
+          <Spacer y={2} />
           {Array.isArray(review.attachments) &&
             review.attachments.length > 0 && (
               <div style={{ display: "flex", gap: "10px", flexWrap: "wrap" }}>

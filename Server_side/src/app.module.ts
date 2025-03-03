@@ -23,6 +23,7 @@ import { CategoryModule } from './category/category.module';
 import { ItemAttributeModule } from './item-attribute/item-attribute.module';
 import { ReportModule } from './report/report.module';
 import {Report} from "./entities/report.entity";
+import {Wishlist} from "./entities/wishlist.entity";
 
 
 @Module({
@@ -45,7 +46,7 @@ import {Report} from "./entities/report.entity";
           username: configService.get<string>("DATABASE_USERNAME"),
           password: configService.get<string>("DATABASE_PASSWORD"),
           database: configService.get<string>("DATABASE_NAME"),
-          entities: [Item, User, Chat, Comment, Attribute, Category, ItemAttribute, Report],
+          entities: [Item, User, Chat, Comment, Attribute, Category, ItemAttribute, Report, Wishlist],
           synchronize: true,
           keepAlive: true,
           logging: true,

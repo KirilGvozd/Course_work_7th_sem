@@ -41,6 +41,10 @@ const CreateCategoryPage: React.FC = () => {
     setAttributes(updatedAttributes);
   };
 
+  const handleGoBack = () => {
+    navigate(-1); // Возвращаем пользователя на предыдущую страницу
+  };
+
   // Отправка формы
   const handleSubmit = async () => {
     if (!name.trim()) {
@@ -195,6 +199,13 @@ const CreateCategoryPage: React.FC = () => {
         <CardFooter style={{ justifyContent: "center" }}>
           <Button color="primary" isLoading={loading} onPress={handleSubmit}>
             Создать категорию
+          </Button>
+          <Spacer y={2} />
+          <Button
+              color="primary"
+              onPress={handleGoBack} // Добавляем обработчик для кнопки "Назад"
+          >
+            Назад
           </Button>
         </CardFooter>
 

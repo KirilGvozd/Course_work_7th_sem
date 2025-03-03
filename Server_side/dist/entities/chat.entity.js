@@ -41,7 +41,7 @@ __decorate([
     __metadata("design:type", String)
 ], Chat.prototype, "messageDate", void 0);
 __decorate([
-    (0, typeorm_1.ManyToOne)(() => item_entity_1.Item, (item) => item.id),
+    (0, typeorm_1.ManyToOne)(() => item_entity_1.Item, (item) => item.id, { onDelete: 'CASCADE' }),
     (0, typeorm_1.JoinColumn)({ name: 'itemId' }),
     __metadata("design:type", item_entity_1.Item)
 ], Chat.prototype, "item", void 0);

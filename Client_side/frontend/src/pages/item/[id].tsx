@@ -81,87 +81,71 @@ const ItemPage = () => {
   const isAdmin = user?.role === "seller";
 
   return (
-    <div style={{ display: "flex", justifyContent: "center", padding: "2rem" }}>
-      <Card style={{ maxWidth: "fit-content", maxHeight: "fit-content" }}>
-        <div style={{ padding: "1rem" }}>
-          <h2>{item.name}</h2>
+    <div className="flex justify-center items-center p-8 bg-gray-100 min-h-screen">
+      <Card className="max-w-lg w-full bg-white rounded-lg shadow-md overflow-hidden animate-fade-in">
+        {/* Item Name */}
+        <div className="p-4 border-b border-gray-200">
+          <h2 className="text-2xl font-semibold text-gray-800">{item.name}</h2>
         </div>
 
-        <div style={{ position: "relative" }}>
+        {/* Image Carousel */}
+        <div className="relative">
           <Image
             alt={item.name}
+            className="w-full h-[500px] object-cover rounded-t-lg"
             height="500px"
             src={`http://localhost:4000/${item.images[currentIndex]}`}
-            style={{ borderRadius: "8px" }}
-            width="100%"
           />
-
           {!loading && (
             <>
+              {/* Previous Button */}
               <Button
-                color="primary"
-                size="sm"
-                style={{
-                  position: "absolute",
-                  top: "50%",
-                  left: "10px",
-                  transform: "translateY(-50%)",
-                  zIndex: 10,
-                  backgroundColor: "rgba(0, 0, 0, 0.5)",
-                  color: "white",
-                }}
+                className="absolute top-1/2 left-2 transform -translate-y-1/2 z-10 bg-black bg-opacity-50 text-white rounded-full p-2 hover:bg-opacity-70 transition duration-300 focus:outline-none"
                 onPress={prevImage}
               >
-                {"<"}
+                <span className="text-4xl">←</span>
               </Button>
 
+              {/* Next Button */}
               <Button
-                color="primary"
-                size="sm"
-                style={{
-                  position: "absolute",
-                  top: "50%",
-                  right: "10px",
-                  transform: "translateY(-50%)",
-                  zIndex: 10,
-                  backgroundColor: "rgba(0, 0, 0, 0.5)",
-                  color: "white",
-                }}
+                className="absolute top-1/2 right-2 transform -translate-y-1/2 z-10 bg-black bg-opacity-50 text-white rounded-full p-2 hover:bg-opacity-70 transition duration-300 focus:outline-none"
                 onPress={nextImage}
               >
-                {">"}
+                <span className="text-4xl">→</span>
               </Button>
             </>
           )}
         </div>
 
-        <div style={{ padding: "1rem" }}>
+        {/* Item Details */}
+        <div className="p-4 border-b border-gray-200">
           <Spacer y={2} />
-          <p>{item.description}</p>
+          <p className="text-gray-700">{item.description}</p>
           <Spacer y={2} />
-          <h4>Цена: {item.price}</h4>
+          <h4 className="text-lg font-semibold text-green-600">
+            Цена: {item.price}
+          </h4>
           <Spacer y={1} />
-          <h4>
+          <h4 className="text-gray-700">
             Продавец:{" "}
             <a
+              className="underline text-blue-600 hover:text-blue-800 transition duration-300"
               href={`/user/${item.user.id}`}
-              style={{ textDecoration: "underline" }}
             >
               {item.user.name}
             </a>
           </h4>
-
-          {/* Отображение категории и её атрибутов */}
+          {/* Category and Attributes */}
           {item.category && (
             <>
               <Spacer y={1} />
-              <h4>Категория: {item.category.name}</h4>
+              <h4 className="text-gray-700">Категория: {item.category.name}</h4>
               <Spacer y={1} />
               {item.attributes && item.attributes.length > 0 ? (
                 <div>
                   {item.attributes.map((attr: any) => (
-                    <div key={attr.id} style={{ marginBottom: "0.5rem" }}>
-                      <h5>
+                    <div key={attr.id} className="mb-2">
+                      <h5 className="text-gray-700">
                         {attr.attribute.name}:{" "}
                         {attr.attribute.type === "BOOLEAN" // Проверяем тип атрибута
                           ? attr.booleanValue === true
@@ -175,43 +159,54 @@ const ItemPage = () => {
                   ))}
                 </div>
               ) : (
-                <h5>Атрибуты не указаны</h5>
+                <h5 className="text-gray-600">Атрибуты не указаны</h5>
               )}
             </>
           )}
         </div>
 
-        <div
-          style={{
-            display: "flex",
-            justifyContent: "space-between",
-            padding: "1rem",
-          }}
-        >
-          <Button onPress={() => navigate("/")}>Назад</Button>
-
-          {isLoggedIn && !isAdmin && !isFavourite && (
-            <Button color="secondary" onPress={addItemToFavourites}>
-              Добавить в избранное
-            </Button>
-          )}
-
-          {isLoggedIn && !isAdmin && (
-            <Button onPress={() => navigate(`/chat/item/${id}`)}>
-              Написать продавцу
-            </Button>
-          )}
-
-          {isAdmin && (
-            <div style={{ display: "flex", gap: "1rem" }}>
-              <Button color="warning" onPress={handleEdit}>
-                Редактировать
+        {/* Action Buttons */}
+        <div className="flex justify-between p-4 bg-gray-50">
+          <Button
+            className="bg-gray-200 text-gray-700 hover:bg-gray-300 transition duration-300 px-4 py-2 rounded-md focus:outline-none"
+            onPress={() => navigate("/")}
+          >
+            Назад
+          </Button>
+          <div className="flex gap-2">
+            {isLoggedIn && !isAdmin && !isFavourite && (
+              <Button
+                className="bg-yellow-400 text-white hover:bg-yellow-500 transition duration-300 px-4 py-2 rounded-md focus:outline-none"
+                onPress={addItemToFavourites}
+              >
+                Добавить в избранное
               </Button>
-              <Button color="danger" onPress={handleDelete}>
-                Удалить
+            )}
+            {isLoggedIn && !isAdmin && (
+              <Button
+                className="bg-blue-500 text-white hover:bg-blue-600 transition duration-300 px-4 py-2 rounded-md focus:outline-none"
+                onPress={() => navigate(`/chat/item/${id}`)}
+              >
+                Написать продавцу
               </Button>
-            </div>
-          )}
+            )}
+            {isAdmin && (
+              <>
+                <Button
+                  className="bg-orange-400 text-white hover:bg-orange-500 transition duration-300 px-4 py-2 rounded-md focus:outline-none"
+                  onPress={handleEdit}
+                >
+                  Редактировать
+                </Button>
+                <Button
+                  className="bg-red-500 text-white hover:bg-red-600 transition duration-300 px-4 py-2 rounded-md focus:outline-none"
+                  onPress={handleDelete}
+                >
+                  Удалить
+                </Button>
+              </>
+            )}
+          </div>
         </div>
       </Card>
     </div>

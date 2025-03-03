@@ -59,4 +59,10 @@ export class CreateItemDto {
     })
     @IsNotEmpty()
     price: number;
+
+    @ApiProperty({
+        description: 'Is this item was approved by moderator',
+        example: true
+    })
+    isApprovedByModerator: boolean;
 }

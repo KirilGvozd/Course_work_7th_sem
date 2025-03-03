@@ -39,6 +39,7 @@ export class ItemController {
         @Query('attributes') attributes?: string
     ) {
         const attributeFilters = attributes ? JSON.parse(attributes) : {};
+        console.log(attributeFilters);
         return this.itemService.findAll(paginationDto, { categoryId: typeId, minPrice, maxPrice, sellerId, attributes: attributeFilters });
     }
 
@@ -65,6 +66,18 @@ export class ItemController {
             throw new ForbiddenException("You don't have rights to watch pending approvals!");
         }
         return await this.itemService.getItemsPendingApproval(req.user.userId);
+    }
+
+    @Get('wishlist')
+    @UseGuards(JwtAuthGuard)
+    @ApiResponse({ status: 200, description: 'Items was retrieved.'})
+    @ApiResponse({ status: 404, description: 'User not found.'})
+    async retrieveWishlist(@Req() req) {
+        if (req.user.role !== 'buyer') {
+            throw new ForbiddenException("You don't have rights to retrieve items from wishlist!");
+        }
+
+        return await this.itemService.retrieveWishlist(+req.user.userId);
     }
 
     @Get(':id')
@@ -94,6 +107,19 @@ export class ItemController {
         body.images = files?.map((file) => file.path) || []
 
         return this.itemService.create(body, user);
+    }
+
+    @Post('add-wishlist')
+    @UseGuards(JwtAuthGuard)
+    @ApiResponse({ status: 200, description: 'Item successfully added to wishlist.'})
+    @ApiResponse({ status: 401, description: 'Unauthorized access.'})
+    @ApiResponse({ status: 403, description: 'You don\'t have rights to add items to wishlist!'})
+    @ApiResponse({ status: 404, description: 'Item not found.'})
+    async addToWishlist(@Req() req, @Body() body: {itemName: string, userId: number}) {
+        if (req.user.role !== 'buyer') {
+            throw new ForbiddenException("You don't have rights to add items to wishlist!");
+        }
+        return await this.itemService.addItemToWishlist(body.itemName, body.userId);
     }
 
     @Post('reserve/:id')
@@ -170,6 +196,20 @@ export class ItemController {
         body.images = [...existingImages, ...images];
 
         return await this.itemService.update(id, body, request.user.userId);
+    }
+
+    @Delete('wishlist/:id')
+    @UseGuards(JwtAuthGuard)
+    @ApiResponse({ status: 200, description: 'Item has been successfully deleted.'})
+    @ApiResponse({ status: 401, description: "You don't have permission to delete this item!"})
+    @ApiResponse({ status: 403, description: "You don't have rights to delete this item!"})
+    @ApiResponse({ status: 404, description: 'Item not found.'})
+    removeFromWishlist(@Param('id') id: number, @Req() req) {
+        if (req.user.role !== 'buyer') {
+            throw new ForbiddenException("You don't have rights to delete the item!");
+        }
+
+        return this.itemService.deleteFromWishlist(+id, +req.user.userId);
     }
 
     @Delete(':id')

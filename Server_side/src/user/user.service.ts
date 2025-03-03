@@ -121,4 +121,9 @@ export class UserService {
             }
         });
     }
+
+    async update(id: number, updateData: Partial<User>): Promise<User> {
+        await this.userRepository.update(id, updateData);
+        return this.findOne(id);
+    }
 }

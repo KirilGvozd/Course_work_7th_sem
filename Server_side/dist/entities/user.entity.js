@@ -12,6 +12,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.User = void 0;
 const typeorm_1 = require("typeorm");
 const item_entity_1 = require("./item.entity");
+const wishlist_entity_1 = require("./wishlist.entity");
 let User = class User {
 };
 exports.User = User;
@@ -52,6 +53,22 @@ __decorate([
     (0, typeorm_1.JoinTable)(),
     __metadata("design:type", Array)
 ], User.prototype, "favourites", void 0);
+__decorate([
+    (0, typeorm_1.OneToMany)(() => wishlist_entity_1.Wishlist, wishlist => wishlist.user, { onDelete: "CASCADE" }),
+    __metadata("design:type", Array)
+], User.prototype, "wishlists", void 0);
+__decorate([
+    (0, typeorm_1.Column)({ nullable: true }),
+    __metadata("design:type", String)
+], User.prototype, "twoFactorSecret", void 0);
+__decorate([
+    (0, typeorm_1.Column)({ default: false }),
+    __metadata("design:type", Boolean)
+], User.prototype, "isTwoFactorEnabled", void 0);
+__decorate([
+    (0, typeorm_1.Column)({ nullable: true }),
+    __metadata("design:type", String)
+], User.prototype, "twoFactorRecoveryCodes", void 0);
 exports.User = User = __decorate([
     (0, typeorm_1.Entity)()
 ], User);

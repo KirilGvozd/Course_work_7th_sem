@@ -8,6 +8,7 @@ import {
   Spacer,
   Select,
   SelectItem,
+  Image,
 } from "@nextui-org/react";
 
 const AddItemPage = () => {
@@ -42,7 +43,7 @@ const AddItemPage = () => {
 
         const data = await response.json();
 
-        setCategories(data[0]); // Извлекаем массив категорий из ответа
+        setCategories(data[0]);
       } catch (err) {
         setError("Не удалось загрузить категории");
       }
@@ -86,7 +87,6 @@ const AddItemPage = () => {
     setLoading(true);
     setError("");
 
-    // Проверка валидности цены
     if (!price || isNaN(Number(price)) || Number(price) <= 0) {
       setError("Цена должна быть положительным числом.");
       setLoading(false);
@@ -94,7 +94,6 @@ const AddItemPage = () => {
       return;
     }
 
-    // Проверка валидности категории
     if (!categoryId || isNaN(Number(categoryId))) {
       setError("Выберите корректную категорию.");
       setLoading(false);
@@ -106,8 +105,8 @@ const AddItemPage = () => {
 
     formData.append("name", name);
     formData.append("description", description);
-    formData.append("price", price.toString()); // Отправляем как строку, но сервер должен преобразовать в число
-    formData.append("categoryId", categoryId.toString()); // То же самое для categoryId
+    formData.append("price", price.toString());
+    formData.append("categoryId", categoryId.toString());
     images.forEach((image) => formData.append("images", image));
 
     try {
@@ -153,8 +152,8 @@ const AddItemPage = () => {
       navigate("/");
       setName("");
       setDescription("");
-      setPrice(0); // Сбрасываем цену
-      setCategoryId(""); // Сбрасываем категорию
+      setPrice(0);
+      setCategoryId("");
       setImages([]);
       setAttributeValues({});
     } catch (err) {
@@ -166,8 +165,21 @@ const AddItemPage = () => {
 
   const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files) {
-      setImages(Array.from(e.target.files));
+      const selectedFiles = Array.from(e.target.files).filter((file) =>
+        file.type.startsWith("image/"),
+      );
+
+      if (selectedFiles.length !== e.target.files.length) {
+        setError("Можно загружать только изображения.");
+
+        return;
+      }
+      setImages((prevImages) => [...prevImages, ...selectedFiles]);
     }
+  };
+
+  const handleRemoveImage = (index: number) => {
+    setImages((prevImages) => prevImages.filter((_, i) => i !== index));
   };
 
   const handleAttributeChange = (attributeId: number, value: any) => {
@@ -204,29 +216,25 @@ const AddItemPage = () => {
         <Input
           required
           label="Цена"
-          type="text" // Используем тип text для ручного ввода
-          value={price === 0 ? "" : price.toString()} // Отображаем пустую строку, если price = 0
+          type="text"
+          value={price === 0 ? "" : price.toString()}
           variant="bordered"
           onBlur={(e) => {
-            // При потере фокуса форматируем значение
             const value = e.target.value;
 
             if (value === "." || value === "") {
-              setPrice(0); // Если введена только точка или поле пустое, устанавливаем 0
+              setPrice(0);
             } else {
-              setPrice(parseFloat(value)); // Преобразуем в число
+              setPrice(parseFloat(value));
             }
           }}
           onChange={(e) => {
             const value = e.target.value;
 
-            // Разрешаем ввод цифр, одной точки и пустой строки
             if (/^\d*\.?\d*$/.test(value) || value === "") {
-              // Если введена только точка, устанавливаем значение в "0."
               if (value === ".") {
-                setPrice("0."); // Сохраняем точку для дальнейшего ввода
+                setPrice("0.");
               } else {
-                // Если значение пустое, устанавливаем price в 0, иначе сохраняем как строку
                 setPrice(value === "" ? 0 : value);
               }
             }
@@ -234,7 +242,6 @@ const AddItemPage = () => {
         />
         <Spacer y={1} />
 
-        {/* Выбор категории */}
         <Select
           required
           label="Категория"
@@ -250,7 +257,6 @@ const AddItemPage = () => {
         </Select>
         <Spacer y={1} />
 
-        {/* Поля для атрибутов категории */}
         {attributes.map((attr) => (
           <div key={attr.id} style={{ marginBottom: "1rem" }}>
             <Input
@@ -302,10 +308,7 @@ const AddItemPage = () => {
                       handleAttributeChange(attr.id, "0.");
                     } else {
                       // Если значение пустое, устанавливаем в null, иначе сохраняем как строку
-                      handleAttributeChange(
-                        attr.id,
-                        value === "" ? null : value,
-                      );
+                      handleAttributeChange(attr.id, value === "" ? null : value);
                     }
                   }
                 } else if (attr.type === "BOOLEAN") {
@@ -320,6 +323,7 @@ const AddItemPage = () => {
           </div>
         ))}
         <Spacer y={1} />
+
         <Input
           multiple
           label="Загрузите фотографии"
@@ -328,6 +332,42 @@ const AddItemPage = () => {
           onChange={handleImageUpload}
         />
         <Spacer y={1} />
+
+        {/* Предпросмотр фотографий */}
+        {images.length > 0 && (
+          <div>
+            <h4>Загруженные фотографии</h4>
+            <div style={{ display: "flex", flexWrap: "wrap", gap: "1rem" }}>
+              {images.map((file, index) => (
+                <div
+                  key={index}
+                  style={{ position: "relative", width: "120px" }}
+                >
+                  <Image
+                    alt={`Uploaded image ${index + 1}`}
+                    height="auto"
+                    src={URL.createObjectURL(file)}
+                    width="100%"
+                  />
+                  <Button
+                    color="danger"
+                    size="sm"
+                    style={{
+                      position: "sticky",
+                      top: "5px",
+                      right: "5px",
+                      padding: "0.5rem",
+                    }}
+                    onPress={() => handleRemoveImage(index)}
+                  >
+                    ✕
+                  </Button>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
         <Spacer y={1} />
         <Button disabled={loading} type="submit" variant="shadow">
           {loading ? "Добавляем..." : "Добавить товар"}

@@ -7,10 +7,11 @@ import {JwtStrategy} from "../auth/jwt.strategy";
 import {MulterModule} from "@nestjs/platform-express";
 import {MailModule} from "../mail/mail.module";
 import {User} from "../entities/user.entity";
+import {Wishlist} from "../entities/wishlist.entity";
 
 @Module({
     imports: [
-        TypeOrmModule.forFeature([Item, User]),
+        TypeOrmModule.forFeature([Item, User, Wishlist]),
         MulterModule.register({
             dest: './uploads',
         }),

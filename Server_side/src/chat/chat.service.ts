@@ -1,7 +1,6 @@
 import {
     ConflictException,
     Injectable,
-    NotFoundException,
 } from "@nestjs/common";
 import {Repository} from "typeorm";
 import {Chat} from "../entities/chat.entity";
@@ -28,6 +27,13 @@ export class ChatService {
             ],
             relations: ['sender', 'receiver', 'item'],
             order: { messageDate: 'ASC' },
+        });
+    }
+
+    async findOne(id: number): Promise<Chat | undefined> {
+        return this.chatRepository.findOne({
+            where: { id },
+            relations: ['sender', 'receiver', 'item'],
         });
     }
 
@@ -64,16 +70,6 @@ export class ChatService {
     }
 
     async delete(id: number) {
-        const chat = await this.chatRepository.findOne({
-            where: {
-                id: id,
-            }
-        });
-
-        if (!chat) {
-            throw new NotFoundException("Not Found");
-        }
-
         await this.chatRepository.delete(id);
     }
 }

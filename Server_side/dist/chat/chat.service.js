@@ -37,6 +37,12 @@ let ChatService = class ChatService {
             order: { messageDate: 'ASC' },
         });
     }
+    async findOne(id) {
+        return this.chatRepository.findOne({
+            where: { id },
+            relations: ['sender', 'receiver', 'item'],
+        });
+    }
     async findChatsByBuyer(buyerId) {
         try {
             return await this.chatRepository
@@ -66,14 +72,6 @@ let ChatService = class ChatService {
         return await this.chatRepository.save(body);
     }
     async delete(id) {
-        const chat = await this.chatRepository.findOne({
-            where: {
-                id: id,
-            }
-        });
-        if (!chat) {
-            throw new common_1.NotFoundException("Not Found");
-        }
         await this.chatRepository.delete(id);
     }
 };

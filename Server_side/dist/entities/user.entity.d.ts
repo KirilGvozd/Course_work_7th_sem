@@ -1,4 +1,5 @@
 import { Item } from "./item.entity";
+import { Wishlist } from "./wishlist.entity";
 export declare class User {
     id: number;
     email: string;
@@ -9,4 +10,8 @@ export declare class User {
     removedRates: number[];
     rate: number;
     favourites: Item[];
+    wishlists: Wishlist[];
+    twoFactorSecret: string;
+    isTwoFactorEnabled: boolean;
+    twoFactorRecoveryCodes: string;
 }

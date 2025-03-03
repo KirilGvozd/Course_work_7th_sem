@@ -3,6 +3,8 @@ import {InjectRepository} from "@nestjs/typeorm";
 import {User} from "../entities/user.entity";
 import {Repository} from "typeorm";
 import {JwtService} from "@nestjs/jwt";
+import {authenticator} from "otplib";
+import * as QRCode from 'qrcode';
 import * as bcrypt from 'bcrypt';
 
 @Injectable()
@@ -25,18 +27,30 @@ export class AuthService {
         );
     }
 
-    async validateGoogleUser(profile: { email: string; name: string }): Promise<User> {
-        let user = await this.findOne({ email: profile.email });
+    async generate2FASecret(user: User): Promise<{ secret: string; qrCodeUrl: string }> {
+        const secret = authenticator.generateSecret();
 
-        if (!user) {
-            user = this.authRepository.create({
-                email: profile.email,
-                name: profile.name,
-                password: bcrypt.hash(Math.random().toString(36), 12).toString(),
-            });
-            await this.authRepository.save(user);
+        const otpauthUrl = authenticator.keyuri(user.email, process.env.TWO_FACTOR_AUTHENTICATION_APP_NAME, secret);
+
+        const qrCodeUrl = await QRCode.toDataURL(otpauthUrl);
+
+        user.twoFactorSecret = secret;
+        await this.authRepository.save(user);
+
+        return { secret, qrCodeUrl };
+    }
+    async verify2FACode(user: User, code: string): Promise<boolean> {
+        return authenticator.verify({
+            secret: user.twoFactorSecret,
+            token: code,
+        });
+    }
+
+    async validateUser(email: string, password: string): Promise<User | null> {
+        const user = await this.findOne({ email });
+        if (user && (await bcrypt.compare(password, user.password))) {
+            return user;
         }
-
-        return user;
+        return null;
     }
 }

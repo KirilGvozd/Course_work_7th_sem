@@ -17,8 +17,10 @@ import AddModeratorPage from "@/pages/admin/AddModeratorPage.tsx";
 import EditCategoryPage from "@/pages/admin/EditCategoryPage.tsx";
 import ReservedItemsPage from "@/pages/item/ReservedItemsPage.tsx";
 import SellersReservedItemsPage from "@/pages/item/SellersReservedItemsPage.tsx";
+import WishListPage from "@/pages/user/WishlistPage.tsx";
 
 const RoutesComponent = () => {
+
   return (
     <Routes>
       <Route element={<HomePage />} path="/" />
@@ -39,6 +41,10 @@ const RoutesComponent = () => {
       <Route
         element={<SellersReservedItemsPage />}
         path="/seller/reserved-items"
+      />
+      <Route
+        element={<WishListPage />}
+        path="/user/wishlist"
       />
     </Routes>
   );

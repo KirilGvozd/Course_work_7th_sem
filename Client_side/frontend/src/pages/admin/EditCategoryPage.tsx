@@ -50,6 +50,10 @@ const EditCategoryPage: React.FC = () => {
     fetchCategory();
   }, [id]);
 
+  const handleGoBack = () => {
+    navigate(-1); // Возвращаем пользователя на предыдущую страницу
+  };
+
   // Добавление нового атрибута
   const handleAddAttribute = async () => {
     if (!newAttributeName.trim() || !newAttributeType) {
@@ -302,6 +306,13 @@ const EditCategoryPage: React.FC = () => {
         <CardFooter style={{ justifyContent: "center" }}>
           <Button color="primary" isLoading={loading} onPress={handleSubmit}>
             Сохранить изменения
+          </Button>
+          <Spacer y={2} />
+          <Button
+              color="primary"
+              onPress={handleGoBack} // Добавляем обработчик для кнопки "Назад"
+          >
+            Назад
           </Button>
         </CardFooter>
 

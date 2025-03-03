@@ -80,43 +80,41 @@ const ReservedItemsPage: React.FC = () => {
           ))}
         </div>
       ) : (
-        <p>У вас нет забронированных товаров</p>
+        <p />
       )}
 
       <div>
         {/* Ваш код с отображением товаров */}
 
-        {totalPages > 0 ? (
-          <div
-            style={{
-              display: "flex",
-              justifyContent: "center",
-              marginTop: "20px",
-            }}
-          >
-            <button
-              disabled={currentPage === 1}
-              onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
-            >
-              Предыдущая
-            </button>
-            <p style={{ margin: "0 10px" }}>
-              Страница {currentPage} из {totalPages}
+        <div className="mt-8">
+          {totalPages > 0 ? (
+            <div className="flex justify-center items-center space-x-4">
+              <button
+                className="px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 focus:outline-none focus:ring focus:ring-blue-200 disabled:opacity-50"
+                disabled={currentPage === 1}
+                onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
+              >
+                Предыдущая
+              </button>
+              <p className="text-gray-700 font-medium">
+                Страница {currentPage} из {totalPages}
+              </p>
+              <button
+                className="px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 focus:outline-none focus:ring focus:ring-blue-200 disabled:opacity-50"
+                disabled={currentPage === totalPages}
+                onClick={() =>
+                  setCurrentPage((prev) => Math.min(prev + 1, totalPages))
+                }
+              >
+                Следующая
+              </button>
+            </div>
+          ) : (
+            <p className="text-center text-gray-600 font-medium mt-4">
+              Товары отсутствуют
             </p>
-            <button
-              disabled={currentPage === totalPages}
-              onClick={() =>
-                setCurrentPage((prev) => Math.min(prev + 1, totalPages))
-              }
-            >
-              Следующая
-            </button>
-          </div>
-        ) : (
-          <p style={{ textAlign: "center", marginTop: "20px", color: "#888" }}>
-            Товары отсутствуют
-          </p>
-        )}
+          )}
+        </div>
       </div>
     </div>
   );

@@ -5,7 +5,7 @@ import {
     NotFoundException,
     UnauthorizedException
 } from "@nestjs/common";
-import {IsNull, Not, Repository} from "typeorm";
+import {IsNull, MoreThan, Not, Repository} from "typeorm";
 import {Item} from "../entities/item.entity";
 import {InjectRepository} from "@nestjs/typeorm";
 import {PaginationDto} from "../pagination.dto";
@@ -13,6 +13,8 @@ import {DEFAULT_PAGE_SIZE} from "../utils/constants";
 import {MailService} from "../mail/mail.service";
 import {User} from "../entities/user.entity";
 import {UpdateItemDto} from "./dto/updateItem.dto";
+import {Wishlist} from "../entities/wishlist.entity";
+import {CreateItemDto} from "./dto/createItemDto";
 
 @Injectable()
 export class ItemService {
@@ -22,6 +24,8 @@ export class ItemService {
         private readonly mailService: MailService,
         @InjectRepository(User)
         private userRepository: Repository<User>,
+        @InjectRepository(Wishlist)
+        private wishlistRepository: Repository<Wishlist>,
     ) {}
 
     async findAll(
@@ -34,6 +38,7 @@ export class ItemService {
             attributes?: Record<string, any>
         }
     ) {
+        console.log(filters.attributes);
         const query = this.itemRepository.createQueryBuilder("item")
             .leftJoinAndSelect("item.attributes", "itemAttribute")
             .leftJoinAndSelect("itemAttribute.attribute", "attribute");
@@ -55,18 +60,33 @@ export class ItemService {
         }
 
         if (filters.attributes) {
-            Object.entries(filters.attributes).forEach(([key, value]) => {
-                query.andWhere("attribute.name = :attrName", { attrName: key });
+            Object.entries(filters.attributes).forEach(([key, value], index) => {
+                // Создаем уникальные псевдонимы для каждого атрибута
+                const attrAlias = `attr${index}`;
+                const itemAttrAlias = `itemAttr${index}`;
 
+                // Добавляем join для каждого атрибута
+                query.leftJoinAndSelect(
+                    "item.attributes",
+                    itemAttrAlias,
+                    `${itemAttrAlias}.itemId = item.id`
+                );
+                query.leftJoinAndSelect(
+                    `${itemAttrAlias}.attribute`,
+                    attrAlias,
+                    `${attrAlias}.id = ${itemAttrAlias}.attributeId`
+                );
+
+                // Добавляем условие для каждого атрибута
                 if (typeof value === "number") {
-                    // Точное совпадение для числовых атрибутов
-                    query.andWhere("itemAttribute.numberValue = :exactValue", { exactValue: value });
+                    query.andWhere(`${attrAlias}.name = :attrName${index}`, { [`attrName${index}`]: key });
+                    query.andWhere(`${itemAttrAlias}.numberValue = :exactValue${index}`, { [`exactValue${index}`]: value });
                 } else if (typeof value === "string") {
-                    // Совпадение для строковых атрибутов
-                    query.andWhere("itemAttribute.stringValue = :stringValue", { stringValue: value });
+                    query.andWhere(`${attrAlias}.name = :attrName${index}`, { [`attrName${index}`]: key });
+                    query.andWhere(`${itemAttrAlias}.stringValue = :stringValue${index}`, { [`stringValue${index}`]: value });
                 } else if (typeof value === "boolean") {
-                    // Совпадение для булевых атрибутов
-                    query.andWhere("itemAttribute.booleanValue = :booleanValue", { booleanValue: value });
+                    query.andWhere(`${attrAlias}.name = :attrName${index}`, { [`attrName${index}`]: key });
+                    query.andWhere(`${itemAttrAlias}.booleanValue = :booleanValue${index}`, { [`booleanValue${index}`]: value });
                 }
             });
         }
@@ -93,16 +113,48 @@ export class ItemService {
         return result;
     }
 
-    async create(body: any, user: {userId: number, role: string}) {
-        if (user.role === "buyer") {
-            throw new UnauthorizedException("You dont have permission to create an item!");
+    async create(body: CreateItemDto, user: { userId: number; role: string }) {
+        if (user.role === 'buyer') {
+            throw new UnauthorizedException('You dont have permission to create an item!');
         }
 
+        // Устанавливаем флаг одобрения модератором
         body.isApprovedByModerator = true;
-        return await this.itemRepository.save(body);
+
+        // Сохраняем новый товар в базе данных
+        const newItem = await this.itemRepository.save(body);
+
+        // Находим всех пользователей, у которых есть товар с таким названием в вишлисте
+        const wishlistUsers = await this.wishlistRepository.find({
+            where: { itemName: body.name }, // Ищем записи в вишлисте с таким названием товара
+            relations: ['user'], // Загружаем связанного пользователя
+        });
+
+        // Отправляем уведомление каждому пользователю и удаляем запись из вишлиста
+        for (const wishlistEntry of wishlistUsers) {
+            if (wishlistEntry.user) {
+                try {
+                    // Отправляем уведомление о добавлении товара
+                    await this.mailService.sendAddedToWishlistNotification(
+                        wishlistEntry.user.email, // Email пользователя
+                        body.name, // Название товара
+                        newItem.id, // ID нового товара
+                    );
+
+                    // Удаляем запись из вишлиста после отправки уведомления
+                    await this.wishlistRepository.delete({ id: wishlistEntry.id });
+                } catch (error) {
+                    console.error(`Failed to send notification or remove wishlist entry for user ${wishlistEntry.user.id}:`, error);
+                }
+            }
+        }
+
+        return newItem;
     }
 
-    async reserveItem(itemId: number, userId: number): Promise<Item> {
+    async reserveItem(itemId: number, userId: number) {
+        const currentDate = new Date();
+
         const item = await this.itemRepository.findOne({
             where: { id: itemId },
             relations: ['user'],
@@ -122,13 +174,14 @@ export class ItemService {
             throw new NotFoundException('Item not found');
         }
 
-        if (item.reservedById) {
-            throw new ConflictException('Item already reserved');
+        if (item.reservedById && item.reservationExpiry && item.reservationExpiry > currentDate) {
+            throw new ConflictException('Item is already reserved and the reservation has not expired yet');
         }
 
         item.reservedBy = buyer;
         item.reservationExpiry = new Date(Date.now() + 24 * 60 * 60 * 1000);
         await this.mailService.sendReservationOfItemNotification(item.user.email, item.name, buyer.name);
+
         return this.itemRepository.save(item);
     }
 
@@ -207,17 +260,24 @@ export class ItemService {
     }
 
     async getReservedItems(userId: number) {
+        const currentDate = new Date();
         return await this.itemRepository.findAndCount({
-            where: { reservedBy: { id: userId } },
+            where: { reservedBy: {
+                id: userId,
+            },
+                reservationExpiry: MoreThan(currentDate),
+            },
             relations: ['user', 'category'],
         });
     }
 
     async getItemsPendingApproval(userId: number) {
+        const currentDate = new Date();
         return this.itemRepository.find({
             where: {
                 user: { id: userId },
                 reservedById: Not(IsNull()),
+                reservationExpiry: MoreThan(currentDate),
             },
             relations: ['reservedBy', 'category'],
         });
@@ -236,7 +296,14 @@ export class ItemService {
             throw new UnauthorizedException("You don't have the permission to update this item!");
         }
 
-        const previousPrice = item.prices.length > 0 ? item.prices[0] : item.price;
+        const previousPrice = item.price;
+
+        console.log(body.deletedImages)
+        if (body.deletedImages && body.deletedImages.length > 0) {
+            for (const image of body.deletedImages) {
+                body.images = body.images.filter((img) => img !== image);
+            }
+        }
 
         if (body.price !== item.price) {
             item.prices.push(item.price);
@@ -246,7 +313,10 @@ export class ItemService {
             ...item,
             ...body,
             prices: item.prices,
+            images: body.images,
         };
+
+        console.log(body.images);
 
         await this.itemRepository.save(updatedItem);
 
@@ -297,5 +367,32 @@ export class ItemService {
         });
 
         return item.images;
+    }
+
+    async addItemToWishlist(itemName: string, userId: number) {
+        return await this.wishlistRepository.save({itemName: itemName, userId: userId});
+    }
+
+    async retrieveWishlist(id: number) {
+        return await this.wishlistRepository.findAndCount({
+            where: {
+                userId: id
+            }
+        });
+    }
+
+    async deleteFromWishlist(id: number, userId: number) {
+        const item = await this.wishlistRepository.findOne({
+            where: {
+                id: id,
+                userId: userId,
+            }
+        });
+
+        if (!item) {
+            throw new UnauthorizedException("You don't have permission to delete this item!");
+        }
+
+        return await this.wishlistRepository.delete(id);
     }
 }

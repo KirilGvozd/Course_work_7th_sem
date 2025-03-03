@@ -7,6 +7,8 @@ import {
   Image,
   Button,
 } from "@nextui-org/react";
+import { motion } from "framer-motion";
+import { FaTimes, FaCheck } from "react-icons/fa";
 
 import { AuthContext } from "../../context/AuthContext";
 
@@ -131,52 +133,66 @@ const SellerReservedItemsPage: React.FC = () => {
             gap: "20px",
           }}
         >
-          {currentItems.map((item) => (
-            <Card key={item.id} style={{ flex: "0 0 calc(25% - 20px)" }}>
-              <CardHeader>
-                <Image
-                  height="300px"
-                  src={`http://localhost:4000/${item.images[0]}`}
-                  style={{ objectFit: "cover", borderRadius: "8px" }}
-                  width="100%"
-                />
-              </CardHeader>
+          <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.95 }}>
+            {currentItems.map((item) => (
+              <Card
+                key={item.id}
+                isHoverable
+                className="w-auto overflow-hidden shadow-lg hover:shadow-xl transition-shadow duration-300"
+              >
+                <CardHeader>
+                  <motion.div whileHover={{ scale: 1.03 }}>
+                    <Image
+                      alt={item.name}
+                      className="w-full h-64 object-cover rounded-t-lg"
+                      height="300px"
+                      src={`http://localhost:4000/${item.images[0]}`}
+                      width="100%"
+                    />
+                  </motion.div>
+                </CardHeader>
 
-              <CardBody>
-                <h4>{item.name}</h4>
-                <p>{item.description}</p>
-                <p>Цена: {item.price}</p>
-                {item.reservedById && (
-                  <p>
-                    {item.reservationExpiry && (
-                      <span>
-                        {" "}
-                        (до {new Date(item.reservationExpiry).toLocaleString()})
-                      </span>
-                    )}
+                <CardBody className="p-4">
+                  <h4 className="text-xl font-semibold text-gray-800">
+                    {item.name}
+                  </h4>
+                  <p className="text-lg font-medium text-gray-900 mt-2">
+                    {item.price}
                   </p>
-                )}
-              </CardBody>
+                  {item.reservedById && (
+                    <p>
+                      {item.reservationExpiry && (
+                        <span>
+                          Зарезервирован до{" "}
+                          {new Date(item.reservationExpiry).toLocaleString()}
+                        </span>
+                      )}
+                    </p>
+                  )}
+                </CardBody>
 
-              <CardFooter>
-                <Button
-                  color="success"
-                  variant={"shadow"}
-                  onPress={() => handleApproveReservation(item.id)}
-                >
-                  Подтвердить
-                </Button>
-                <Button
-                  color="danger"
-                  style={{ marginLeft: "10px" }}
-                  variant={"shadow"}
-                  onPress={() => handleRejectReservation(item.id)}
-                >
-                  Отклонить
-                </Button>
-              </CardFooter>
-            </Card>
-          ))}
+                <CardFooter className="p-4 bg-gray-50 border-t border-gray-200">
+                  <Button
+                    className="w-full"
+                    color="success"
+                    startContent={<FaCheck />}
+                    onPress={() => handleApproveReservation(item.id)}
+                  >
+                    Подтвердить
+                  </Button>
+                  <Button
+                    className="w-full bg-red-500 hover:bg-red-600 text-white"
+                    color="danger"
+                    startContent={<FaTimes />}
+                    style={{ marginLeft: "10px" }}
+                    onPress={() => handleRejectReservation(item.id)}
+                  >
+                    Отклонить
+                  </Button>
+                </CardFooter>
+              </Card>
+            ))}
+          </motion.div>
         </div>
       ) : (
         <p>Нет товаров, ожидающих подтверждения бронирования</p>
@@ -186,37 +202,35 @@ const SellerReservedItemsPage: React.FC = () => {
       <div>
         {/* Ваш код с отображением товаров */}
 
-        {totalPages > 0 ? (
-          <div
-            style={{
-              display: "flex",
-              justifyContent: "center",
-              marginTop: "20px",
-            }}
-          >
-            <button
-              disabled={currentPage === 1}
-              onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
-            >
-              Предыдущая
-            </button>
-            <p style={{ margin: "0 10px" }}>
-              Страница {currentPage} из {totalPages}
+        <div className="mt-8">
+          {totalPages > 0 ? (
+            <div className="flex justify-center items-center space-x-4">
+              <button
+                className="px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 focus:outline-none focus:ring focus:ring-blue-200 disabled:opacity-50"
+                disabled={currentPage === 1}
+                onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
+              >
+                Предыдущая
+              </button>
+              <p className="text-gray-700 font-medium">
+                Страница {currentPage} из {totalPages}
+              </p>
+              <button
+                className="px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 focus:outline-none focus:ring focus:ring-blue-200 disabled:opacity-50"
+                disabled={currentPage === totalPages}
+                onClick={() =>
+                  setCurrentPage((prev) => Math.min(prev + 1, totalPages))
+                }
+              >
+                Следующая
+              </button>
+            </div>
+          ) : (
+            <p className="text-center text-gray-600 font-medium mt-4">
+              Товары отсутствуют
             </p>
-            <button
-              disabled={currentPage === totalPages}
-              onClick={() =>
-                setCurrentPage((prev) => Math.min(prev + 1, totalPages))
-              }
-            >
-              Следующая
-            </button>
-          </div>
-        ) : (
-          <p style={{ textAlign: "center", marginTop: "20px", color: "#888" }}>
-            Товары отсутствуют
-          </p>
-        )}
+          )}
+        </div>
       </div>
     </div>
   );

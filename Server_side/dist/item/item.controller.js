@@ -27,6 +27,7 @@ let ItemController = class ItemController {
     }
     findAll(paginationDto, typeId, minPrice, maxPrice, sellerId, attributes) {
         const attributeFilters = attributes ? JSON.parse(attributes) : {};
+        console.log(attributeFilters);
         return this.itemService.findAll(paginationDto, { categoryId: typeId, minPrice, maxPrice, sellerId, attributes: attributeFilters });
     }
     async getReservedItems(req) {
@@ -43,6 +44,12 @@ let ItemController = class ItemController {
         }
         return await this.itemService.getItemsPendingApproval(req.user.userId);
     }
+    async retrieveWishlist(req) {
+        if (req.user.role !== 'buyer') {
+            throw new common_1.ForbiddenException("You don't have rights to retrieve items from wishlist!");
+        }
+        return await this.itemService.retrieveWishlist(+req.user.userId);
+    }
     findOne(id) {
         return this.itemService.findOne(id);
     }
@@ -56,6 +63,12 @@ let ItemController = class ItemController {
         body.userId = user.userId;
         body.images = files?.map((file) => file.path) || [];
         return this.itemService.create(body, user);
+    }
+    async addToWishlist(req, body) {
+        if (req.user.role !== 'buyer') {
+            throw new common_1.ForbiddenException("You don't have rights to add items to wishlist!");
+        }
+        return await this.itemService.addItemToWishlist(body.itemName, body.userId);
     }
     async reserve(itemId, req) {
         if (req.user.role === 'buyer') {
@@ -93,6 +106,12 @@ let ItemController = class ItemController {
         const images = files ? files.map((file) => file.path) : [];
         body.images = [...existingImages, ...images];
         return await this.itemService.update(id, body, request.user.userId);
+    }
+    removeFromWishlist(id, req) {
+        if (req.user.role !== 'buyer') {
+            throw new common_1.ForbiddenException("You don't have rights to delete the item!");
+        }
+        return this.itemService.deleteFromWishlist(+id, +req.user.userId);
     }
     delete(id, request) {
         if (request.user.role !== 'seller') {
@@ -144,6 +163,16 @@ __decorate([
     __metadata("design:returntype", Promise)
 ], ItemController.prototype, "getItemsPendingApproval", null);
 __decorate([
+    (0, common_1.Get)('wishlist'),
+    (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard),
+    (0, swagger_1.ApiResponse)({ status: 200, description: 'Items was retrieved.' }),
+    (0, swagger_1.ApiResponse)({ status: 404, description: 'User not found.' }),
+    __param(0, (0, common_1.Req)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object]),
+    __metadata("design:returntype", Promise)
+], ItemController.prototype, "retrieveWishlist", null);
+__decorate([
     (0, common_1.Get)(':id'),
     (0, swagger_1.ApiResponse)({ status: 200, description: 'Item has been found.' }),
     (0, swagger_1.ApiResponse)({ status: 404, description: 'Item not found.' }),
@@ -163,6 +192,19 @@ __decorate([
     __metadata("design:paramtypes", [createItemDto_1.CreateItemDto, Object, Array]),
     __metadata("design:returntype", Promise)
 ], ItemController.prototype, "create", null);
+__decorate([
+    (0, common_1.Post)('add-wishlist'),
+    (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard),
+    (0, swagger_1.ApiResponse)({ status: 200, description: 'Item successfully added to wishlist.' }),
+    (0, swagger_1.ApiResponse)({ status: 401, description: 'Unauthorized access.' }),
+    (0, swagger_1.ApiResponse)({ status: 403, description: 'You don\'t have rights to add items to wishlist!' }),
+    (0, swagger_1.ApiResponse)({ status: 404, description: 'Item not found.' }),
+    __param(0, (0, common_1.Req)()),
+    __param(1, (0, common_1.Body)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object, Object]),
+    __metadata("design:returntype", Promise)
+], ItemController.prototype, "addToWishlist", null);
 __decorate([
     (0, common_1.Post)('reserve/:id'),
     (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard),
@@ -229,6 +271,19 @@ __decorate([
     __metadata("design:paramtypes", [Number, updateItem_dto_1.UpdateItemDto, Array, Object]),
     __metadata("design:returntype", Promise)
 ], ItemController.prototype, "update", null);
+__decorate([
+    (0, common_1.Delete)('wishlist/:id'),
+    (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard),
+    (0, swagger_1.ApiResponse)({ status: 200, description: 'Item has been successfully deleted.' }),
+    (0, swagger_1.ApiResponse)({ status: 401, description: "You don't have permission to delete this item!" }),
+    (0, swagger_1.ApiResponse)({ status: 403, description: "You don't have rights to delete this item!" }),
+    (0, swagger_1.ApiResponse)({ status: 404, description: 'Item not found.' }),
+    __param(0, (0, common_1.Param)('id')),
+    __param(1, (0, common_1.Req)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Number, Object]),
+    __metadata("design:returntype", void 0)
+], ItemController.prototype, "removeFromWishlist", null);
 __decorate([
     (0, common_1.Delete)(':id'),
     (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard),

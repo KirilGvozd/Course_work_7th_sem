@@ -7,6 +7,8 @@ import {
   Image,
   Button,
 } from "@nextui-org/react";
+import { motion } from "framer-motion";
+import { FaShoppingCart, FaTimes, FaEllipsisV } from "react-icons/fa";
 
 import { AuthContext } from "../context/AuthContext";
 
@@ -16,9 +18,9 @@ interface ProductCardProps {
   description: string;
   price: number;
   image: string;
-  reservedById?: number | null; // Пропс для проверки бронирования
-  reservationExpiry?: string; // Пропс для срока бронирования
-  onRemove?: () => void; // Колбэк для удаления товара из списка
+  reservedById?: number | null;
+  reservationExpiry?: string;
+  onRemove?: () => void;
 }
 
 const ProductCard: React.FC<ProductCardProps> = ({
@@ -30,11 +32,10 @@ const ProductCard: React.FC<ProductCardProps> = ({
   reservationExpiry,
   onRemove,
 }) => {
-  const [isReserved, setIsReserved] = useState(!!reservedById); // Проверяем, есть ли reservedById
+  const [isReserved, setIsReserved] = useState(!!reservedById);
   const [timeLeft, setTimeLeft] = useState<string>("");
   const { user } = useContext(AuthContext);
 
-  // Эффект для обновления таймера
   useEffect(() => {
     if (isReserved && reservationExpiry) {
       const updateTimer = () => {
@@ -55,7 +56,6 @@ const ProductCard: React.FC<ProductCardProps> = ({
         setTimeLeft(`${hours}h ${minutes}m ${seconds}s`);
       };
 
-      // Обновляем таймер сразу и каждую секунду
       updateTimer();
       const interval = setInterval(updateTimer, 1000);
 
@@ -63,7 +63,6 @@ const ProductCard: React.FC<ProductCardProps> = ({
     }
   }, [isReserved, reservationExpiry]);
 
-  // Обработчик бронирования товара
   const handleReserve = async () => {
     try {
       const response = await fetch(`http://localhost:4000/item/reserve/${id}`, {
@@ -81,7 +80,6 @@ const ProductCard: React.FC<ProductCardProps> = ({
     }
   };
 
-  // Обработчик удаления товара из забронированных
   const handleRemoveReservation = async () => {
     try {
       const response = await fetch(`http://localhost:4000/item/reserve/${id}`, {
@@ -92,7 +90,7 @@ const ProductCard: React.FC<ProductCardProps> = ({
       if (response.ok) {
         setIsReserved(false);
         if (onRemove) {
-          onRemove(); // Вызываем колбэк для обновления списка
+          onRemove();
         }
       } else {
         alert("Ошибка при удалении бронирования");
@@ -103,68 +101,76 @@ const ProductCard: React.FC<ProductCardProps> = ({
   };
 
   return (
-    <Card
-      isHoverable
-      style={{
-        width: "auto",
-      }}
-    >
-      {/* Размытие применяется только к CardHeader и CardBody */}
-      <div style={{ filter: isReserved ? "blur(2px)" : "none" }}>
-        <CardHeader>
-          <Image
-            alt={name}
-            height="300px"
-            src={image}
-            style={{ objectFit: "cover", borderRadius: "8px" }}
-            width="100%"
-          />
-        </CardHeader>
+    <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.95 }}>
+      <Card
+        isHoverable
+        className="w-auto overflow-hidden shadow-lg hover:shadow-xl transition-shadow duration-300"
+      >
+        <div className={isReserved ? "filter blur-sm" : ""}>
+          {/* Картинка товара */}
+          <CardHeader className="p-0">
+            <motion.div whileHover={{ scale: 1.03 }}>
+              <Image
+                alt={name}
+                className="w-full h-64 object-cover rounded-t-lg"
+                height="300px"
+                src={image}
+                width="100%"
+              />
+            </motion.div>
+          </CardHeader>
 
-        <CardBody>
-          <h4>{name}</h4>
-        </CardBody>
-      </div>
+          {/* Основная информация о товаре */}
+          <CardBody className="p-4">
+            <h4 className="text-xl font-semibold text-gray-800">{name}</h4>
+            <p className="text-lg font-medium text-gray-900 mt-2">{price}</p>
+          </CardBody>
+        </div>
 
-      {/* Футер не блюрится */}
-      <CardFooter>
-        <span style={{ marginRight: "10px" }}>{price}</span>
-        {isReserved ? (
-          <div>
-            <p>Товар забронирован</p>
-            {reservationExpiry && <p>До конца бронирования: {timeLeft}</p>}
-            {/* Показываем кнопку "Удалить из забронированных" только для пользователя, который забронировал товар */}
-            {user?.id === reservedById && (
+        {/* Футер с кнопками */}
+        <CardFooter className="p-4 bg-gray-50 border-t border-gray-200">
+          {isReserved ? (
+            <div className="w-full">
+              <p className="text-sm text-gray-600 mb-2">Товар забронирован</p>
+              {reservationExpiry && (
+                <p className="text-sm text-gray-600 mb-4">
+                  До конца бронирования: {timeLeft}
+                </p>
+              )}
+              {user?.id === reservedById && (
+                <Button
+                  className="w-full bg-red-500 hover:bg-red-600 text-white"
+                  color="danger"
+                  startContent={<FaTimes />}
+                  onPress={handleRemoveReservation}
+                >
+                  Удалить из забронированных
+                </Button>
+              )}
+            </div>
+          ) : (
+            <div className="flex items-center justify-between w-full">
+              {user?.role === "buyer" && (
+                <Button
+                  className="bg-blue-500 hover:bg-blue-600 text-white"
+                  color="primary"
+                  startContent={<FaShoppingCart />}
+                  onPress={handleReserve}
+                >
+                  Забронировать
+                </Button>
+              )}
               <Button
-                color="danger"
-                variant="solid"
-                onPress={handleRemoveReservation}
-              >
-                Удалить из забронированных
-              </Button>
-            )}
-          </div>
-        ) : (
-          <>
-            {/* Показываем кнопку "Забронировать" только для пользователей с ролью buyer */}
-            {user?.role === "buyer" && (
-              <Button color="primary" variant="solid" onPress={handleReserve}>
-                Забронировать
-              </Button>
-            )}
-            <Button
-              as="a"
-              color="secondary"
-              href={`/item/${id}`}
-              style={{ marginLeft: "10px" }}
-              variant="solid"
-            >
-              Подробнее
-            </Button>
-          </>
-        )}
-      </CardFooter>
-    </Card>
+                as="a"
+                className="bg-transparent border border-gray-300 hover:bg-gray-100 text-gray-700"
+                href={`/item/${id}`}
+                startContent={<FaEllipsisV />}
+              />
+            </div>
+          )}
+        </CardFooter>
+      </Card>
+    </motion.div>
   );
 };
 

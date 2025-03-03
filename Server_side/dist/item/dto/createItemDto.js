@@ -84,4 +84,11 @@ __decorate([
     (0, class_validator_1.IsNotEmpty)(),
     __metadata("design:type", Number)
 ], CreateItemDto.prototype, "price", void 0);
+__decorate([
+    (0, swagger_1.ApiProperty)({
+        description: 'Is this item was approved by moderator',
+        example: true
+    }),
+    __metadata("design:type", Boolean)
+], CreateItemDto.prototype, "isApprovedByModerator", void 0);
 //# sourceMappingURL=createItemDto.js.map
